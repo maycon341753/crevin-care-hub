@@ -19,52 +19,69 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddFuncionarioModal } from "@/components/funcionarios/AddFuncionarioModal";
+import { Funcionario } from "@/types";
 
 // Mock data - será substituído por dados reais do banco
-const funcionarios = [
+const funcionarios: Funcionario[] = [
   {
-    id: 1,
+    id: "1",
     nome: "Maria Silva",
-    cargo: "Técnica de Enfermagem",
-    departamento: "Enfermagem",
-    salario: 3500,
-    status: "Ativo",
-    admissao: "2023-02-15",
-    telefone: "(61) 99999-1111",
     cpf: "123.456.789-01",
+    telefone: "(61) 99999-1111",
+    email: "maria.silva@crevin.com",
+    cargo: "Técnica de Enfermagem",
+    departamento_id: "dept-1",
+    salario: 3500,
+    data_admissao: "2023-02-15",
+    status: "ativo",
+    created_at: "2023-02-15T00:00:00Z",
+    updated_at: "2023-02-15T00:00:00Z",
+    created_by: "user-1"
   },
   {
-    id: 2,
+    id: "2",
     nome: "João Santos",
-    cargo: "Cuidador",
-    departamento: "Cuidados",
-    salario: 2800,
-    status: "Ativo",
-    admissao: "2023-05-10",
-    telefone: "(61) 99999-2222",
     cpf: "234.567.890-12",
+    telefone: "(61) 99999-2222",
+    email: "joao.santos@crevin.com",
+    cargo: "Cuidador",
+    departamento_id: "dept-2",
+    salario: 2800,
+    data_admissao: "2023-05-10",
+    status: "ativo",
+    created_at: "2023-05-10T00:00:00Z",
+    updated_at: "2023-05-10T00:00:00Z",
+    created_by: "user-1"
   },
   {
-    id: 3,
+    id: "3",
     nome: "Ana Costa",
-    cargo: "Nutricionista",
-    departamento: "Nutrição",
-    salario: 4200,
-    status: "Férias",
-    admissao: "2022-08-03",
-    telefone: "(61) 99999-3333",
     cpf: "345.678.901-23",
+    telefone: "(61) 99999-3333",
+    email: "ana.costa@crevin.com",
+    cargo: "Nutricionista",
+    departamento_id: "dept-3",
+    salario: 4200,
+    data_admissao: "2022-08-03",
+    status: "ferias",
+    created_at: "2022-08-03T00:00:00Z",
+    updated_at: "2022-08-03T00:00:00Z",
+    created_by: "user-1"
   },
   {
-    id: 4,
+    id: "4",
     nome: "Carlos Oliveira",
-    cargo: "Motorista",
-    departamento: "Transporte",
-    salario: 3000,
-    status: "Ativo",
-    admissao: "2023-01-20",
-    telefone: "(61) 99999-4444",
     cpf: "456.789.012-34",
+    telefone: "(61) 99999-4444",
+    email: "carlos.oliveira@crevin.com",
+    cargo: "Motorista",
+    departamento_id: "dept-4",
+    salario: 2500,
+    data_admissao: "2023-01-20",
+    status: "ativo",
+    created_at: "2023-01-20T00:00:00Z",
+    updated_at: "2023-01-20T00:00:00Z",
+    created_by: "user-1"
   },
 ];
 
@@ -73,21 +90,47 @@ export default function FuncionariosPage() {
   const [selectedDepartment, setSelectedDepartment] = useState("Todos");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const filteredFuncionarios = funcionarios.filter(funcionario => {
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ativo":
+        return "bg-green-100 text-green-800 hover:bg-green-100";
+      case "inativo":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
+      case "ferias":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case "afastado":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "ativo":
+        return "Ativo";
+      case "inativo":
+        return "Inativo";
+      case "ferias":
+        return "Férias";
+      case "afastado":
+        return "Afastado";
+      default:
+        return status;
+    }
+  };
+
+  // Filtrar funcionários baseado na busca e departamento
+  const filteredFuncionarios = funcionarios.filter((funcionario) => {
     const matchesSearch = funcionario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         funcionario.cargo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === "Todos" || funcionario.departamento === selectedDepartment;
+                         funcionario.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         funcionario.cpf.includes(searchTerm);
+    
+    const matchesDepartment = selectedDepartment === "Todos" || 
+                             funcionario.departamento_id === selectedDepartment; // Será ajustado quando integrar com dados reais
+    
     return matchesSearch && matchesDepartment;
   });
-
-  const getStatusBadge = (status: string) => {
-    const colors = {
-      "Ativo": "bg-success text-success-foreground",
-      "Férias": "bg-warning text-warning-foreground",
-      "Inativo": "bg-destructive text-destructive-foreground",
-    };
-    return colors[status as keyof typeof colors] || "bg-muted text-muted-foreground";
-  };
 
   return (
     <div className="space-y-6">
@@ -222,15 +265,15 @@ export default function FuncionariosPage() {
                   <TableRow key={funcionario.id}>
                     <TableCell className="font-medium">{funcionario.nome}</TableCell>
                     <TableCell>{funcionario.cargo}</TableCell>
-                    <TableCell>{funcionario.departamento}</TableCell>
+                    <TableCell>Departamento</TableCell> {/* Será substituído por lookup real */}
                     <TableCell>
                       <Badge className={getStatusBadge(funcionario.status)}>
-                        {funcionario.status}
+                        {getStatusLabel(funcionario.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>R$ {funcionario.salario.toLocaleString()}</TableCell>
                     <TableCell>
-                      {new Date(funcionario.admissao).toLocaleDateString('pt-BR')}
+                      {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>

@@ -53,7 +53,7 @@ interface FilterState {
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<{ id: string; nome: string | null; email: string }[]>([]);
+  const [users, setUsers] = useState<{ id: string; full_name: string | null }[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     action: "",
@@ -71,9 +71,8 @@ export default function AuditLogsPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, nome, email')
-        .eq('ativo', true)
-        .order('nome');
+        .select('id, full_name')
+        .order('full_name');
 
       if (error) throw error;
       setUsers(data || []);
@@ -285,7 +284,7 @@ export default function AuditLogsPage() {
                   <SelectItem value="">Todos os usuários</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
-                      {user.nome || user.email}
+                      {user.full_name || 'Usuário sem nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>

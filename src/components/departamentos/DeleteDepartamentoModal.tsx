@@ -12,23 +12,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Departamento {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-  _count?: {
-    funcionarios: number;
-  };
-}
+import { Departamento } from "@/types";
 
 interface DeleteDepartamentoModalProps {
   open: boolean;
   onClose: () => void;
-  departamento: Departamento;
+  departamento: Departamento & {
+    _count?: {
+      funcionarios: number;
+    };
+  };
 }
 
 export function DeleteDepartamentoModal({ open, onClose, departamento }: DeleteDepartamentoModalProps) {

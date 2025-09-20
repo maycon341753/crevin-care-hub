@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCPF, formatPhone } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +31,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import { Funcionario, Departamento } from "@/types";
 
 // Schema de validação
 const funcionarioSchema = z.object({
@@ -46,11 +48,6 @@ const funcionarioSchema = z.object({
 
 type FuncionarioFormData = z.infer<typeof funcionarioSchema>;
 
-interface Departamento {
-  id: string;
-  nome: string;
-}
-
 interface AddFuncionarioModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,6 +57,7 @@ interface AddFuncionarioModalProps {
 export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncionarioModalProps) {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<FuncionarioFormData>({
     resolver: zodResolver(funcionarioSchema),
@@ -82,7 +80,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       try {
         const { data, error } = await supabase
           .from('departamentos')
-          .select('id, nome')
+          .select('id, nome, descricao, ativo, created_at, updated_at')
           .order('nome');
 
         if (error) throw error;
@@ -115,6 +113,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
           salario: data.salario,
           data_admissao: data.data_admissao,
           status: data.status,
+          created_by: user?.id || '',
         }]);
 
       if (error) throw error;

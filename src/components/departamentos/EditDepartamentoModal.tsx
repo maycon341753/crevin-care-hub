@@ -14,15 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Departamento {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { Departamento } from "@/types";
 
 interface EditDepartamentoModalProps {
   open: boolean;

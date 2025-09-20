@@ -49,7 +49,7 @@ export function AddProfileModal({ open, onClose }: AddProfileModalProps) {
     try {
       const { data, error } = await supabase
         .from('departamentos')
-        .select('id, nome')
+        .select('id, nome, descricao, ativo, created_at, updated_at')
         .eq('ativo', true)
         .order('nome');
 

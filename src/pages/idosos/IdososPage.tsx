@@ -11,20 +11,7 @@ import { AddIdosoModal } from "@/components/idosos/AddIdosoModal";
 import { EditIdosoModal } from "@/components/idosos/EditIdosoModal";
 import { DeleteIdosoModal } from "@/components/idosos/DeleteIdosoModal";
 import { formatCPF, formatPhone } from "@/lib/utils";
-
-interface Idoso {
-  id: string;
-  nome: string;
-  cpf: string;
-  data_nascimento: string;
-  telefone: string | null;
-  endereco: string | null;
-  contato_emergencia: string | null;
-  observacoes: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { Idoso } from "@/types";
 
 export default function IdososPage() {
   const [idosos, setIdosos] = useState<Idoso[]>([]);
@@ -88,10 +75,19 @@ export default function IdososPage() {
     fetchIdosos();
   };
 
-  const getStatusBadge = (ativo: boolean) => {
-    return ativo 
-      ? "bg-green-100 text-green-800 hover:bg-green-100" 
-      : "bg-red-100 text-red-800 hover:bg-red-100";
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ativo':
+        return "bg-green-100 text-green-800 hover:bg-green-100";
+      case 'inativo':
+        return "bg-red-100 text-red-800 hover:bg-red-100";
+      case 'transferido':
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case 'falecido':
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    }
   };
 
   const calculateAge = (birthDate: string) => {
@@ -209,7 +205,7 @@ export default function IdososPage() {
                   <TableHead>CPF</TableHead>
                   <TableHead>Idade</TableHead>
                   <TableHead>Telefone</TableHead>
-                  <TableHead>Endereço</TableHead>
+                  <TableHead>Quarto/Ala</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -250,7 +246,7 @@ export default function IdososPage() {
                         {idoso.endereco ? (
                           <div className="flex items-center gap-1 max-w-[200px]">
                             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="truncate" title={idoso.endereco}>
+                            <span className="truncate">
                               {idoso.endereco}
                             </span>
                           </div>
@@ -259,8 +255,8 @@ export default function IdososPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusBadge(idoso.ativo)}>
-                          {idoso.ativo ? "Ativo" : "Inativo"}
+                        <Badge className={getStatusBadge(idoso.ativo ? 'ativo' : 'inativo')}>
+                          {idoso.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

@@ -7,30 +7,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Departamento } from "@/types";
 import { AddDepartamentoModal } from "@/components/departamentos/AddDepartamentoModal";
 import { EditDepartamentoModal } from "@/components/departamentos/EditDepartamentoModal";
 import { DeleteDepartamentoModal } from "@/components/departamentos/DeleteDepartamentoModal";
 
-interface Departamento {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
+interface DepartamentoWithCount extends Departamento {
   _count?: {
     funcionarios: number;
   };
 }
 
 export default function DepartamentosPage() {
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [departamentos, setDepartamentos] = useState<DepartamentoWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedDepartamento, setSelectedDepartamento] = useState<Departamento | null>(null);
+  const [selectedDepartamento, setSelectedDepartamento] = useState<DepartamentoWithCount | null>(null);
   const { toast } = useToast();
 
   const fetchDepartamentos = useCallback(async () => {

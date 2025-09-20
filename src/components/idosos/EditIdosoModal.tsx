@@ -3,30 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-
-interface Idoso {
-  id: string;
-  nome: string;
-  cpf: string;
-  data_nascimento: string;
-  telefone: string | null;
-  endereco: string | null;
-  contato_emergencia: string | null;
-  observacoes: string | null;
-  ativo: boolean;
-}
+import { Idoso } from "@/types";
 
 interface EditIdosoModalProps {
   open: boolean;
@@ -35,162 +16,53 @@ interface EditIdosoModalProps {
 }
 
 export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<Idoso>>({
     nome: "",
     cpf: "",
+    rg: "",
     data_nascimento: "",
     telefone: "",
     endereco: "",
     contato_emergencia: "",
-    observacoes: "",
+    observacoes_medicas: "",
     ativo: true,
   });
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (idoso) {
       setFormData({
-        nome: idoso.nome,
-        cpf: formatCPF(idoso.cpf),
-        data_nascimento: idoso.data_nascimento,
-        telefone: idoso.telefone ? formatPhone(idoso.telefone) : "",
+        nome: idoso.nome || "",
+        cpf: idoso.cpf || "",
+        rg: idoso.rg || "",
+        data_nascimento: idoso.data_nascimento || "",
+        telefone: idoso.telefone || "",
         endereco: idoso.endereco || "",
         contato_emergencia: idoso.contato_emergencia || "",
-        observacoes: idoso.observacoes || "",
-        ativo: idoso.ativo,
+        observacoes_medicas: idoso.observacoes_medicas || "",
+        ativo: idoso.ativo !== undefined ? idoso.ativo : true,
       });
     }
   }, [idoso]);
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  };
-
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    }
-    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  };
-
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCPF(e.target.value);
-    if (formatted.length <= 14) {
-      handleInputChange('cpf', formatted);
-    }
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    if (formatted.length <= 15) {
-      handleInputChange('telefone', formatted);
-    }
-  };
-
-  const validateForm = () => {
-    if (!formData.nome.trim()) {
-      toast({
-        title: "Erro de validação",
-        description: "Nome é obrigatório.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!formData.cpf.trim()) {
-      toast({
-        title: "Erro de validação",
-        description: "CPF é obrigatório.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Validação básica de CPF (11 dígitos)
-    const cpfNumbers = formData.cpf.replace(/\D/g, '');
-    if (cpfNumbers.length !== 11) {
-      toast({
-        title: "Erro de validação",
-        description: "CPF deve ter 11 dígitos.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!formData.data_nascimento) {
-      toast({
-        title: "Erro de validação",
-        description: "Data de nascimento é obrigatória.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Validar se a data não é futura
-    const birthDate = new Date(formData.data_nascimento);
-    const today = new Date();
-    if (birthDate > today) {
-      toast({
-        title: "Erro de validação",
-        description: "Data de nascimento não pode ser futura.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    setLoading(true);
 
     try {
-      setLoading(true);
-
-      // Verificar se CPF já existe em outro registro
-      const cpfNumbers = formData.cpf.replace(/\D/g, '');
-      if (cpfNumbers !== idoso.cpf) {
-        const { data: existingIdoso } = await supabase
-          .from('idosos')
-          .select('id')
-          .eq('cpf', cpfNumbers)
-          .neq('id', idoso.id)
-          .single();
-
-        if (existingIdoso) {
-          toast({
-            title: "Erro",
-            description: "Já existe outro idoso cadastrado com este CPF.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
       const { error } = await supabase
         .from('idosos')
         .update({
-          nome: formData.nome.trim(),
-          cpf: formData.cpf.replace(/\D/g, ''),
+          nome: formData.nome,
+          cpf: formData.cpf?.replace(/\D/g, ''),
+          rg: formData.rg,
           data_nascimento: formData.data_nascimento,
-          telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : null,
-          endereco: formData.endereco.trim() || null,
-          contato_emergencia: formData.contato_emergencia.trim() || null,
-          observacoes: formData.observacoes.trim() || null,
+          telefone: formData.telefone?.replace(/\D/g, ''),
+          endereco: formData.endereco,
+          contato_emergencia: formData.contato_emergencia,
+          observacoes_medicas: formData.observacoes_medicas,
           ativo: formData.ativo,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', idoso.id);
 
@@ -220,19 +92,18 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
         <DialogHeader>
           <DialogTitle>Editar Idoso</DialogTitle>
           <DialogDescription>
-            Atualize as informações do idoso cadastrado no sistema.
+            Atualize as informações do idoso.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome *</Label>
               <Input
                 id="nome"
                 value={formData.nome}
-                onChange={(e) => handleInputChange('nome', e.target.value)}
-                placeholder="Nome completo do idoso"
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 required
               />
             </div>
@@ -242,32 +113,52 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
               <Input
                 id="cpf"
                 value={formData.cpf}
-                onChange={handleCPFChange}
+                onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                 placeholder="000.000.000-00"
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="rg">RG</Label>
+              <Input
+                id="rg"
+                value={formData.rg || ""}
+                onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
               <Input
                 id="data_nascimento"
                 type="date"
                 value={formData.data_nascimento}
-                onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
+                onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
                 required
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone</Label>
               <Input
                 id="telefone"
-                value={formData.telefone}
-                onChange={handlePhoneChange}
+                value={formData.telefone || ""}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                 placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contato_emergencia">Contato de Emergência</Label>
+              <Input
+                id="contato_emergencia"
+                value={formData.contato_emergencia || ""}
+                onChange={(e) => setFormData({ ...formData, contato_emergencia: e.target.value })}
               />
             </div>
           </div>
@@ -276,40 +167,37 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
             <Label htmlFor="endereco">Endereço</Label>
             <Input
               id="endereco"
-              value={formData.endereco}
-              onChange={(e) => handleInputChange('endereco', e.target.value)}
-              placeholder="Endereço completo"
+              value={formData.endereco || ""}
+              onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contato_emergencia">Contato de Emergência</Label>
-            <Input
-              id="contato_emergencia"
-              value={formData.contato_emergencia}
-              onChange={(e) => handleInputChange('contato_emergencia', e.target.value)}
-              placeholder="Nome e telefone do contato de emergência"
-            />
+            <Label htmlFor="ativo">Status *</Label>
+            <Select
+              value={formData.ativo ? "true" : "false"}
+              onValueChange={(value) => 
+                setFormData({ ...formData, ativo: value === "true" })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
+            <Label htmlFor="observacoes_medicas">Observações Médicas</Label>
             <Textarea
-              id="observacoes"
-              value={formData.observacoes}
-              onChange={(e) => handleInputChange('observacoes', e.target.value)}
-              placeholder="Observações adicionais sobre o idoso"
+              id="observacoes_medicas"
+              value={formData.observacoes_medicas || ""}
+              onChange={(e) => setFormData({ ...formData, observacoes_medicas: e.target.value })}
               rows={3}
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="ativo"
-              checked={formData.ativo}
-              onCheckedChange={(checked) => handleInputChange('ativo', checked)}
-            />
-            <Label htmlFor="ativo">Idoso ativo</Label>
           </div>
 
           <DialogFooter>
@@ -317,8 +205,7 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Alterações
+              {loading ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </form>

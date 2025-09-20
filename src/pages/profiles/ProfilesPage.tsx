@@ -13,17 +13,11 @@ import { DeleteProfileModal } from "@/components/profiles/DeleteProfileModal";
 
 interface Profile {
   id: string;
-  email: string;
-  nome: string | null;
-  telefone: string | null;
-  cargo: string | null;
-  departamento_id: string | null;
-  ativo: boolean;
+  full_name: string;
+  user_id: string;
+  role: string;
   created_at: string;
   updated_at: string;
-  departamentos?: {
-    nome: string;
-  };
 }
 
 export default function ProfilesPage() {
@@ -42,13 +36,8 @@ export default function ProfilesPage() {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          departamentos (
-            nome
-          )
-        `)
-        .order('nome');
+        .select('*')
+        .order('full_name');
 
       if (error) throw error;
 
@@ -70,10 +59,8 @@ export default function ProfilesPage() {
   }, [fetchProfiles]);
 
   const filteredProfiles = profiles.filter(profile =>
-    (profile.nome && profile.nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    profile.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (profile.cargo && profile.cargo.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (profile.departamentos?.nome && profile.departamentos.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+    profile.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    profile.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (profile: Profile) => {
@@ -100,8 +87,8 @@ export default function ProfilesPage() {
       : "bg-red-100 text-red-800 hover:bg-red-100";
   };
 
-  const getRoleBadge = (cargo: string | null) => {
-    if (!cargo) return null;
+  const getRoleBadge = (role: string) => {
+    if (!role) return null;
     
     const roleColors: { [key: string]: string } = {
       'admin': 'bg-purple-100 text-purple-800 hover:bg-purple-100',
@@ -111,12 +98,12 @@ export default function ProfilesPage() {
       'funcionário': 'bg-gray-100 text-gray-800 hover:bg-gray-100',
     };
 
-    const color = roleColors[cargo.toLowerCase()] || 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+    const color = roleColors[role.toLowerCase()] || 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     
     return (
       <Badge className={color}>
         <Shield className="h-3 w-3 mr-1" />
-        {cargo}
+        {role}
       </Badge>
     );
   };
@@ -162,7 +149,7 @@ export default function ProfilesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {profiles.filter(p => p.ativo).length}
+              {profiles.length}
             </div>
           </CardContent>
         </Card>
@@ -174,7 +161,7 @@ export default function ProfilesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {profiles.filter(p => !p.ativo).length}
+              0
             </div>
           </CardContent>
         </Card>
@@ -186,7 +173,7 @@ export default function ProfilesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {profiles.filter(p => p.cargo && (p.cargo.toLowerCase().includes('admin') || p.cargo.toLowerCase().includes('gerente'))).length}
+              {profiles.filter(p => p.role && (p.role.toLowerCase().includes('admin') || p.role.toLowerCase().includes('gerente'))).length}
             </div>
           </CardContent>
         </Card>
@@ -236,26 +223,26 @@ export default function ProfilesPage() {
                   filteredProfiles.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
-                        {profile.nome || "Nome não informado"}
+                        {profile.full_name || "Nome não informado"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          {profile.email}
+                          {profile.user_id}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getRoleBadge(profile.cargo)}
+                        {getRoleBadge(profile.role)}
                       </TableCell>
                       <TableCell>
-                        {profile.departamentos?.nome || "-"}
+                        -
                       </TableCell>
                       <TableCell>
-                        {profile.telefone || "-"}
+                        -
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusBadge(profile.ativo)}>
-                          {profile.ativo ? "Ativo" : "Inativo"}
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                          Ativo
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

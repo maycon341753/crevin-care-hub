@@ -29,12 +29,11 @@ interface Departamento {
 
 interface Profile {
   id: string;
-  email: string;
-  nome: string | null;
-  telefone: string | null;
-  cargo: string | null;
-  departamento_id: string | null;
-  ativo: boolean;
+  full_name: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface EditProfileModalProps {
@@ -47,12 +46,8 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
   const [loading, setLoading] = useState(false);
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [formData, setFormData] = useState({
-    email: "",
-    nome: "",
-    telefone: "",
-    cargo: "",
-    departamento_id: "",
-    ativo: true,
+    full_name: "",
+    role: "",
   });
   const { toast } = useToast();
 
@@ -60,7 +55,7 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
     try {
       const { data, error } = await supabase
         .from('departamentos')
-        .select('id, nome')
+        .select('id, nome, descricao, ativo, created_at, updated_at')
         .eq('ativo', true)
         .order('nome');
 
@@ -80,12 +75,8 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
   useEffect(() => {
     if (profile) {
       setFormData({
-        email: profile.email,
-        nome: profile.nome || "",
-        telefone: profile.telefone ? formatPhone(profile.telefone) : "",
-        cargo: profile.cargo || "",
-        departamento_id: profile.departamento_id || "",
-        ativo: profile.ativo,
+        full_name: profile.full_name || "",
+        role: profile.role || "",
       });
     }
   }, [profile]);
@@ -113,30 +104,19 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
   };
 
   const validateForm = () => {
-    if (!formData.email.trim()) {
-      toast({
-        title: "Erro de validação",
-        description: "Email é obrigatório.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Validação básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Erro de validação",
-        description: "Email deve ter um formato válido.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!formData.nome.trim()) {
+    if (!formData.full_name.trim()) {
       toast({
         title: "Erro de validação",
         description: "Nome é obrigatório.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!formData.role.trim()) {
+      toast({
+        title: "Erro de validação",
+        description: "Cargo é obrigatório.",
         variant: "destructive",
       });
       return false;
@@ -153,34 +133,11 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
     try {
       setLoading(true);
 
-      // Verificar se email já existe em outro registro
-      if (formData.email.toLowerCase() !== profile.email.toLowerCase()) {
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', formData.email.toLowerCase())
-          .neq('id', profile.id)
-          .single();
-
-        if (existingProfile) {
-          toast({
-            title: "Erro",
-            description: "Já existe outro usuário cadastrado com este email.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
       const { error } = await supabase
         .from('profiles')
         .update({
-          email: formData.email.toLowerCase().trim(),
-          nome: formData.nome.trim(),
-          telefone: formData.telefone ? formData.telefone.replace(/\D/g, '') : null,
-          cargo: formData.cargo.trim() || null,
-          departamento_id: formData.departamento_id || null,
-          ativo: formData.ativo,
+          full_name: formData.full_name.trim(),
+          role: formData.role.trim(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', profile.id);
@@ -218,78 +175,26 @@ export function EditProfileModal({ open, onClose, profile }: EditProfileModalPro
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome *</Label>
+              <Label htmlFor="full_name">Nome *</Label>
               <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => handleInputChange('nome', e.target.value)}
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => handleInputChange('full_name', e.target.value)}
                 placeholder="Nome completo"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="role">Cargo *</Label>
               <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="usuario@exemplo.com"
+                id="role"
+                value={formData.role}
+                onChange={(e) => handleInputChange('role', e.target.value)}
+                placeholder="Ex: Administrador, Funcionário"
                 required
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone</Label>
-              <Input
-                id="telefone"
-                value={formData.telefone}
-                onChange={handlePhoneChange}
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cargo">Cargo</Label>
-              <Input
-                id="cargo"
-                value={formData.cargo}
-                onChange={(e) => handleInputChange('cargo', e.target.value)}
-                placeholder="Ex: Administrador, Funcionário"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="departamento">Departamento</Label>
-            <Select
-              value={formData.departamento_id}
-              onValueChange={(value) => handleInputChange('departamento_id', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um departamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Nenhum departamento</SelectItem>
-                {departamentos.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    {dept.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="ativo"
-              checked={formData.ativo}
-              onCheckedChange={(checked) => handleInputChange('ativo', checked)}
-            />
-            <Label htmlFor="ativo">Usuário ativo</Label>
           </div>
 
           <DialogFooter>

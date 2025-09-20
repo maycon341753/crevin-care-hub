@@ -15,8 +15,11 @@ import { Loader2, AlertTriangle } from "lucide-react";
 
 interface Profile {
   id: string;
-  email: string;
-  nome: string | null;
+  full_name: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface DeleteProfileModalProps {
@@ -125,10 +128,10 @@ export function DeleteProfileModal({ open, onClose, profile }: DeleteProfileModa
           <div className="p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium text-gray-900">Usuário a ser excluído:</h4>
             <p className="text-sm text-gray-600 mt-1">
-              <strong>Nome:</strong> {profile.nome || 'Não informado'}
+              <strong>Nome:</strong> {profile.full_name || 'Não informado'}
             </p>
             <p className="text-sm text-gray-600">
-              <strong>Email:</strong> {profile.email}
+              <strong>ID:</strong> {profile.id}
             </p>
           </div>
 
