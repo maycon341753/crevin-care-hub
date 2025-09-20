@@ -38,6 +38,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+interface NavigationSubItem {
+  title: string;
+  url: string;
+}
+
+interface NavigationItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  subItems?: NavigationSubItem[];
+}
+
 const navigationItems = [
   {
     title: "Dashboard",
@@ -146,8 +158,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
 
   const isActive = (path: string) => currentPath === path;
-  const isGroupActive = (item: any) => 
-    item.subItems?.some((sub: any) => currentPath === sub.url) || currentPath === item.url;
+  const isGroupActive = (item: NavigationItem) => 
+    item.subItems?.some((sub: NavigationSubItem) => currentPath === sub.url) || currentPath === item.url;
 
   const toggleGroup = (itemTitle: string) => {
     setOpenGroups(prev => 

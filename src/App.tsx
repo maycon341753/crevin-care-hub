@@ -11,7 +11,11 @@ import { Loader2 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/AuthPage";
 import FuncionariosPage from "./pages/funcionarios/FuncionariosPage";
+import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
+import IdososPage from "./pages/idosos/IdososPage";
+import ProfilesPage from "./pages/profiles/ProfilesPage";
+import AuditLogsPage from "./pages/audit/AuditLogsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,7 +83,11 @@ const App = () => (
             {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/funcionarios" element={<ProtectedRoute><FuncionariosPage /></ProtectedRoute>} />
-            <Route path="/doacoes/*" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
+            <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
+            <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
+            <Route path="/idosos" element={<ProtectedRoute><IdososPage /></ProtectedRoute>} />
+            <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
+            <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             
             {/* Placeholder routes for other modules */}
             <Route path="/idosos" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Idosos em Desenvolvimento</h1></div></ProtectedRoute>} />

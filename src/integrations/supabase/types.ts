@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          id: string
+          table_name: string
+          operation: string
+          old_data: Json | null
+          new_data: Json | null
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          table_name: string
+          operation: string
+          old_data?: Json | null
+          new_data?: Json | null
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          table_name?: string
+          operation?: string
+          old_data?: Json | null
+          new_data?: Json | null
+          user_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       departamentos: {
         Row: {
           id: string
@@ -103,6 +133,87 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      doacoes: {
+        Row: {
+          id: string
+          tipo: "dinheiro" | "item"
+          valor: number | null
+          descricao: string
+          doador_nome: string | null
+          doador_contato: string | null
+          data_doacao: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tipo: "dinheiro" | "item"
+          valor?: number | null
+          descricao: string
+          doador_nome?: string | null
+          doador_contato?: string | null
+          data_doacao: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tipo?: "dinheiro" | "item"
+          valor?: number | null
+          descricao?: string
+          doador_nome?: string | null
+          doador_contato?: string | null
+          data_doacao?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      idosos: {
+        Row: {
+          id: string
+          nome: string
+          cpf: string
+          rg: string | null
+          data_nascimento: string
+          telefone: string | null
+          endereco: string | null
+          contato_emergencia: string | null
+          observacoes_medicas: string | null
+          ativo: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          cpf: string
+          rg?: string | null
+          data_nascimento: string
+          telefone?: string | null
+          endereco?: string | null
+          contato_emergencia?: string | null
+          observacoes_medicas?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          cpf?: string
+          rg?: string | null
+          data_nascimento?: string
+          telefone?: string | null
+          endereco?: string | null
+          contato_emergencia?: string | null
+          observacoes_medicas?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

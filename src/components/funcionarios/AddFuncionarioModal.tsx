@@ -41,7 +41,7 @@ const funcionarioSchema = z.object({
   departamento_id: z.string().min(1, "Selecione um departamento"),
   salario: z.number().min(0, "Salário deve ser maior que zero"),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
-  status: z.enum(["Ativo", "Inativo", "Férias", "Licença"]),
+  status: z.enum(["ativo", "inativo", "ferias", "afastado"]),
 });
 
 type FuncionarioFormData = z.infer<typeof funcionarioSchema>;
@@ -72,7 +72,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       departamento_id: "",
       salario: 0,
       data_admissao: new Date().toISOString().split('T')[0],
-      status: "Ativo",
+      status: "ativo",
     },
   });
 
@@ -123,9 +123,9 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       form.reset();
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao adicionar funcionário:', error);
-      toast.error(error.message || 'Erro ao adicionar funcionário');
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar funcionário');
     } finally {
       setIsLoading(false);
     }
@@ -316,10 +316,10 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Ativo">Ativo</SelectItem>
-                        <SelectItem value="Inativo">Inativo</SelectItem>
-                        <SelectItem value="Férias">Férias</SelectItem>
-                        <SelectItem value="Licença">Licença</SelectItem>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                        <SelectItem value="ferias">Férias</SelectItem>
+                        <SelectItem value="afastado">Afastado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
