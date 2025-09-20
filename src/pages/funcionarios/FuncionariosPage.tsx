@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AddFuncionarioModal } from "@/components/funcionarios/AddFuncionarioModal";
 
 // Mock data - será substituído por dados reais do banco
 const funcionarios = [
@@ -70,6 +71,7 @@ const funcionarios = [
 export default function FuncionariosPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("Todos");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const filteredFuncionarios = funcionarios.filter(funcionario => {
     const matchesSearch = funcionario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,7 +104,7 @@ export default function FuncionariosPage() {
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button className="bg-gradient-primary hover:bg-primary-hover">
+          <Button className="bg-gradient-primary hover:bg-primary-hover" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Funcionário
           </Button>
@@ -260,6 +262,17 @@ export default function FuncionariosPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal para adicionar funcionário */}
+      <AddFuncionarioModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        onSuccess={() => {
+          // Aqui você pode recarregar a lista de funcionários
+          // Por enquanto, apenas fechamos o modal
+          setIsAddModalOpen(false);
+        }}
+      />
     </div>
   );
 }

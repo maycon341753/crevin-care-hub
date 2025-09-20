@@ -7,13 +7,103 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
   public: {
     Tables: {
+      departamentos: {
+        Row: {
+          id: string
+          nome: string
+          descricao: string | null
+          ativo: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          descricao?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          descricao?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      funcionarios: {
+        Row: {
+          id: string
+          nome: string
+          cpf: string
+          rg: string | null
+          telefone: string | null
+          email: string | null
+          endereco: string | null
+          cargo: string
+          departamento_id: string
+          salario: number | null
+          data_admissao: string
+          data_demissao: string | null
+          status: "ativo" | "inativo" | "ferias" | "afastado"
+          observacoes: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          cpf: string
+          rg?: string | null
+          telefone?: string | null
+          email?: string | null
+          endereco?: string | null
+          cargo: string
+          departamento_id: string
+          salario?: number | null
+          data_admissao: string
+          data_demissao?: string | null
+          status?: "ativo" | "inativo" | "ferias" | "afastado"
+          observacoes?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          cpf?: string
+          rg?: string | null
+          telefone?: string | null
+          email?: string | null
+          endereco?: string | null
+          cargo?: string
+          departamento_id?: string
+          salario?: number | null
+          data_admissao?: string
+          data_demissao?: string | null
+          status?: "ativo" | "inativo" | "ferias" | "afastado"
+          observacoes?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
