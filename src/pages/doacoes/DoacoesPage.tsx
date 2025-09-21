@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Search, Download, Receipt, HandHeart, DollarSign, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,66 +13,53 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Mock data
-const doacoesDinheiro = [
-  {
-    id: 1,
-    protocolo: "001-2025",
-    doador: "Maria Santos",
-    cpf: "123.456.789-01",
-    valor: 500,
-    tipo: "PIX",
-    data: "2025-01-15",
-    telefone: "(61) 99999-1111",
-  },
-  {
-    id: 2,
-    protocolo: "002-2025",
-    doador: "João Silva",
-    cpf: "234.567.890-12",
-    valor: 1000,
-    tipo: "Cartão",
-    data: "2025-01-14",
-    telefone: "(61) 99999-2222",
-  },
-  {
-    id: 3,
-    protocolo: "003-2025",
-    doador: "Ana Costa",
-    cpf: "345.678.901-23",
-    valor: 250,
-    tipo: "Dinheiro",
-    data: "2025-01-13",
-    telefone: "(61) 99999-3333",
-  },
-];
-
-const doacoesItens = [
-  {
-    id: 1,
-    protocolo: "016092025",
-    doador: "Carlos Oliveira",
-    cpf: "456.789.012-34",
-    item: "Fraldas Geriátricas",
-    quantidade: "50 unidades",
-    data: "2025-01-15",
-    telefone: "(61) 99999-4444",
-  },
-  {
-    id: 2,
-    protocolo: "017092025",
-    doador: "Lucia Ferreira",
-    cpf: "567.890.123-45",
-    item: "Medicamentos",
-    quantidade: "2kg",
-    data: "2025-01-14",
-    telefone: "(61) 99999-5555",
-  },
-];
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DoacoesPage() {
+  const [doacoesDinheiro, setDoacoesDinheiro] = useState<any[]>([]);
+  const [doacoesItens, setDoacoesItens] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  const fetchDoacoes = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Buscar doações em dinheiro
+      const { data: dinheiroData, error: dinheiroError } = await supabase
+        .from('doacoes_dinheiro')
+        .select('*')
+        .order('data_doacao', { ascending: false });
+
+      if (dinheiroError) throw dinheiroError;
+
+      // Buscar doações de itens
+      const { data: itensData, error: itensError } = await supabase
+        .from('doacoes_itens')
+        .select('*')
+        .order('data_doacao', { ascending: false });
+
+      if (itensError) throw itensError;
+
+      setDoacoesDinheiro(dinheiroData || []);
+      setDoacoesItens(itensData || []);
+    } catch (error) {
+      console.error('Erro ao carregar doações:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as doações.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchDoacoes();
+  }, [fetchDoacoes]);
   
   const getTipoBadge = (tipo: string) => {
     const colors = {
@@ -85,6 +72,14 @@ export default function DoacoesPage() {
 
   const totalDoacoesDinheiro = doacoesDinheiro.reduce((acc, doacao) => acc + doacao.valor, 0);
   const totalDoacoesItens = doacoesItens.length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -205,21 +200,29 @@ export default function DoacoesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {doacoesDinheiro.map((doacao) => (
+                    {doacoesDinheiro.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Nenhuma doação em dinheiro cadastrada.</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      doacoesDinheiro.map((doacao) => (
                       <TableRow key={doacao.id}>
                         <TableCell className="font-mono">{doacao.protocolo}</TableCell>
-                        <TableCell className="font-medium">{doacao.doador}</TableCell>
-                        <TableCell>{doacao.cpf}</TableCell>
+                        <TableCell className="font-medium">{doacao.doador_nome}</TableCell>
+                        <TableCell>{doacao.doador_cpf}</TableCell>
                         <TableCell className="font-semibold text-success">
-                          R$ {doacao.valor.toLocaleString()}
+                          R$ {doacao.valor?.toLocaleString() || '0'}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getTipoBadge(doacao.tipo)}>
-                            {doacao.tipo}
+                          <Badge className={getTipoBadge(doacao.tipo_pagamento)}>
+                            {doacao.tipo_pagamento}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {new Date(doacao.data).toLocaleDateString('pt-BR')}
+                          {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm">
@@ -228,7 +231,8 @@ export default function DoacoesPage() {
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -261,17 +265,25 @@ export default function DoacoesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {doacoesItens.map((doacao) => (
+                    {doacoesItens.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Nenhuma doação de itens cadastrada.</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      doacoesItens.map((doacao) => (
                       <TableRow key={doacao.id}>
                         <TableCell className="font-mono">{doacao.protocolo}</TableCell>
-                        <TableCell className="font-medium">{doacao.doador}</TableCell>
-                        <TableCell>{doacao.cpf}</TableCell>
-                        <TableCell>{doacao.item}</TableCell>
+                        <TableCell className="font-medium">{doacao.doador_nome}</TableCell>
+                        <TableCell>{doacao.doador_cpf}</TableCell>
+                        <TableCell>{doacao.item_nome}</TableCell>
                         <TableCell className="font-semibold text-secondary">
                           {doacao.quantidade}
                         </TableCell>
                         <TableCell>
-                          {new Date(doacao.data).toLocaleDateString('pt-BR')}
+                          {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm">
@@ -280,7 +292,8 @@ export default function DoacoesPage() {
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                    )}
                   </TableBody>
                 </Table>
               </div>

@@ -210,7 +210,10 @@ export default function DepartamentosPage() {
                 {filteredDepartamentos.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? "Nenhum departamento encontrado." : "Nenhum departamento cadastrado."}
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>
+                        {searchTerm ? "Nenhum departamento encontrado." : "Nenhum departamento cadastrado."}
+                      </p>
                     </TableCell>
                   </TableRow>
                 ) : (

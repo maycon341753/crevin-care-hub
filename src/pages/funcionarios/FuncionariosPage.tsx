@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Search, Filter, Download, Eye, Edit, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Search, Filter, Download, Eye, Edit, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,76 +19,56 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddFuncionarioModal } from "@/components/funcionarios/AddFuncionarioModal";
+import { ViewFuncionarioModal } from "@/components/funcionarios/ViewFuncionarioModal";
+import { EditFuncionarioModal } from "@/components/funcionarios/EditFuncionarioModal";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Funcionario } from "@/types";
 
-// Mock data - será substituído por dados reais do banco
-const funcionarios: Funcionario[] = [
-  {
-    id: "1",
-    nome: "Maria Silva",
-    cpf: "123.456.789-01",
-    telefone: "(61) 99999-1111",
-    email: "maria.silva@crevin.com",
-    cargo: "Técnica de Enfermagem",
-    departamento_id: "dept-1",
-    salario: 3500,
-    data_admissao: "2023-02-15",
-    status: "ativo",
-    created_at: "2023-02-15T00:00:00Z",
-    updated_at: "2023-02-15T00:00:00Z",
-    created_by: "user-1"
-  },
-  {
-    id: "2",
-    nome: "João Santos",
-    cpf: "234.567.890-12",
-    telefone: "(61) 99999-2222",
-    email: "joao.santos@crevin.com",
-    cargo: "Cuidador",
-    departamento_id: "dept-2",
-    salario: 2800,
-    data_admissao: "2023-05-10",
-    status: "ativo",
-    created_at: "2023-05-10T00:00:00Z",
-    updated_at: "2023-05-10T00:00:00Z",
-    created_by: "user-1"
-  },
-  {
-    id: "3",
-    nome: "Ana Costa",
-    cpf: "345.678.901-23",
-    telefone: "(61) 99999-3333",
-    email: "ana.costa@crevin.com",
-    cargo: "Nutricionista",
-    departamento_id: "dept-3",
-    salario: 4200,
-    data_admissao: "2022-08-03",
-    status: "ferias",
-    created_at: "2022-08-03T00:00:00Z",
-    updated_at: "2022-08-03T00:00:00Z",
-    created_by: "user-1"
-  },
-  {
-    id: "4",
-    nome: "Carlos Oliveira",
-    cpf: "456.789.012-34",
-    telefone: "(61) 99999-4444",
-    email: "carlos.oliveira@crevin.com",
-    cargo: "Motorista",
-    departamento_id: "dept-4",
-    salario: 2500,
-    data_admissao: "2023-01-20",
-    status: "ativo",
-    created_at: "2023-01-20T00:00:00Z",
-    updated_at: "2023-01-20T00:00:00Z",
-    created_by: "user-1"
-  },
-];
-
 export default function FuncionariosPage() {
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("Todos");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
+  const { toast } = useToast();
+
+  const fetchFuncionarios = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('funcionarios')
+        .select(`
+          *,
+          departamentos (
+            id,
+            nome
+          )
+        `)
+        .order('nome');
+
+      if (error) throw error;
+
+      setFuncionarios(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar funcionários:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os funcionários.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchFuncionarios();
+  }, [fetchFuncionarios]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -120,17 +100,48 @@ export default function FuncionariosPage() {
     }
   };
 
+  const handleModalClose = () => {
+    setIsAddModalOpen(false);
+    setIsViewModalOpen(false);
+    setIsEditModalOpen(false);
+    setSelectedFuncionario(null);
+    fetchFuncionarios();
+  };
+
   // Filtrar funcionários baseado na busca e departamento
+  const handleViewFuncionario = (funcionario: Funcionario) => {
+    setSelectedFuncionario(funcionario);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditFuncionario = (funcionario: Funcionario) => {
+    setSelectedFuncionario(funcionario);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = (updatedFuncionario: Funcionario) => {
+    fetchFuncionarios();
+    console.log("Funcionário atualizado:", updatedFuncionario);
+  };
+
   const filteredFuncionarios = funcionarios.filter((funcionario) => {
     const matchesSearch = funcionario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          funcionario.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          funcionario.cpf.includes(searchTerm);
     
     const matchesDepartment = selectedDepartment === "Todos" || 
-                             funcionario.departamento_id === selectedDepartment; // Será ajustado quando integrar com dados reais
+                             funcionario.departamento_id === selectedDepartment;
     
     return matchesSearch && matchesDepartment;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -163,7 +174,7 @@ export default function FuncionariosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">47</div>
+            <div className="text-2xl font-bold">{funcionarios.length}</div>
           </CardContent>
         </Card>
         <Card className="crevin-card">
@@ -173,7 +184,9 @@ export default function FuncionariosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">43</div>
+            <div className="text-2xl font-bold text-success">
+              {funcionarios.filter(f => f.status === 'ativo').length}
+            </div>
           </CardContent>
         </Card>
         <Card className="crevin-card">
@@ -183,7 +196,9 @@ export default function FuncionariosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">3</div>
+            <div className="text-2xl font-bold text-warning">
+              {funcionarios.filter(f => f.status === 'ferias').length}
+            </div>
           </CardContent>
         </Card>
         <Card className="crevin-card">
@@ -193,7 +208,9 @@ export default function FuncionariosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 164.700</div>
+            <div className="text-2xl font-bold">
+              R$ {funcionarios.reduce((total, f) => total + (f.salario || 0), 0).toLocaleString('pt-BR')}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -261,17 +278,29 @@ export default function FuncionariosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFuncionarios.map((funcionario) => (
+                {filteredFuncionarios.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>
+                        {searchTerm || selectedDepartment !== "Todos" 
+                          ? "Nenhum funcionário encontrado com os filtros aplicados." 
+                          : "Nenhum funcionário cadastrado."}
+                      </p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredFuncionarios.map((funcionario) => (
                   <TableRow key={funcionario.id}>
                     <TableCell className="font-medium">{funcionario.nome}</TableCell>
                     <TableCell>{funcionario.cargo}</TableCell>
-                    <TableCell>Departamento</TableCell> {/* Será substituído por lookup real */}
+                    <TableCell>{funcionario.departamentos?.nome || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge className={getStatusBadge(funcionario.status)}>
                         {getStatusLabel(funcionario.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>R$ {funcionario.salario.toLocaleString()}</TableCell>
+                    <TableCell>R$ {funcionario.salario?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
                       {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
                     </TableCell>
@@ -283,11 +312,11 @@ export default function FuncionariosPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewFuncionario(funcionario)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Visualizar
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditFuncionario(funcionario)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
@@ -299,7 +328,8 @@ export default function FuncionariosPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -310,11 +340,22 @@ export default function FuncionariosPage() {
       <AddFuncionarioModal
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
-        onSuccess={() => {
-          // Aqui você pode recarregar a lista de funcionários
-          // Por enquanto, apenas fechamos o modal
-          setIsAddModalOpen(false);
-        }}
+        onSuccess={handleModalClose}
+      />
+
+      {/* Modal para visualizar funcionário */}
+      <ViewFuncionarioModal
+        open={isViewModalOpen}
+        onOpenChange={setIsViewModalOpen}
+        funcionario={selectedFuncionario}
+      />
+
+      {/* Modal para editar funcionário */}
+      <EditFuncionarioModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        funcionario={selectedFuncionario}
+        onSuccess={handleModalClose}
       />
     </div>
   );
