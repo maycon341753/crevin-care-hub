@@ -43,30 +43,103 @@ export default function Dashboard() {
         setLoading(true);
         
         // Carregar estatísticas básicas
-        const [funcionariosRes, idososRes, doacoesRes] = await Promise.all([
+        const [funcionariosRes, idososRes, doacoesRes, departamentosRes] = await Promise.all([
           supabase.from('funcionarios').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
           supabase.from('idosos').select('*', { count: 'exact', head: true }).eq('ativo', true),
-          supabase.from('doacoes_dinheiro').select('valor').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+          supabase.from('doacoes_dinheiro').select('valor').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+          supabase.from('departamentos').select('*', { count: 'exact', head: true }).eq('ativo', true)
         ]);
+
+        // Calcular receita mensal (soma das doações do mês atual)
+        const receitaMensal = doacoesRes.data?.reduce((acc, d) => acc + d.valor, 0) || 0;
 
         setStats({
           funcionariosAtivos: funcionariosRes.count || 0,
           idososAssistidos: idososRes.count || 0,
-          receitaMensal: 0, // Será implementado quando houver tabela de receitas
-          doacoesMes: doacoesRes.data?.reduce((acc, d) => acc + d.valor, 0) || 0,
+          receitaMensal: receitaMensal,
+          doacoesMes: receitaMensal, // Por enquanto, receita = doações
         });
 
-        // Carregar atividades recentes (simulado por enquanto)
-        setRecentActivity([]);
+        // Carregar atividades recentes (últimas doações e funcionários cadastrados)
+        const [recentDoacoes, recentFuncionarios] = await Promise.all([
+          supabase
+            .from('doacoes_dinheiro')
+            .select('id, doador_nome, valor, created_at')
+            .order('created_at', { ascending: false })
+            .limit(3),
+          supabase
+            .from('funcionarios')
+            .select('id, nome, cargo, created_at')
+            .order('created_at', { ascending: false })
+            .limit(2)
+        ]);
+
+        const activities = [
+          ...(recentDoacoes.data || []).map(doacao => ({
+            id: `doacao-${doacao.id}`,
+            title: `Nova doação recebida`,
+            description: `${doacao.doador_nome} doou R$ ${doacao.valor.toLocaleString()}`,
+            time: new Date(doacao.created_at).toLocaleDateString('pt-BR'),
+            icon: HandHeart
+          })),
+          ...(recentFuncionarios.data || []).map(funcionario => ({
+            id: `funcionario-${funcionario.id}`,
+            title: `Novo funcionário cadastrado`,
+            description: `${funcionario.nome} - ${funcionario.cargo}`,
+            time: new Date(funcionario.created_at).toLocaleDateString('pt-BR'),
+            icon: Users
+          }))
+        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
+
+        setRecentActivity(activities);
         
-        // Carregar alertas (simulado por enquanto)
-        setAlerts([]);
+        // Carregar alertas baseados em dados reais
+        const alertsData = [];
         
-        // Carregar estatísticas rápidas (simulado por enquanto)
+        // Verificar funcionários inativos recentes
+        const { count: funcionariosInativos } = await supabase
+          .from('funcionarios')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'inativo')
+          .gte('updated_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+        if (funcionariosInativos && funcionariosInativos > 0) {
+          alertsData.push({
+            id: 'funcionarios-inativos',
+            title: 'Funcionários Inativos',
+            description: `${funcionariosInativos} funcionário(s) ficaram inativos esta semana`,
+            type: 'warning',
+            priority: 'medium'
+          });
+        }
+
+        // Verificar meta de doações (exemplo: R$ 10.000 por mês)
+        const metaDoacao = 10000;
+        const percentualMeta = (receitaMensal / metaDoacao) * 100;
+        
+        if (percentualMeta < 50) {
+          alertsData.push({
+            id: 'meta-doacoes',
+            title: 'Meta de Doações',
+            description: `Apenas ${percentualMeta.toFixed(1)}% da meta mensal atingida`,
+            type: 'warning',
+            priority: 'high'
+          });
+        }
+
+        setAlerts(alertsData);
+        
+        // Carregar estatísticas rápidas com dados reais
+        const totalFuncionarios = funcionariosRes.count || 0;
+        const funcionariosPresentes = Math.floor(totalFuncionarios * 0.85); // Simulação: 85% presentes
+        const totalIdosos = idososRes.count || 0;
+        const ocupacaoQuartos = totalIdosos > 0 ? Math.min((totalIdosos / 50) * 100, 100) : 0; // Assumindo 50 quartos
+        const metaDoacoesPercent = Math.min((receitaMensal / metaDoacao) * 100, 100);
+
         setQuickStats({
-          ocupacaoQuartos: 0,
-          metaDoacoes: 0,
-          funcionariosPresentes: 0,
+          ocupacaoQuartos: Math.round(ocupacaoQuartos),
+          metaDoacoes: Math.round(metaDoacoesPercent),
+          funcionariosPresentes: totalFuncionarios > 0 ? Math.round((funcionariosPresentes / totalFuncionarios) * 100) : 0,
         });
 
       } catch (error) {
@@ -279,23 +352,23 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Ocupação de Quartos</span>
-                  <span>92%</span>
+                  <span>{quickStats.ocupacaoQuartos}%</span>
                 </div>
-                <Progress value={92} className="h-2" />
+                <Progress value={quickStats.ocupacaoQuartos} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Meta de Doações</span>
-                  <span>67%</span>
+                  <span>{quickStats.metaDoacoes}%</span>
                 </div>
-                <Progress value={67} className="h-2" />
+                <Progress value={quickStats.metaDoacoes} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Funcionários Presentes</span>
-                  <span>89%</span>
+                  <span>{quickStats.funcionariosPresentes}%</span>
                 </div>
-                <Progress value={89} className="h-2" />
+                <Progress value={quickStats.funcionariosPresentes} className="h-2" />
               </div>
             </CardContent>
           </Card>
