@@ -144,89 +144,84 @@ export default function FuncionariosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Funcionários</h1>
-          <p className="text-muted-foreground">
-            Gerencie funcionários e colaboradores da CREVIN
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Funcionários</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Gerencie os funcionários da instituição
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button className="bg-gradient-primary hover:bg-primary-hover" onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <Button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
             Novo Funcionário
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="crevin-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Funcionários
-            </CardTitle>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Funcionários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{funcionarios.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{funcionarios.length}</div>
           </CardContent>
         </Card>
-        <Card className="crevin-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Funcionários Ativos
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ativos</CardTitle>
+            <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {funcionarios.filter(f => f.status === 'ativo').length}
             </div>
           </CardContent>
         </Card>
-        <Card className="crevin-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Em Férias
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Em Férias</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {funcionarios.filter(f => f.status === 'ferias').length}
             </div>
           </CardContent>
         </Card>
-        <Card className="crevin-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Folha Salarial
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Afastados</CardTitle>
+            <Users className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {funcionarios.reduce((total, f) => total + (f.salario || 0), 0).toLocaleString('pt-BR')}
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600">
+              {funcionarios.filter(f => f.status === 'afastado').length}
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters and Search */}
-      <Card className="crevin-card">
-        <CardHeader>
-          <CardTitle>Lista de Funcionários</CardTitle>
-          <CardDescription>
+      <Card>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-lg sm:text-xl">Lista de Funcionários</CardTitle>
+          <CardDescription className="text-sm">
             Visualize e gerencie todos os funcionários cadastrados
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-            <div className="flex items-center gap-2 flex-1">
-              <div className="relative flex-1 max-w-sm">
+        <CardContent className="px-4 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2 flex-1">
+              <div className="relative flex-1 max-w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar funcionário..."
@@ -237,12 +232,14 @@ export default function FuncionariosPage() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    {selectedDepartment}
+                  <Button variant="outline" className="w-full sm:w-auto justify-between">
+                    <div className="flex items-center">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <span className="truncate">{selectedDepartment}</span>
+                    </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem onClick={() => setSelectedDepartment("Todos")}>
                     Todos os Departamentos
                   </DropdownMenuItem>
@@ -264,17 +261,17 @@ export default function FuncionariosPage() {
           </div>
 
           {/* Table */}
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Departamento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Salário</TableHead>
-                  <TableHead>Admissão</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="min-w-[120px]">Nome</TableHead>
+                  <TableHead className="min-w-[100px] hidden sm:table-cell">Cargo</TableHead>
+                  <TableHead className="min-w-[120px] hidden sm:table-cell">Departamento</TableHead>
+                  <TableHead className="min-w-[80px]">Status</TableHead>
+                  <TableHead className="min-w-[100px] hidden md:table-cell">Salário</TableHead>
+                  <TableHead className="min-w-[100px] hidden lg:table-cell">Admissão</TableHead>
+                  <TableHead className="text-right min-w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -282,7 +279,7 @@ export default function FuncionariosPage() {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>
+                      <p className="text-sm">
                         {searchTerm || selectedDepartment !== "Todos" 
                           ? "Nenhum funcionário encontrado com os filtros aplicados." 
                           : "Nenhum funcionário cadastrado."}
@@ -292,26 +289,34 @@ export default function FuncionariosPage() {
                 ) : (
                   filteredFuncionarios.map((funcionario) => (
                   <TableRow key={funcionario.id}>
-                    <TableCell className="font-medium">{funcionario.nome}</TableCell>
-                    <TableCell>{funcionario.cargo}</TableCell>
-                    <TableCell>{funcionario.departamentos?.nome || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{funcionario.nome}</span>
+                        <span className="text-xs text-muted-foreground sm:hidden">
+                          {funcionario.cargo} • {funcionario.departamentos?.nome || 'N/A'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{funcionario.cargo}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{funcionario.departamentos?.nome || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge className={getStatusBadge(funcionario.status)}>
                         {getStatusLabel(funcionario.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>R$ {funcionario.salario?.toLocaleString() || '0'}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">R$ {funcionario.salario?.toLocaleString() || '0'}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
                             •••
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={() => handleViewFuncionario(funcionario)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Visualizar

@@ -143,41 +143,43 @@ export default function NovoFuncionarioPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/funcionarios')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Novo Funcionário</h1>
-          <p className="text-muted-foreground">
-            Cadastre um novo funcionário no sistema
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/funcionarios')}
+            className="w-auto"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Novo Funcionário</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Cadastre um novo funcionário no sistema
+            </p>
+          </div>
         </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Dados Pessoais */}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+          {/* Informações Pessoais */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <User className="h-5 w-5" />
-                Dados Pessoais
+                Informações Pessoais
               </CardTitle>
               <CardDescription>
-                Informações básicas do funcionário
+                Dados pessoais do funcionário
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="nome"
@@ -210,7 +212,9 @@ export default function NovoFuncionarioPage() {
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="rg"
@@ -243,7 +247,9 @@ export default function NovoFuncionarioPage() {
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="email"
@@ -253,7 +259,7 @@ export default function NovoFuncionarioPage() {
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="funcionario@crevin.com.br"
+                          placeholder="email@exemplo.com"
                           {...field}
                         />
                       </FormControl>
@@ -261,41 +267,39 @@ export default function NovoFuncionarioPage() {
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <FormField
-                control={form.control}
-                name="endereco"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Digite o endereço completo"
-                        {...field}
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <div className="sm:col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="endereco"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o endereço completo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Dados Profissionais */}
+          {/* Informações Profissionais */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <Building2 className="h-5 w-5" />
-                Dados Profissionais
+                Informações Profissionais
               </CardTitle>
               <CardDescription>
-                Informações sobre cargo e departamento
+                Dados relacionados ao trabalho
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="cargo"
@@ -303,7 +307,7 @@ export default function NovoFuncionarioPage() {
                     <FormItem>
                       <FormLabel>Cargo *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Técnico de Enfermagem" {...field} />
+                        <Input placeholder="Digite o cargo" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -319,7 +323,7 @@ export default function NovoFuncionarioPage() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o departamento" />
+                            <SelectValue placeholder="Selecione um departamento" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -334,61 +338,26 @@ export default function NovoFuncionarioPage() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="inativo">Inativo</SelectItem>
-                          <SelectItem value="ferias">Férias</SelectItem>
-                          <SelectItem value="afastado">Afastado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Dados Financeiros e Admissionais */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Dados Financeiros e Admissionais
-              </CardTitle>
-              <CardDescription>
-                Informações sobre salário e admissão
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="salario"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Salário (R$)</FormLabel>
+                      <FormLabel>Salário</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            className="pl-10"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -402,7 +371,14 @@ export default function NovoFuncionarioPage() {
                     <FormItem>
                       <FormLabel>Data de Admissão *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="date"
+                            className="pl-10"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -412,15 +388,40 @@ export default function NovoFuncionarioPage() {
 
               <FormField
                 control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                        <SelectItem value="ferias">Férias</SelectItem>
+                        <SelectItem value="afastado">Afastado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="observacoes"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Observações</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Observações adicionais sobre o funcionário"
-                        {...field}
+                        placeholder="Observações adicionais sobre o funcionário..."
+                        className="resize-none"
                         rows={3}
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -431,26 +432,22 @@ export default function NovoFuncionarioPage() {
           </Card>
 
           {/* Botões de Ação */}
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end sm:gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate('/funcionarios')}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Funcionário
-                </>
-              )}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {loading ? 'Salvando...' : 'Salvar Funcionário'}
             </Button>
           </div>
         </form>

@@ -82,21 +82,21 @@ export default function DoacoesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Doações</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Doações</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie doações em dinheiro e itens recebidos pela CREVIN
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Relatório
           </Button>
-          <Button className="bg-gradient-secondary hover:bg-secondary-hover">
+          <Button className="w-full sm:w-auto bg-gradient-secondary hover:bg-secondary-hover">
             <Plus className="h-4 w-4 mr-2" />
             Nova Doação
           </Button>
@@ -104,7 +104,7 @@ export default function DoacoesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="crevin-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -112,7 +112,7 @@ export default function DoacoesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-xl sm:text-2xl font-bold text-success">
               R$ {totalDoacoesDinheiro.toLocaleString()}
             </div>
           </CardContent>
@@ -124,7 +124,7 @@ export default function DoacoesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">{totalDoacoesItens}</div>
+            <div className="text-xl sm:text-2xl font-bold text-secondary">{totalDoacoesItens}</div>
           </CardContent>
         </Card>
         <Card className="crevin-card">
@@ -134,7 +134,7 @@ export default function DoacoesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">127</div>
+            <div className="text-xl sm:text-2xl font-bold">127</div>
           </CardContent>
         </Card>
         <Card className="crevin-card">
@@ -144,7 +144,7 @@ export default function DoacoesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">89</div>
+            <div className="text-xl sm:text-2xl font-bold">89</div>
           </CardContent>
         </Card>
       </div>
@@ -152,7 +152,7 @@ export default function DoacoesPage() {
       {/* Tabs for different types of donations */}
       <Card className="crevin-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <HandHeart className="h-5 w-5 text-secondary" />
             Registro de Doações
           </CardTitle>
@@ -163,13 +163,13 @@ export default function DoacoesPage() {
         <CardContent>
           <Tabs defaultValue="dinheiro" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="dinheiro" className="flex items-center gap-2">
+              <TabsTrigger value="dinheiro" className="flex items-center gap-2 text-xs sm:text-sm">
                 <DollarSign className="h-4 w-4" />
-                Doações em Dinheiro
+                <span className="hidden sm:inline">Doações em</span> Dinheiro
               </TabsTrigger>
-              <TabsTrigger value="itens" className="flex items-center gap-2">
+              <TabsTrigger value="itens" className="flex items-center gap-2 text-xs sm:text-sm">
                 <Package className="h-4 w-4" />
-                Doações de Itens
+                <span className="hidden sm:inline">Doações de</span> Itens
               </TabsTrigger>
             </TabsList>
 
@@ -186,17 +186,17 @@ export default function DoacoesPage() {
                 </div>
               </div>
 
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Protocolo</TableHead>
-                      <TableHead>Doador</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="min-w-[100px]">Protocolo</TableHead>
+                      <TableHead className="min-w-[150px]">Doador</TableHead>
+                      <TableHead className="min-w-[120px] hidden sm:table-cell">CPF</TableHead>
+                      <TableHead className="min-w-[100px]">Valor</TableHead>
+                      <TableHead className="min-w-[80px] hidden md:table-cell">Tipo</TableHead>
+                      <TableHead className="min-w-[100px] hidden sm:table-cell">Data</TableHead>
+                      <TableHead className="text-right min-w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -204,30 +204,35 @@ export default function DoacoesPage() {
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>Nenhuma doação em dinheiro cadastrada.</p>
+                          <p className="text-sm">Nenhuma doação em dinheiro cadastrada.</p>
                         </TableCell>
                       </TableRow>
                     ) : (
                       doacoesDinheiro.map((doacao) => (
                       <TableRow key={doacao.id}>
-                        <TableCell className="font-mono">{doacao.protocolo}</TableCell>
-                        <TableCell className="font-medium">{doacao.doador_nome}</TableCell>
-                        <TableCell>{doacao.doador_cpf}</TableCell>
-                        <TableCell className="font-semibold text-success">
+                        <TableCell className="font-mono text-xs sm:text-sm">{doacao.protocolo}</TableCell>
+                        <TableCell>
+                          <div className="font-medium text-sm">{doacao.doador_nome}</div>
+                          <div className="text-xs text-muted-foreground sm:hidden">
+                            {doacao.doador_cpf}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">{doacao.doador_cpf}</TableCell>
+                        <TableCell className="font-semibold text-success text-sm">
                           R$ {doacao.valor?.toLocaleString() || '0'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge className={getTipoBadge(doacao.tipo_pagamento)}>
                             {doacao.tipo_pagamento}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">
                           {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">
-                            <Receipt className="h-4 w-4 mr-2" />
-                            Recibo
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Recibo</span>
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -251,17 +256,17 @@ export default function DoacoesPage() {
                 </div>
               </div>
 
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Protocolo</TableHead>
-                      <TableHead>Doador</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Quantidade</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="min-w-[100px]">Protocolo</TableHead>
+                      <TableHead className="min-w-[150px]">Doador</TableHead>
+                      <TableHead className="min-w-[120px] hidden sm:table-cell">CPF</TableHead>
+                      <TableHead className="min-w-[120px]">Item</TableHead>
+                      <TableHead className="min-w-[80px] hidden md:table-cell">Quantidade</TableHead>
+                      <TableHead className="min-w-[100px] hidden sm:table-cell">Data</TableHead>
+                      <TableHead className="text-right min-w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -269,26 +274,36 @@ export default function DoacoesPage() {
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>Nenhuma doação de itens cadastrada.</p>
+                          <p className="text-sm">Nenhuma doação de itens cadastrada.</p>
                         </TableCell>
                       </TableRow>
                     ) : (
                       doacoesItens.map((doacao) => (
                       <TableRow key={doacao.id}>
-                        <TableCell className="font-mono">{doacao.protocolo}</TableCell>
-                        <TableCell className="font-medium">{doacao.doador_nome}</TableCell>
-                        <TableCell>{doacao.doador_cpf}</TableCell>
-                        <TableCell>{doacao.item_nome}</TableCell>
-                        <TableCell className="font-semibold text-secondary">
+                        <TableCell className="font-mono text-xs sm:text-sm">{doacao.protocolo}</TableCell>
+                        <TableCell>
+                          <div className="font-medium text-sm">{doacao.doador_nome}</div>
+                          <div className="text-xs text-muted-foreground sm:hidden">
+                            {doacao.doador_cpf}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">{doacao.doador_cpf}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">{doacao.item_nome}</div>
+                          <div className="text-xs text-secondary font-semibold md:hidden">
+                            Qtd: {doacao.quantidade}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell font-semibold text-secondary">
                           {doacao.quantidade}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">
                           {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">
-                            <Receipt className="h-4 w-4 mr-2" />
-                            Guia
+                          <Button variant="outline" size="sm" className="text-xs">
+                            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Guia</span>
                           </Button>
                         </TableCell>
                       </TableRow>

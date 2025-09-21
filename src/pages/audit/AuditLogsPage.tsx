@@ -192,18 +192,84 @@ export default function AuditLogsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Logs de Auditoria</h1>
-          <p className="text-muted-foreground">
-            Visualize todas as ações realizadas no sistema
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Logs de Auditoria</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Monitore todas as ações realizadas no sistema
           </p>
         </div>
-        <Button onClick={() => fetchLogs(currentPage)} variant="outline">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Atualizar
+        <Button 
+          onClick={() => fetchLogs(currentPage)} 
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
+          <RefreshCw className={`h-4 w-4 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Atualizar</span>
         </Button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="crevin-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Logs</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">{logs.length}</div>
+            <p className="text-xs text-muted-foreground">
+              registros encontrados
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="crevin-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {new Set(logs.map(log => log.user_id)).size}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              usuários únicos
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="crevin-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Operações</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {new Set(logs.map(log => log.operation)).size}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              tipos diferentes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="crevin-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Período</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {totalPages}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              páginas de dados
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filtros */}
@@ -312,12 +378,12 @@ export default function AuditLogsPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button onClick={applyFilters}>
+          <div className="flex flex-col gap-2 sm:flex-row mt-4">
+            <Button onClick={applyFilters} className="w-full sm:w-auto">
               <Search className="mr-2 h-4 w-4" />
               Aplicar Filtros
             </Button>
-            <Button variant="outline" onClick={clearFilters}>
+            <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
               Limpar Filtros
             </Button>
           </div>
@@ -342,56 +408,62 @@ export default function AuditLogsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data/Hora</TableHead>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Ação</TableHead>
-                      <TableHead>Tabela</TableHead>
-                      <TableHead>Registro ID</TableHead>
-                      <TableHead>IP</TableHead>
+                      <TableHead className="min-w-[140px]">Data/Hora</TableHead>
+                      <TableHead className="min-w-[150px]">Usuário</TableHead>
+                      <TableHead className="min-w-[80px]">Ação</TableHead>
+                      <TableHead className="min-w-[100px] hidden sm:table-cell">Tabela</TableHead>
+                      <TableHead className="min-w-[100px] hidden md:table-cell">Registro ID</TableHead>
+                      <TableHead className="min-w-[100px] hidden lg:table-cell">IP</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {logs.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          Nenhum log encontrado
+                          <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">Nenhum log encontrado</p>
                         </TableCell>
                       </TableRow>
                     ) : (
                       logs.map((log) => (
                         <TableRow key={log.id}>
-                          <TableCell className="font-mono text-sm">
-                            {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                          <TableCell className="font-mono text-xs sm:text-sm">
+                            <div className="whitespace-nowrap">
+                              {format(new Date(log.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(log.created_at), 'HH:mm:ss', { locale: ptBR })}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <div className="font-medium">
+                              <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                              <div className="min-w-0">
+                                <div className="font-medium text-xs sm:text-sm truncate">
                                   {log.profiles?.full_name || 'Usuário não encontrado'}
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  ID: {log.user_id}
+                                <div className="text-xs text-muted-foreground sm:hidden">
+                                  {log.table_name}
                                 </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getActionBadgeVariant(log.operation)}>
-                            {log.operation}
-                          </Badge>
+                            <Badge variant={getActionBadgeVariant(log.operation)} className="text-xs">
+                              {log.operation}
+                            </Badge>
                           </TableCell>
-                          <TableCell className="font-mono">
+                          <TableCell className="font-mono text-sm hidden sm:table-cell">
                             {log.table_name}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
+                          <TableCell className="font-mono text-xs hidden md:table-cell">
                             {log.record_id || 'N/A'}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
+                          <TableCell className="font-mono text-xs hidden lg:table-cell">
                             {log.ip_address || 'N/A'}
                           </TableCell>
                         </TableRow>
@@ -403,16 +475,17 @@ export default function AuditLogsPage() {
 
               {/* Paginação */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-muted-foreground text-center sm:text-left">
                     Página {currentPage} de {totalPages}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-center sm:justify-end">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => fetchLogs(currentPage - 1)}
                       disabled={currentPage === 1}
+                      className="flex-1 sm:flex-none"
                     >
                       Anterior
                     </Button>
@@ -421,6 +494,7 @@ export default function AuditLogsPage() {
                       size="sm"
                       onClick={() => fetchLogs(currentPage + 1)}
                       disabled={currentPage === totalPages}
+                      className="flex-1 sm:flex-none"
                     >
                       Próxima
                     </Button>

@@ -112,28 +112,28 @@ export default function IdososPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Idosos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Idosos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie o cadastro dos idosos atendidos pela instituição
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Idoso
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Idosos</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{idosos.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{idosos.length}</div>
           </CardContent>
         </Card>
         
@@ -143,7 +143,7 @@ export default function IdososPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl sm:text-2xl font-bold">
               {idosos.filter(i => i.ativo).length}
             </div>
           </CardContent>
@@ -197,17 +197,17 @@ export default function IdososPage() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Idade</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Quarto/Ala</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="min-w-[150px]">Nome</TableHead>
+                  <TableHead className="hidden sm:table-cell min-w-[120px]">CPF</TableHead>
+                  <TableHead className="min-w-[80px]">Idade</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[120px]">Telefone</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[150px]">Quarto/Ala</TableHead>
+                  <TableHead className="min-w-[80px]">Status</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,18 +221,23 @@ export default function IdososPage() {
                   filteredIdosos.map((idoso) => (
                     <TableRow key={idoso.id}>
                       <TableCell className="font-medium">
-                        {idoso.nome}
+                        <div className="flex flex-col">
+                          <span>{idoso.nome}</span>
+                          <span className="text-xs text-muted-foreground sm:hidden">
+                            {formatCPF(idoso.cpf)}
+                          </span>
+                        </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {formatCPF(idoso.cpf)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {calculateAge(idoso.data_nascimento)} anos
+                          <span className="text-sm">{calculateAge(idoso.data_nascimento)}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {idoso.telefone ? (
                           <div className="flex items-center gap-1">
                             <Phone className="h-4 w-4 text-muted-foreground" />
@@ -242,7 +247,7 @@ export default function IdososPage() {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {idoso.endereco ? (
                           <div className="flex items-center gap-1 max-w-[200px]">
                             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -260,7 +265,7 @@ export default function IdososPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="outline"
                             size="sm"

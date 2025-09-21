@@ -30,6 +30,11 @@ export function NovoIdosoPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -77,162 +82,224 @@ export function NovoIdosoPage() {
     }
   };
 
-  const handleCancel = () => {
-    navigate('/idosos');
-  };
-
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCancel}
-            className="flex items-center gap-2"
+            variant="outline"
+            onClick={() => navigate("/idosos")}
+            className="w-fit"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Cadastrar Novo Idoso</h1>
-            <p className="text-muted-foreground">
-              Preencha os dados do idoso para cadastrá-lo no sistema
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">Cadastrar Novo Idoso</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Preencha as informações do idoso para cadastro no sistema
             </p>
           </div>
         </div>
 
-        <Card>
+        {/* Form */}
+        <Card className="crevin-card">
           <CardHeader>
-            <CardTitle>Dados do Idoso</CardTitle>
-            <CardDescription>
-              Campos marcados com * são obrigatórios
+            <CardTitle className="text-lg sm:text-xl">Informações Pessoais</CardTitle>
+            <CardDescription className="text-sm">
+              Dados básicos do idoso para identificação
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome *</Label>
+              {/* Dados Pessoais */}
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label htmlFor="nome" className="text-sm font-medium">
+                    Nome Completo *
+                  </Label>
                   <Input
                     id="nome"
+                    name="nome"
                     value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    onChange={handleInputChange}
+                    placeholder="Digite o nome completo"
                     required
-                    placeholder="Nome completo do idoso"
+                    className="mt-1"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
+                <div>
+                  <Label htmlFor="cpf" className="text-sm font-medium">
+                    CPF *
+                  </Label>
                   <Input
                     id="cpf"
+                    name="cpf"
                     value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                    onChange={handleInputChange}
                     placeholder="000.000.000-00"
                     required
+                    className="mt-1"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="rg">RG</Label>
+                <div>
+                  <Label htmlFor="rg" className="text-sm font-medium">
+                    RG
+                  </Label>
                   <Input
                     id="rg"
+                    name="rg"
                     value={formData.rg || ""}
-                    onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
+                    onChange={handleInputChange}
                     placeholder="Número do RG"
+                    className="mt-1"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
+                <div>
+                  <Label htmlFor="data_nascimento" className="text-sm font-medium">
+                    Data de Nascimento *
+                  </Label>
                   <Input
                     id="data_nascimento"
+                    name="data_nascimento"
                     type="date"
                     value={formData.data_nascimento}
-                    onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                    onChange={handleInputChange}
                     required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="data_admissao">Data de Admissão *</Label>
-                  <Input
-                    id="data_admissao"
-                    type="date"
-                    value={formData.data_admissao}
-                    onChange={(e) => setFormData({ ...formData, data_admissao: e.target.value })}
-                    required
+                    className="mt-1"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
+                <div>
+                  <Label htmlFor="telefone" className="text-sm font-medium">
+                    Telefone
+                  </Label>
                   <Input
                     id="telefone"
+                    name="telefone"
                     value={formData.telefone || ""}
-                    onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                    onChange={handleInputChange}
                     placeholder="(00) 00000-0000"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="data_admissao" className="text-sm font-medium">
+                    Data de Admissão *
+                  </Label>
+                  <Input
+                    id="data_admissao"
+                    name="data_admissao"
+                    type="date"
+                    value={formData.data_admissao}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="endereco">Endereço</Label>
-                <Input
-                  id="endereco"
-                  value={formData.endereco || ""}
-                  onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                  placeholder="Endereço completo"
-                />
+              {/* Endereço */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Endereço</h3>
+                <div className="grid gap-4 sm:gap-6 grid-cols-1">
+                  <div>
+                    <Label htmlFor="endereco" className="text-sm font-medium">
+                      Endereço Completo
+                    </Label>
+                    <Input
+                      id="endereco"
+                      name="endereco"
+                      value={formData.endereco || ""}
+                      onChange={handleInputChange}
+                      placeholder="Rua, número, bairro, cidade - UF"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contato_emergencia">Contato de Emergência</Label>
-                <Input
-                  id="contato_emergencia"
-                  value={formData.contato_emergencia || ""}
-                  onChange={(e) => setFormData({ ...formData, contato_emergencia: e.target.value })}
-                  placeholder="Nome e telefone do contato de emergência"
-                />
+              {/* Contato de Emergência */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Contato de Emergência</h3>
+                <div className="grid gap-4 sm:gap-6 grid-cols-1">
+                  <div>
+                    <Label htmlFor="contato_emergencia" className="text-sm font-medium">
+                      Contato de Emergência
+                    </Label>
+                    <Input
+                      id="contato_emergencia"
+                      name="contato_emergencia"
+                      value={formData.contato_emergencia || ""}
+                      onChange={handleInputChange}
+                      placeholder="Nome e telefone do contato de emergência"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="observacoes_medicas">Observações Médicas</Label>
-                <Textarea
-                  id="observacoes_medicas"
-                  value={formData.observacoes_medicas || ""}
-                  onChange={(e) => setFormData({ ...formData, observacoes_medicas: e.target.value })}
-                  placeholder="Informações médicas relevantes, medicamentos, alergias, etc..."
-                  rows={4}
-                />
+              {/* Observações */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Observações Médicas</h3>
+                <div>
+                  <Label htmlFor="observacoes_medicas" className="text-sm font-medium">
+                    Observações Médicas
+                  </Label>
+                  <Textarea
+                    id="observacoes_medicas"
+                    name="observacoes_medicas"
+                    value={formData.observacoes_medicas || ""}
+                    onChange={handleInputChange}
+                    placeholder="Informações médicas relevantes, medicamentos, alergias, etc..."
+                    rows={4}
+                    className="mt-1 resize-none"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="ativo">Status</Label>
-                <Select
-                  value={formData.ativo ? "true" : "false"}
-                  onValueChange={(value) => setFormData({ ...formData, ativo: value === "true" })}
+              {/* Status */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Status</h3>
+                <div>
+                  <Label htmlFor="ativo" className="text-sm font-medium">
+                    Status do Idoso
+                  </Label>
+                  <Select
+                    value={formData.ativo ? "true" : "false"}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, ativo: value === "true" }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Ativo</SelectItem>
+                      <SelectItem value="false">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/idosos")}
+                  className="w-full sm:w-auto"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Ativo</SelectItem>
-                    <SelectItem value="false">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto sm:ml-auto bg-gradient-primary hover:bg-primary-hover"
+                >
                   {loading ? "Cadastrando..." : "Cadastrar Idoso"}
                 </Button>
               </div>

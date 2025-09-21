@@ -117,28 +117,28 @@ export default function ProfilesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Usuários</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerencie os usuários e perfis de acesso ao sistema
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Usuário
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profiles.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{profiles.length}</div>
           </CardContent>
         </Card>
         
@@ -199,17 +199,17 @@ export default function ProfilesPage() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Departamento</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="min-w-[150px]">Nome</TableHead>
+                  <TableHead className="min-w-[200px] hidden sm:table-cell">Email</TableHead>
+                  <TableHead className="min-w-[120px]">Cargo</TableHead>
+                  <TableHead className="min-w-[120px] hidden md:table-cell">Departamento</TableHead>
+                  <TableHead className="min-w-[120px] hidden lg:table-cell">Telefone</TableHead>
+                  <TableHead className="min-w-[100px] hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="min-w-[120px] text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -223,9 +223,14 @@ export default function ProfilesPage() {
                   filteredProfiles.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
-                        {profile.full_name || "Nome não informado"}
+                        <div>
+                          <div className="font-medium">{profile.full_name || "Nome não informado"}</div>
+                          <div className="text-sm text-muted-foreground sm:hidden">
+                            {profile.user_id}
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-1">
                           <Mail className="h-4 w-4 text-muted-foreground" />
                           {profile.user_id}
@@ -234,32 +239,34 @@ export default function ProfilesPage() {
                       <TableCell>
                         {getRoleBadge(profile.role)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         -
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         -
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                           Ativo
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(profile)}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(profile)}
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         </div>
                       </TableCell>

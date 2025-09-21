@@ -204,12 +204,12 @@ export default function Dashboard() {
     );
   }
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Visão geral do sistema administrativo CREVIN
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (
           <Card key={stat.title} className="crevin-card hover:shadow-lg crevin-transition">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -234,7 +234,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-xl sm:text-2xl font-bold">{stat.value}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {stat.trend === "up" ? (
                   <TrendingUp className="h-3 w-3 text-success" />
@@ -244,23 +244,24 @@ export default function Dashboard() {
                 <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
                   {stat.change}
                 </span>
-                <span>do mês anterior</span>
+                <span className="hidden sm:inline">do mês anterior</span>
+                <span className="sm:hidden">anterior</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         {/* Recent Activity */}
         <div className="lg:col-span-2">
           <Card className="crevin-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <FileText className="h-5 w-5 text-primary" />
                 Atividades Recentes
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Últimas ações realizadas no sistema
               </CardDescription>
             </CardHeader>
@@ -268,7 +269,7 @@ export default function Dashboard() {
               {recentActivity.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Nenhuma atividade recente</p>
+                  <p className="text-sm">Nenhuma atividade recente</p>
                 </div>
               ) : (
                 recentActivity.map((activity) => (
@@ -278,13 +279,13 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                      <p className="text-sm text-muted-foreground break-words">{activity.description}</p>
                       <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
                     </div>
                   </div>
                 ))
               )}
-              <Button variant="outline" className="w-full mt-4">
+              <Button variant="outline" className="w-full mt-4 text-sm">
                 Ver todas as atividades
               </Button>
             </CardContent>
@@ -296,16 +297,16 @@ export default function Dashboard() {
           {/* Alerts */}
           <Card className="crevin-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <AlertCircle className="h-5 w-5 text-warning" />
                 Lembretes & Alertas
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {alerts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Nenhum alerta no momento</p>
+                <div className="text-center py-6 text-muted-foreground">
+                  <AlertCircle className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum alerta no momento</p>
                 </div>
               ) : (
                 alerts.map((alert) => (
@@ -319,10 +320,10 @@ export default function Dashboard() {
                         : "border-l-success bg-success-light"
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1">
                         <p className="font-medium text-sm">{alert.title}</p>
-                        <p className="text-xs text-muted-foreground">{alert.description}</p>
+                        <p className="text-xs text-muted-foreground break-words">{alert.description}</p>
                       </div>
                       <Badge
                         variant={
@@ -332,7 +333,7 @@ export default function Dashboard() {
                             ? "default"
                             : "secondary"
                         }
-                        className="text-xs"
+                        className="text-xs self-start"
                       >
                         {alert.priority === "high" ? "Alto" : alert.priority === "medium" ? "Médio" : "Baixo"}
                       </Badge>
@@ -351,22 +352,22 @@ export default function Dashboard() {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Ocupação de Quartos</span>
-                  <span>{quickStats.ocupacaoQuartos}%</span>
+                  <span className="truncate pr-2">Ocupação de Quartos</span>
+                  <span className="font-medium">{quickStats.ocupacaoQuartos}%</span>
                 </div>
                 <Progress value={quickStats.ocupacaoQuartos} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Meta de Doações</span>
-                  <span>{quickStats.metaDoacoes}%</span>
+                  <span className="truncate pr-2">Meta de Doações</span>
+                  <span className="font-medium">{quickStats.metaDoacoes}%</span>
                 </div>
                 <Progress value={quickStats.metaDoacoes} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Funcionários Presentes</span>
-                  <span>{quickStats.funcionariosPresentes}%</span>
+                  <span className="truncate pr-2">Funcionários Presentes</span>
+                  <span className="font-medium">{quickStats.funcionariosPresentes}%</span>
                 </div>
                 <Progress value={quickStats.funcionariosPresentes} className="h-2" />
               </div>
