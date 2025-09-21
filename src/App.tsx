@@ -19,6 +19,7 @@ import IdososPage from "./pages/idosos/IdososPage";
 import { NovoIdosoPage } from "./pages/idosos/NovoIdosoPage";
 import ProfilesPage from "./pages/profiles/ProfilesPage";
 import AuditLogsPage from "./pages/audit/AuditLogsPage";
+import UsuariosPage from "./pages/admin/UsuariosPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,8 +96,9 @@ const App = () => (
             <Route path="/idosos/novo" element={<ProtectedRoute><NovoIdosoPage /></ProtectedRoute>} />
             <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
-            
-            {/* Placeholder routes for other modules */}
+            <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
+
+            {/* Módulos em desenvolvimento */}
             <Route path="/financeiro" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo Financeiro em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/fornecedores" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Fornecedores em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />

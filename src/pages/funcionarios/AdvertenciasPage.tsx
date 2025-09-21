@@ -7,6 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import AddAdvertenciaModal from "@/components/advertencias/AddAdvertenciaModal";
+import EditAdvertenciaModal from "@/components/advertencias/EditAdvertenciaModal";
+import DeleteAdvertenciaModal from "@/components/advertencias/DeleteAdvertenciaModal";
 
 interface Advertencia {
   id: string;
@@ -26,18 +29,15 @@ interface Advertencia {
     nome: string;
     cargo: string;
   };
-  aplicada_por_user?: {
-    email: string;
-  };
 }
 
 export default function AdvertenciasPage() {
   const [advertencias, setAdvertencias] = useState<Advertencia[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedAdvertencia, setSelectedAdvertencia] = useState<Advertencia | null>(null);
   const { toast } = useToast();
 
@@ -50,8 +50,7 @@ export default function AdvertenciasPage() {
         .from('advertencias')
         .select(`
           *,
-          funcionario:funcionarios(nome, cargo),
-          aplicada_por_user:profiles!advertencias_aplicada_por_fkey(email)
+          funcionario:funcionarios(nome, cargo)
         `)
         .order('data_advertencia', { ascending: false });
 
@@ -74,7 +73,8 @@ export default function AdvertenciasPage() {
     fetchAdvertencias();
   }, [fetchAdvertencias]);
 
-  const filteredAdvertencias = advertencias.filter(adv =>
+  // Filtrar advertências baseado no termo de busca
+  const filteredData = advertencias.filter(adv =>
     adv.funcionario?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     adv.motivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     adv.tipo.toLowerCase().includes(searchTerm.toLowerCase())
@@ -82,20 +82,24 @@ export default function AdvertenciasPage() {
 
   const handleEdit = (advertencia: Advertencia) => {
     setSelectedAdvertencia(advertencia);
-    setShowEditModal(true);
+    setEditModalOpen(true);
   };
 
   const handleDelete = (advertencia: Advertencia) => {
     setSelectedAdvertencia(advertencia);
-    setShowDeleteModal(true);
+    setDeleteModalOpen(true);
   };
 
-  const handleModalClose = () => {
-    setShowAddModal(false);
-    setShowEditModal(false);
-    setShowDeleteModal(false);
+  const handleCloseModals = () => {
+    setAddModalOpen(false);
+    setEditModalOpen(false);
+    setDeleteModalOpen(false);
     setSelectedAdvertencia(null);
+  };
+
+  const handleSuccess = () => {
     fetchAdvertencias();
+    handleCloseModals();
   };
 
   const getTipoBadge = (tipo: string) => {
@@ -171,7 +175,7 @@ export default function AdvertenciasPage() {
             Gerencie as advertências aplicadas aos funcionários
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button onClick={() => setAddModalOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Advertência
         </Button>
@@ -259,14 +263,14 @@ export default function AdvertenciasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAdvertencias.length === 0 ? (
+                {filteredData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Nenhuma advertência encontrada." : "Nenhuma advertência cadastrada."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAdvertencias.map((advertencia) => (
+                  filteredData.map((advertencia) => (
                     <TableRow key={advertencia.id}>
                       <TableCell className="font-medium">
                         <div>
@@ -299,7 +303,7 @@ export default function AdvertenciasPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {advertencia.aplicada_por_user?.email || 'N/A'}
+                        N/A
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -328,42 +332,26 @@ export default function AdvertenciasPage() {
         </CardContent>
       </Card>
 
-      {/* Modais - Serão implementados posteriormente */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Nova Advertência</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento. Modal será implementado em breve.
-            </p>
-            <Button onClick={() => setShowAddModal(false)}>Fechar</Button>
-          </div>
-        </div>
-      )}
+      {/* Modais */}
+      <AddAdvertenciaModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        onSuccess={handleSuccess}
+      />
 
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Editar Advertência</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento. Modal será implementado em breve.
-            </p>
-            <Button onClick={() => setShowEditModal(false)}>Fechar</Button>
-          </div>
-        </div>
-      )}
+      <EditAdvertenciaModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={handleSuccess}
+        advertencia={selectedAdvertencia}
+      />
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-lg font-semibold mb-4">Excluir Advertência</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento. Modal será implementado em breve.
-            </p>
-            <Button onClick={() => setShowDeleteModal(false)}>Fechar</Button>
-          </div>
-        </div>
-      )}
+      <DeleteAdvertenciaModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        onSuccess={handleSuccess}
+        advertencia={selectedAdvertencia}
+      />
     </div>
   );
 }
