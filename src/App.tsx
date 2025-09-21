@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/AuthPage";
 import FuncionariosPage from "./pages/funcionarios/FuncionariosPage";
+import NovoFuncionarioPage from "./pages/funcionarios/NovoFuncionarioPage";
 import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
 import IdososPage from "./pages/idosos/IdososPage";
@@ -80,9 +81,10 @@ const App = () => (
               } 
             />
 
-            {/* Protected routes */}
+            {/* Protected Routes */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/funcionarios" element={<ProtectedRoute><FuncionariosPage /></ProtectedRoute>} />
+            <Route path="/funcionarios/novo" element={<ProtectedRoute><NovoFuncionarioPage /></ProtectedRoute>} />
             <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
             <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/idosos" element={<ProtectedRoute><IdososPage /></ProtectedRoute>} />
