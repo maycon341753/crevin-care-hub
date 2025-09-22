@@ -5,7 +5,7 @@ import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, User, Building2, DollarSign, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, formatPhone } from "@/lib/utils";
+import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,9 @@ const funcionarioSchema = z.object({
   endereco: z.string().optional(),
   cargo: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres"),
   departamento_id: z.string().min(1, "Selecione um departamento"),
-  salario: z.number().min(0, "Salário deve ser maior que zero").optional(),
+  salario: z.string().refine((val) => !val || isValidBrazilianSalary(val), {
+    message: "Formato de salário inválido. Use o formato 1.234,56"
+  }).optional(),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
   status: z.enum(["ativo", "inativo", "ferias", "afastado"]),
   observacoes: z.string().optional(),
@@ -111,7 +113,7 @@ export default function NovoFuncionarioPage() {
           endereco: data.endereco || null,
           cargo: data.cargo,
           departamento_id: data.departamento_id,
-          salario: data.salario || null,
+          salario: data.salario ? parseBrazilianSalary(data.salario) : null,
           data_admissao: data.data_admissao,
           status: data.status,
           observacoes: data.observacoes || null,
@@ -140,6 +142,12 @@ export default function NovoFuncionarioPage() {
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhone(value);
     form.setValue('telefone', formatted);
+  };
+
+  // Formatação automática de salário
+  const handleSalaryChange = (value: string) => {
+    const formatted = formatSalaryInput(value);
+    form.setValue('salario', formatted);
   };
 
   return (
@@ -351,11 +359,13 @@ export default function NovoFuncionarioPage() {
                         <div className="relative">
                           <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
-                            type="number"
-                            placeholder="0.00"
+                            type="text"
+                            placeholder="1.234,56"
                             className="pl-10"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              handleSalaryChange(e.target.value);
+                            }}
                           />
                         </div>
                       </FormControl>

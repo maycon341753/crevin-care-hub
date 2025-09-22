@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Funcionario } from "@/types";
 import { Edit } from "lucide-react";
+import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface EditFuncionarioModalProps {
   open: boolean;
@@ -45,6 +48,49 @@ export function EditFuncionarioModal({
     status: "ativo",
   });
 
+  const [departamentos, setDepartamentos] = useState<Array<{id: string, nome: string}>>([]);
+
+  // Carregar departamentos
+  useEffect(() => {
+    const fetchDepartamentos = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('departamentos')
+          .select('id, nome')
+          .eq('ativo', true)
+          .order('nome');
+        
+        if (error) {
+          console.error('Erro ao carregar departamentos:', error);
+          // Usar departamentos padrão se houver erro
+          setDepartamentos([
+            { id: 'dept-1', nome: 'Enfermagem' },
+            { id: 'dept-2', nome: 'Cuidados' },
+            { id: 'dept-3', nome: 'Nutrição' },
+            { id: 'dept-4', nome: 'Transporte' },
+            { id: 'dept-5', nome: 'Administração' }
+          ]);
+        } else {
+          setDepartamentos(data || []);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar departamentos:', error);
+        // Usar departamentos padrão em caso de erro
+        setDepartamentos([
+          { id: 'dept-1', nome: 'Enfermagem' },
+          { id: 'dept-2', nome: 'Cuidados' },
+          { id: 'dept-3', nome: 'Nutrição' },
+          { id: 'dept-4', nome: 'Transporte' },
+          { id: 'dept-5', nome: 'Administração' }
+        ]);
+      }
+    };
+
+    if (open) {
+      fetchDepartamentos();
+    }
+  }, [open]);
+
   const [isLoading, setIsLoading] = useState(false);
 
   // Preenche o formulário quando o funcionário é selecionado
@@ -57,7 +103,7 @@ export function EditFuncionarioModal({
         email: funcionario.email,
         cargo: funcionario.cargo,
         departamento_id: funcionario.departamento_id,
-        salario: funcionario.salario.toString(),
+        salario: funcionario.salario ? formatSalaryInput(funcionario.salario.toString()) : "",
         data_admissao: funcionario.data_admissao,
         status: funcionario.status,
       });
@@ -65,10 +111,18 @@ export function EditFuncionarioModal({
   }, [funcionario]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field === 'salario') {
+      const formatted = formatSalaryInput(value);
+      setFormData(prev => ({
+        ...prev,
+        [field]: formatted
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,8 +132,24 @@ export function EditFuncionarioModal({
     setIsLoading(true);
 
     try {
-      // Simula uma chamada de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Atualizar funcionário no Supabase
+      const { error } = await supabase
+        .from('funcionarios')
+        .update({
+          nome: formData.nome,
+          cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação do CPF
+          telefone: formData.telefone.replace(/\D/g, ''), // Remove formatação do telefone
+          email: formData.email || null,
+          cargo: formData.cargo,
+          departamento_id: formData.departamento_id || null,
+          salario: formData.salario ? parseBrazilianSalary(formData.salario) : null,
+          data_admissao: formData.data_admissao,
+          status: formData.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', funcionario.id);
+
+      if (error) throw error;
 
       const updatedFuncionario: Funcionario = {
         ...funcionario,
@@ -89,16 +159,18 @@ export function EditFuncionarioModal({
         email: formData.email,
         cargo: formData.cargo,
         departamento_id: formData.departamento_id,
-        salario: parseFloat(formData.salario),
+        salario: formData.salario ? parseBrazilianSalary(formData.salario) : 0,
         data_admissao: formData.data_admissao,
         status: formData.status,
         updated_at: new Date().toISOString(),
       };
 
       onSuccess(updatedFuncionario);
+      toast.success('Funcionário atualizado com sucesso!');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao atualizar funcionário:", error);
+      toast.error(error.message || 'Erro ao atualizar funcionário');
     } finally {
       setIsLoading(false);
     }
@@ -216,15 +288,15 @@ export function EditFuncionarioModal({
                   onValueChange={(value) => handleInputChange("departamento_id", value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o departamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dept-1">Enfermagem</SelectItem>
-                    <SelectItem value="dept-2">Cuidados</SelectItem>
-                    <SelectItem value="dept-3">Nutrição</SelectItem>
-                    <SelectItem value="dept-4">Transporte</SelectItem>
-                    <SelectItem value="dept-5">Administração</SelectItem>
-                  </SelectContent>
+                    <SelectValue placeholder="Selecione um departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departamentos.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                 </Select>
               </div>
 
@@ -232,11 +304,10 @@ export function EditFuncionarioModal({
                 <Label htmlFor="salario">Salário *</Label>
                 <Input
                   id="salario"
-                  type="number"
-                  step="0.01"
+                  type="text"
                   value={formData.salario}
                   onChange={(e) => handleInputChange("salario", e.target.value)}
-                  placeholder="0.00"
+                  placeholder="1.234,56"
                   required
                 />
               </div>

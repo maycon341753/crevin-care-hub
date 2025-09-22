@@ -16,7 +16,12 @@ import AdvertenciasPage from "./pages/funcionarios/AdvertenciasPage";
 import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
 import IdososPage from "./pages/idosos/IdososPage";
+import QuartosPage from "./pages/idosos/QuartosPage";
+import SaudePage from "./pages/idosos/SaudePage";
 import { NovoIdosoPage } from "./pages/idosos/NovoIdosoPage";
+import FinanceiroPage from "./pages/financeiro/FinanceiroPage";
+import ContasPagarPage from "./pages/financeiro/ContasPagarPage";
+import ContasReceberPage from "./pages/financeiro/ContasReceberPage";
 import ProfilesPage from "./pages/profiles/ProfilesPage";
 import AuditLogsPage from "./pages/audit/AuditLogsPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
@@ -94,12 +99,16 @@ const App = () => (
             <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/idosos" element={<ProtectedRoute><IdososPage /></ProtectedRoute>} />
             <Route path="/idosos/novo" element={<ProtectedRoute><NovoIdosoPage /></ProtectedRoute>} />
+            <Route path="/idosos/quartos" element={<ProtectedRoute><QuartosPage /></ProtectedRoute>} />
+            <Route path="/idosos/saude" element={<ProtectedRoute><SaudePage /></ProtectedRoute>} />
             <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
 
-            {/* Módulos em desenvolvimento */}
-            <Route path="/financeiro" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo Financeiro em Desenvolvimento</h1></div></ProtectedRoute>} />
+            {/* Módulos Financeiros */}
+            <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />
+            <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><ContasPagarPage /></ProtectedRoute>} />
+            <Route path="/financeiro/contas-receber" element={<ProtectedRoute><ContasReceberPage /></ProtectedRoute>} />
             <Route path="/fornecedores" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Fornecedores em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Agenda em Desenvolvimento</h1></div></ProtectedRoute>} />
