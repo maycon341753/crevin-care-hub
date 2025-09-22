@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
 import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
+import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 
 interface CategoriaFinanceira {
   id: string;
@@ -206,7 +207,7 @@ const ContasPagarPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              R$ {totalPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalPendente)}
             </div>
           </CardContent>
         </Card>
@@ -218,7 +219,7 @@ const ContasPagarPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              R$ {totalPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalPago)}
             </div>
           </CardContent>
         </Card>
@@ -230,7 +231,7 @@ const ContasPagarPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              R$ {totalVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalVencido)}
             </div>
           </CardContent>
         </Card>
@@ -318,12 +319,12 @@ const ContasPagarPage: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-3 w-3" />
-                        R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {formatBrazilianCurrency(conta.valor)}
                       </div>
                       
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Venc: {format(new Date(conta.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                        Venc: {formatBrazilianDate(conta.data_vencimento)}
                       </div>
                       
                       <div>
@@ -337,7 +338,7 @@ const ContasPagarPage: React.FC = () => {
 
                     {conta.data_pagamento && (
                       <div className="text-sm text-green-600 mt-1">
-                        Pago em: {format(new Date(conta.data_pagamento), 'dd/MM/yyyy', { locale: ptBR })}
+                        Pago em: {formatBrazilianDate(conta.data_pagamento)}
                       </div>
                     )}
                   </div>

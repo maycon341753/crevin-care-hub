@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AddContaReceberModal from '@/components/financeiro/AddContaReceberModal';
 import EditContaReceberModal from '@/components/financeiro/EditContaReceberModal';
+import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 
 interface CategoriaFinanceira {
   id: string;
@@ -192,7 +193,7 @@ const ContasReceberPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              R$ {totalPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalPendente)}
             </div>
           </CardContent>
         </Card>
@@ -204,7 +205,7 @@ const ContasReceberPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              R$ {totalRecebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalRecebido)}
             </div>
           </CardContent>
         </Card>
@@ -216,7 +217,7 @@ const ContasReceberPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              R$ {totalVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalVencido)}
             </div>
           </CardContent>
         </Card>
@@ -228,7 +229,7 @@ const ContasReceberPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {(totalPendente + totalRecebido + totalVencido).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {formatBrazilianCurrency(totalPendente + totalRecebido + totalVencido)}
             </div>
           </CardContent>
         </Card>
@@ -303,12 +304,12 @@ const ContasReceberPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-3 w-3" />
-                        R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {formatBrazilianCurrency(conta.valor)}
                       </div>
                       
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Venc: {format(new Date(conta.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                        Venc: {formatBrazilianDate(conta.data_vencimento)}
                       </div>
                       
                       <div>
@@ -322,7 +323,7 @@ const ContasReceberPage = () => {
 
                     {conta.data_recebimento && (
                       <div className="text-sm text-green-600 mt-1">
-                        Recebido em: {format(new Date(conta.data_recebimento), 'dd/MM/yyyy', { locale: ptBR })}
+                        Recebido em: {formatBrazilianDate(conta.data_recebimento)}
                       </div>
                     )}
                   </div>

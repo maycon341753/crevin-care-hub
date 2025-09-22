@@ -8,8 +8,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Funcionario } from "@/types";
-import { User, Mail, Phone, Calendar, DollarSign, Building, Briefcase } from "lucide-react";
-import { formatBrazilianDate } from "@/lib/utils";
+import { User, Mail, Phone, MapPin, Calendar, DollarSign, Building2, FileText, Clock } from "lucide-react";
+import { formatBrazilianSalary, formatBrazilianDate, formatBrazilianDateTime } from "@/lib/utils";
 
 interface ViewFuncionarioModalProps {
   open: boolean;
@@ -165,16 +165,14 @@ export function ViewFuncionarioModal({
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-500">Data de Criação</label>
                 <span className="text-sm">
-                  {new Date(funcionario.created_at).toLocaleDateString('pt-BR')} às{' '}
-                  {new Date(funcionario.created_at).toLocaleTimeString('pt-BR')}
+                  {formatBrazilianDateTime(funcionario.created_at)}
                 </span>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-500">Última Atualização</label>
                 <span className="text-sm">
-                  {new Date(funcionario.updated_at).toLocaleDateString('pt-BR')} às{' '}
-                  {new Date(funcionario.updated_at).toLocaleTimeString('pt-BR')}
+                  {formatBrazilianDateTime(funcionario.updated_at)}
                 </span>
               </div>
             </div>

@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AddAdvertenciaModal from "@/components/advertencias/AddAdvertenciaModal";
 import EditAdvertenciaModal from "@/components/advertencias/EditAdvertenciaModal";
 import DeleteAdvertenciaModal from "@/components/advertencias/DeleteAdvertenciaModal";
+import { formatBrazilianDate } from "@/lib/utils";
 
 interface Advertencia {
   id: string;
@@ -292,7 +293,7 @@ export default function AdvertenciasPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(advertencia.data_advertencia).toLocaleDateString('pt-BR')}
+                        {formatBrazilianDate(advertencia.data_advertencia)}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusBadge(advertencia.status)}>

@@ -304,7 +304,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="0.00"
+                        placeholder="0,00"
                         step="0.01"
                         min="0"
                         {...field}

@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatBrazilianDate } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -477,13 +478,38 @@ export default function UsuariosPage() {
 
   const getRoleBadge = (role: string) => {
     const roleConfig = {
-      admin: { label: "Administrador", variant: "destructive" as const },
-      developer: { label: "Desenvolvedor", variant: "default" as const },
-      user: { label: "Usuário", variant: "secondary" as const },
+      admin: { 
+        label: "Administrador", 
+        variant: "default" as const, 
+        className: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
+        icon: Shield
+      },
+      developer: { 
+        label: "Desenvolvedor", 
+        variant: "default" as const, 
+        className: "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200",
+        icon: UserCheck
+      },
+      user: { 
+        label: "Usuário", 
+        variant: "secondary" as const, 
+        className: "",
+        icon: Users
+      },
     };
 
     const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const IconComponent = config.icon;
+    
+    return (
+      <Badge 
+        variant={config.variant} 
+        className={`${config.className} flex items-center gap-1`}
+      >
+        <IconComponent className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
   };
 
   const getStatusBadge = (status?: string, active?: boolean) => {
@@ -620,7 +646,7 @@ export default function UsuariosPage() {
                         N/A
                       </TableCell>
                       <TableCell>
-                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                        {formatBrazilianDate(user.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
@@ -662,6 +688,51 @@ export default function UsuariosPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Seção destacada para Administradores */}
+      {users.filter(u => u.role === 'admin' || u.role === 'developer').length > 0 && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <Shield className="h-5 w-5" />
+              Administradores do Sistema
+            </CardTitle>
+            <CardDescription className="text-blue-600">
+              Usuários com privilégios administrativos e de desenvolvimento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {users
+                .filter(u => u.role === 'admin' || u.role === 'developer')
+                .map((admin) => (
+                  <div 
+                    key={admin.id} 
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        {admin.role === 'admin' ? (
+                          <Shield className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <UserCheck className="h-5 w-5 text-purple-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{admin.full_name || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">{admin.email || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getRoleBadge(admin.role)}
+                      {getStatusBadge(admin.status, admin.active)}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modal para adicionar usuário */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>

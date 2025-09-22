@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatCurrencyInput, parseBrazilianCurrency, isValidBrazilianCurrency, formatBrazilianCurrency } from '@/lib/utils';
+import { formatCurrencyInput, parseBrazilianCurrency, isValidBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
 
 interface CategoriaFinanceira {
   id: string;
@@ -70,7 +70,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
     if (isOpen && conta) {
       setFormData({
         descricao: conta.descricao,
-        valor: formatBrazilianCurrency(conta.valor), // Formatar valor para exibição brasileira
+        valor: formatBrazilianCurrencyValue(conta.valor), // Formatar valor para exibição brasileira
         data_vencimento: conta.data_vencimento,
         categoria_id: conta.categoria_id,
         idoso_id: conta.idoso_id || '',
@@ -221,7 +221,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
                 type="text"
                 value={formData.valor}
                 onChange={(e) => handleInputChange('valor', e.target.value)}
-                placeholder="1234,78"
+                placeholder="0,00"
                 required
               />
             </div>

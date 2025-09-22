@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
+import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
   id: string;
@@ -14,18 +16,13 @@ interface CategoriaFinanceira {
   cor: string;
 }
 
-interface Funcionario {
-  id: string;
-  nome: string;
-}
-
 interface ContaPagar {
   id: string;
   descricao: string;
   valor: number;
   data_vencimento: string;
   categoria_id: string;
-  funcionario_id?: string;
+  administrador_id?: string;
   fornecedor_nome?: string;
   fornecedor_cnpj?: string;
   fornecedor_telefone?: string;
@@ -54,7 +51,7 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
     valor: '',
     data_vencimento: '',
     categoria_id: '',
-    funcionario_id: '',
+    administrador_id: '',
     fornecedor_nome: '',
     fornecedor_cnpj: '',
     fornecedor_telefone: '',
@@ -62,17 +59,17 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
     observacoes: '',
     status: 'pendente' as 'pendente' | 'pago' | 'vencido'
   });
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const { administradores, loading: loadingAdmins } = useAdministradores();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && conta) {
       setFormData({
         descricao: conta.descricao,
-        valor: conta.valor.toString(),
+        valor: formatBrazilianCurrencyValue(conta.valor),
         data_vencimento: conta.data_vencimento,
         categoria_id: conta.categoria_id,
-        funcionario_id: conta.funcionario_id || '',
+        administrador_id: conta.administrador_id || '',
         fornecedor_nome: conta.fornecedor_nome || '',
         fornecedor_cnpj: conta.fornecedor_cnpj || '',
         fornecedor_telefone: conta.fornecedor_telefone || '',
@@ -80,24 +77,8 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
         observacoes: conta.observacoes || '',
         status: conta.status
       });
-      fetchFuncionarios();
     }
   }, [isOpen, conta]);
-
-  const fetchFuncionarios = async () => {
-    const { data, error } = await supabase
-      .from('funcionarios')
-      .select('id, nome')
-      .eq('ativo', true)
-      .order('nome');
-
-    if (error) {
-      console.error('Erro ao buscar funcionários:', error);
-      return;
-    }
-
-    setFuncionarios(data || []);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +93,7 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
     try {
       const contaData = {
         ...formData,
-        valor: parseFloat(formData.valor),
+        valor: parseBrazilianCurrency(formData.valor),
         funcionario_id: formData.funcionario_id || null,
         updated_at: new Date().toISOString()
       };
@@ -139,10 +120,19 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // Aplicar formatação especial para o campo valor
+    if (field === 'valor') {
+      const formattedValue = formatCurrencyInput(value);
+      setFormData(prev => ({
+        ...prev,
+        [field]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const marcarComoPago = async () => {
@@ -202,9 +192,7 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
               <Label htmlFor="valor">Valor (R$) *</Label>
               <Input
                 id="valor"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
                 value={formData.valor}
                 onChange={(e) => handleInputChange('valor', e.target.value)}
                 placeholder="0,00"
@@ -213,7 +201,7 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+              <Label htmlFor="data_vencimento">Data de Vencimento (Dia/Mês/Ano) *</Label>
               <Input
                 id="data_vencimento"
                 type="date"
@@ -256,17 +244,18 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="funcionario_id">Funcionário Responsável (opcional)</Label>
+              <Label htmlFor="administrador_id">Administrador Responsável (opcional)</Label>
               <select
-                id="funcionario_id"
-                value={formData.funcionario_id}
-                onChange={(e) => handleInputChange('funcionario_id', e.target.value)}
+                id="administrador_id"
+                value={formData.administrador_id}
+                onChange={(e) => handleInputChange('administrador_id', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loadingAdmins}
               >
-                <option value="">Selecione um funcionário</option>
-                {funcionarios.map((funcionario) => (
-                  <option key={funcionario.id} value={funcionario.id}>
-                    {funcionario.nome}
+                <option value="">Selecione um administrador</option>
+                {administradores.map((admin) => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.nome}
                   </option>
                 ))}
               </select>

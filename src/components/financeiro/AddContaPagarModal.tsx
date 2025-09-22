@@ -6,17 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatCurrencyInput, parseBrazilianCurrency } from '@/lib/utils';
+import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
   id: string;
   nome: string;
   tipo: 'receita' | 'despesa';
   cor: string;
-}
-
-interface Funcionario {
-  id: string;
-  nome: string;
 }
 
 interface AddContaPagarModalProps {
@@ -37,36 +34,33 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
     valor: '',
     data_vencimento: '',
     categoria_id: '',
-    funcionario_id: '',
+    administrador_id: '',
     fornecedor_nome: '',
     fornecedor_cnpj: '',
     fornecedor_telefone: '',
     forma_pagamento: '',
     observacoes: ''
   });
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const { administradores, loading: loadingAdmins } = useAdministradores();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchFuncionarios();
+      // Reset form when modal opens
+      setFormData({
+        descricao: '',
+        valor: '',
+        data_vencimento: '',
+        categoria_id: '',
+        administrador_id: '',
+        fornecedor_nome: '',
+        fornecedor_cnpj: '',
+        fornecedor_telefone: '',
+        forma_pagamento: '',
+        observacoes: ''
+      });
     }
   }, [isOpen]);
-
-  const fetchFuncionarios = async () => {
-    const { data, error } = await supabase
-      .from('funcionarios')
-      .select('id, nome')
-      .eq('ativo', true)
-      .order('nome');
-
-    if (error) {
-      console.error('Erro ao buscar funcionários:', error);
-      return;
-    }
-
-    setFuncionarios(data || []);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +77,7 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
       
       const contaData = {
         ...formData,
-        valor: parseFloat(formData.valor),
+        valor: parseBrazilianCurrency(formData.valor),
         funcionario_id: formData.funcionario_id || null,
         created_by: userData.user?.id || '00000000-0000-0000-0000-000000000000'
       };
@@ -125,10 +119,19 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // Aplicar formatação especial para o campo valor
+    if (field === 'valor') {
+      const formattedValue = formatCurrencyInput(value);
+      setFormData(prev => ({
+        ...prev,
+        [field]: formattedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   return (
@@ -155,9 +158,7 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
               <Label htmlFor="valor">Valor (R$) *</Label>
               <Input
                 id="valor"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
                 value={formData.valor}
                 onChange={(e) => handleInputChange('valor', e.target.value)}
                 placeholder="0,00"
@@ -166,7 +167,7 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+              <Label htmlFor="data_vencimento">Data de Vencimento (Dia/Mês/Ano) *</Label>
               <Input
                 id="data_vencimento"
                 type="date"
@@ -195,17 +196,18 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="funcionario_id">Funcionário Responsável (opcional)</Label>
+              <Label htmlFor="administrador_id">Administrador Responsável (opcional)</Label>
               <select
-                id="funcionario_id"
-                value={formData.funcionario_id}
-                onChange={(e) => handleInputChange('funcionario_id', e.target.value)}
+                id="administrador_id"
+                value={formData.administrador_id}
+                onChange={(e) => handleInputChange('administrador_id', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loadingAdmins}
               >
-                <option value="">Selecione um funcionário</option>
-                {funcionarios.map((funcionario) => (
-                  <option key={funcionario.id} value={funcionario.id}>
-                    {funcionario.nome}
+                <option value="">Selecione um administrador</option>
+                {administradores.map((admin) => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.full_name}
                   </option>
                 ))}
               </select>

@@ -14,9 +14,11 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
 
 // Dados serão carregados do banco de dados
 
@@ -79,14 +81,14 @@ export default function Dashboard() {
             id: `doacao-${doacao.id}`,
             title: `Nova doação recebida`,
             description: `${doacao.doador_nome} doou R$ ${doacao.valor.toLocaleString()}`,
-            time: new Date(doacao.created_at).toLocaleDateString('pt-BR'),
+            time: formatBrazilianDate(doacao.created_at),
             icon: HandHeart
           })),
           ...(recentFuncionarios.data || []).map(funcionario => ({
             id: `funcionario-${funcionario.id}`,
             title: `Novo funcionário cadastrado`,
             description: `${funcionario.nome} - ${funcionario.cargo}`,
-            time: new Date(funcionario.created_at).toLocaleDateString('pt-BR'),
+            time: formatBrazilianDate(funcionario.created_at),
             icon: Users
           }))
         ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);

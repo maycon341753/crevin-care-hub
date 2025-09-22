@@ -19,11 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Filter, Calendar, User, Activity, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Search, Filter, Calendar, User, Activity, RefreshCw, Eye, AlertTriangle, CheckCircle, XCircle, Clock } from "lucide-react";
+import { formatBrazilianDateTime } from "@/lib/utils";
 
 interface AuditLog {
   id: string;
@@ -433,10 +433,7 @@ export default function AuditLogsPage() {
                         <TableRow key={log.id}>
                           <TableCell className="font-mono text-xs sm:text-sm">
                             <div className="whitespace-nowrap">
-                              {format(new Date(log.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {format(new Date(log.created_at), 'HH:mm:ss', { locale: ptBR })}
+                              {formatBrazilianDateTime(log.created_at)}
                             </div>
                           </TableCell>
                           <TableCell>

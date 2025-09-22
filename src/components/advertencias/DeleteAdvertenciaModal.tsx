@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBrazilianDate } from "@/lib/utils";
 
 interface Advertencia {
   id: string;
@@ -122,7 +123,7 @@ export default function DeleteAdvertenciaModal({ open, onOpenChange, onSuccess, 
               <span className="font-medium">Motivo:</span> {advertencia.motivo}
             </div>
             <div>
-              <span className="font-medium">Data:</span> {new Date(advertencia.data_advertencia).toLocaleDateString('pt-BR')}
+              <span className="font-medium">Data:</span> {formatBrazilianDate(advertencia.data_advertencia)}
             </div>
             <div>
               <span className="font-medium">Status:</span> {formatStatus(advertencia.status)}

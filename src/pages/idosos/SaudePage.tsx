@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Edit, Trash2, Search, Heart, Activity, Stethoscope, Calendar } from "lucide-react";
 import { AddSaudeModal } from "@/components/saude/AddSaudeModal";
 import { EditSaudeModal } from "@/components/saude/EditSaudeModal";
+import { formatBrazilianDate } from "@/lib/utils";
 
 interface SaudeIdoso {
   id: string;
@@ -355,7 +356,7 @@ export default function SaudePage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {new Date(registro.data_registro).toLocaleDateString('pt-BR')}
+                          {formatBrazilianDate(registro.data_registro)}
                         </div>
                         {registro.hora_registro && (
                           <div className="text-sm text-gray-500">

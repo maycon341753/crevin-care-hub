@@ -1,20 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Download, Receipt, HandHeart, DollarSign, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { Plus, Search, Edit, Trash2, Heart, DollarSign, Calendar, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AddDoacaoModal } from "@/components/doacoes/AddDoacaoModal";
+import { EditDoacaoModal } from "@/components/doacoes/EditDoacaoModal";
+import { DeleteDoacaoModal } from "@/components/doacoes/DeleteDoacaoModal";
+import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
 
 export default function DoacoesPage() {
   const [doacoesDinheiro, setDoacoesDinheiro] = useState<any[]>([]);
@@ -227,7 +224,7 @@ export default function DoacoesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm">
-                          {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
+                          {formatBrazilianDate(doacao.data_doacao)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm" className="text-xs">
@@ -298,7 +295,7 @@ export default function DoacoesPage() {
                           {doacao.quantidade}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm">
-                          {new Date(doacao.data_doacao).toLocaleDateString('pt-BR')}
+                          {formatBrazilianDate(doacao.data_doacao)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm" className="text-xs">

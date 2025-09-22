@@ -19,12 +19,11 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import AddContaReceberModal from '@/components/financeiro/AddContaReceberModal';
 import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
 import EditContaReceberModal from '@/components/financeiro/EditContaReceberModal';
 import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
+import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 
 interface CategoriaFinanceira {
   id: string;
@@ -224,14 +223,11 @@ const FinanceiroPage: React.FC = () => {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+    return formatBrazilianCurrency(value);
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+    return formatBrazilianDate(dateString);
   };
 
   const filteredContasReceber = contasReceber.filter(conta => {

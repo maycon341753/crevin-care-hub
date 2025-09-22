@@ -20,47 +20,60 @@ export const formatPhone = (value: string) => {
   return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
 };
 
-// Função para formatar valor monetário brasileiro (entrada com vírgula)
+// Função para formatar valor monetário brasileiro com separação automática (1.234,56)
 export const formatCurrencyInput = (value: string): string => {
-  // Remove tudo que não é dígito ou vírgula
-  let numbers = value.replace(/[^\d,]/g, '');
+  // Remove tudo que não é dígito
+  let numbers = value.replace(/\D/g, '');
   
-  // Garante que só há uma vírgula
-  const parts = numbers.split(',');
-  if (parts.length > 2) {
-    numbers = parts[0] + ',' + parts.slice(1).join('');
-  }
+  // Se não há números, retorna 0,00
+  if (!numbers) return '0,00';
   
-  // Limita a 2 casas decimais após a vírgula
-  if (parts.length === 2 && parts[1].length > 2) {
-    numbers = parts[0] + ',' + parts[1].substring(0, 2);
-  }
+  // Converte para centavos (adiciona zeros à esquerda se necessário)
+  numbers = numbers.padStart(3, '0');
   
-  return numbers;
+  // Separa os centavos (últimos 2 dígitos)
+  const centavos = numbers.slice(-2);
+  const reais = numbers.slice(0, -2);
+  
+  // Adiciona separador de milhares na parte dos reais
+  const reaisFormatted = reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  
+  return `${reaisFormatted},${centavos}`;
 };
 
 // Função para converter valor brasileiro (com vírgula) para número
 export const parseBrazilianCurrency = (value: string): number => {
   if (!value) return 0;
   
-  // Remove espaços e substitui vírgula por ponto
-  const cleanValue = value.trim().replace(',', '.');
+  // Remove pontos (separadores de milhares) e substitui vírgula por ponto
+  const cleanValue = value.trim().replace(/\./g, '').replace(',', '.');
   const parsed = parseFloat(cleanValue);
   
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Função para formatar número para exibição brasileira (com vírgula)
+// Função para formatar número para exibição brasileira com R$ (R$ 1.234,56)
 export const formatBrazilianCurrency = (value: number): string => {
-  return value.toFixed(2).replace('.', ',');
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value);
+};
+
+// Função para formatar número para exibição brasileira sem símbolo (1.234,56)
+export const formatBrazilianCurrencyValue = (value: number): string => {
+  return value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 };
 
 // Função para validar formato de moeda brasileira
 export const isValidBrazilianCurrency = (value: string): boolean => {
   if (!value) return true; // Campo vazio é válido
   
-  // Regex para formato brasileiro: números opcionais, vírgula opcional, até 2 dígitos decimais
-  const regex = /^\d+(?:,\d{1,2})?$/;
+  // Regex para formato brasileiro: números com pontos como separadores de milhares e vírgula para decimais
+  const regex = /^\d{1,3}(\.\d{3})*,\d{2}$/;
   return regex.test(value.trim());
 };
 
@@ -140,6 +153,57 @@ export const formatBrazilianDate = (date: string | Date): string => {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
+  });
+};
+
+// Função para formatar data e hora no padrão brasileiro DD/MM/AAAA HH:mm
+export const formatBrazilianDateTime = (date: string | Date): string => {
+  if (!date) return '';
+  
+  let dateObj: Date;
+  
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else {
+    dateObj = date;
+  }
+  
+  // Verifica se a data é válida
+  if (isNaN(dateObj.getTime())) return '';
+  
+  const dateStr = dateObj.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+  
+  const timeStr = dateObj.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  return `${dateStr} ${timeStr}`;
+};
+
+// Função para formatar apenas a hora no padrão brasileiro HH:mm:ss
+export const formatBrazilianTime = (date: string | Date): string => {
+  if (!date) return '';
+  
+  let dateObj: Date;
+  
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else {
+    dateObj = date;
+  }
+  
+  // Verifica se a data é válida
+  if (isNaN(dateObj.getTime())) return '';
+  
+  return dateObj.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   });
 };
 

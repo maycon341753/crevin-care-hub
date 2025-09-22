@@ -338,7 +338,7 @@ export function EditFuncionarioModal({
                   type="text"
                   value={formData.salario}
                   onChange={(e) => handleInputChange("salario", e.target.value)}
-                  placeholder="1.234,56"
+                  placeholder="0,00"
                   required
                 />
               </div>

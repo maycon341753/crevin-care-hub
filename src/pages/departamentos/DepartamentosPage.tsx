@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBrazilianDate } from "@/lib/utils";
 import { Departamento } from "@/types";
 import { AddDepartamentoModal } from "@/components/departamentos/AddDepartamentoModal";
 import { EditDepartamentoModal } from "@/components/departamentos/EditDepartamentoModal";
@@ -242,7 +243,7 @@ export default function DepartamentosPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm">
-                        {new Date(departamento.created_at).toLocaleDateString('pt-BR')}
+                        {formatBrazilianDate(departamento.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1 sm:gap-2">

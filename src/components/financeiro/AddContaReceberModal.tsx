@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrencyInput, parseBrazilianCurrency, isValidBrazilianCurrency } from '@/lib/utils';
+import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
   id: string;
@@ -38,6 +39,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
     valor: '',
     data_vencimento: '',
     categoria_id: '',
+    administrador_id: '',
     idoso_id: '',
     pagador_nome: '',
     pagador_cpf: '',
@@ -46,6 +48,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
     observacoes: ''
   });
   const [idosos, setIdosos] = useState<Idoso[]>([]);
+  const { administradores, loading: loadingAdmins } = useAdministradores();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -174,7 +177,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
                 type="text"
                 value={formData.valor}
                 onChange={(e) => handleInputChange('valor', e.target.value)}
-                placeholder="1234,78"
+                placeholder="0,00"
                 required
               />
             </div>
@@ -203,6 +206,24 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
                 {categorias.map((categoria) => (
                   <option key={categoria.id} value={categoria.id}>
                     {categoria.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="administrador_id">Administrador Responsável (opcional)</Label>
+              <select
+                id="administrador_id"
+                value={formData.administrador_id}
+                onChange={(e) => handleInputChange('administrador_id', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loadingAdmins}
+              >
+                <option value="">Selecione um administrador</option>
+                {administradores.map((admin) => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.nome}
                   </option>
                 ))}
               </select>
