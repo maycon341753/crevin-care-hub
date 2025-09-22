@@ -7,7 +7,7 @@ export default function AuthPage() {
         <LoginForm />
         
         <footer className="mt-8 text-center text-xs text-muted-foreground">
-          <p>© 2024 CREVIN - Conselho Regional de Enfermagem</p>
+          <p>© 2025 CREVIN - Comunidade de Renovação Esperança e Vida Nova</p>
           <p>Sistema Administrativo Interno</p>
         </footer>
       </div>
