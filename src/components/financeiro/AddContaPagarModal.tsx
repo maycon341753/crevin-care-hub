@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrencyInput, parseBrazilianCurrency } from '@/lib/utils';
-import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
   id: string;
@@ -34,14 +34,12 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
     valor: '',
     data_vencimento: '',
     categoria_id: '',
-    administrador_id: '',
     fornecedor_nome: '',
     fornecedor_cnpj: '',
     fornecedor_telefone: '',
     forma_pagamento: '',
     observacoes: ''
   });
-  const { administradores, loading: loadingAdmins } = useAdministradores();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -52,7 +50,6 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
         valor: '',
         data_vencimento: '',
         categoria_id: '',
-        administrador_id: '',
         fornecedor_nome: '',
         fornecedor_cnpj: '',
         fornecedor_telefone: '',
@@ -78,7 +75,6 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
       const contaData = {
         ...formData,
         valor: parseBrazilianCurrency(formData.valor),
-        funcionario_id: formData.funcionario_id || null,
         created_by: userData.user?.id || '00000000-0000-0000-0000-000000000000'
       };
 
@@ -109,7 +105,6 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
       valor: '',
       data_vencimento: '',
       categoria_id: '',
-      funcionario_id: '',
       fornecedor_nome: '',
       fornecedor_cnpj: '',
       fornecedor_telefone: '',
@@ -166,16 +161,13 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
               />
             </div>
 
-            <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento (Dia/Mês/Ano) *</Label>
-              <Input
-                id="data_vencimento"
-                type="date"
-                value={formData.data_vencimento}
-                onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
-                required
-              />
-            </div>
+            <DateInput
+              id="data_vencimento"
+              label="Data de Vencimento"
+              value={formData.data_vencimento}
+              onChange={(value) => handleInputChange('data_vencimento', value)}
+              required
+            />
 
             <div>
               <Label htmlFor="categoria_id">Categoria *</Label>
@@ -190,24 +182,6 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
                 {categorias.map((categoria) => (
                   <option key={categoria.id} value={categoria.id}>
                     {categoria.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="administrador_id">Administrador Responsável (opcional)</Label>
-              <select
-                id="administrador_id"
-                value={formData.administrador_id}
-                onChange={(e) => handleInputChange('administrador_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loadingAdmins}
-              >
-                <option value="">Selecione um administrador</option>
-                {administradores.map((admin) => (
-                  <option key={admin.id} value={admin.id}>
-                    {admin.full_name}
                   </option>
                 ))}
               </select>

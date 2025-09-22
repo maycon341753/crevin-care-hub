@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
@@ -200,16 +201,13 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
               />
             </div>
 
-            <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento (Dia/Mês/Ano) *</Label>
-              <Input
-                id="data_vencimento"
-                type="date"
-                value={formData.data_vencimento}
-                onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
-                required
-              />
-            </div>
+            <DateInput
+              id="data_vencimento"
+              label="Data de Vencimento"
+              value={formData.data_vencimento}
+              onChange={(value) => handleInputChange('data_vencimento', value)}
+              required
+            />
 
             <div>
               <Label htmlFor="categoria_id">Categoria *</Label>
