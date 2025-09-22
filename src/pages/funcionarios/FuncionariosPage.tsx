@@ -24,7 +24,7 @@ import { EditFuncionarioModal } from "@/components/funcionarios/EditFuncionarioM
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Funcionario } from "@/types";
-import { formatBrazilianSalary } from "@/lib/utils";
+import { formatBrazilianSalary, formatBrazilianDate } from "@/lib/utils";
 
 export default function FuncionariosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -336,7 +336,7 @@ export default function FuncionariosPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">R$ {formatBrazilianSalary(funcionario.salario || 0)}</TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
+                      {formatBrazilianDate(funcionario.data_admissao)}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>

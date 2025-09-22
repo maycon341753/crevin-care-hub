@@ -69,7 +69,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       cargo: "",
       departamento_id: "",
       salario: 0,
-      data_admissao: new Date().toISOString().split('T')[0],
+      data_admissao: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
       status: "ativo",
     },
   });
@@ -101,6 +101,26 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
   const onSubmit = async (data: FuncionarioFormData) => {
     setIsLoading(true);
     try {
+      console.log('Dados do formulário:', data);
+      console.log('Data de admissão enviada:', data.data_admissao);
+      
+      // Validação adicional da data de admissão
+      if (!data.data_admissao) {
+        toast.error('Data de admissão é obrigatória');
+        return;
+      }
+
+      // Garantir que a data está no formato correto (YYYY-MM-DD)
+      let dataAdmissaoFormatted = data.data_admissao;
+      if (data.data_admissao.includes('/')) {
+        const parts = data.data_admissao.split('/');
+        if (parts.length === 3) {
+          dataAdmissaoFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+      }
+      
+      console.log('Data de admissão formatada para banco:', dataAdmissaoFormatted);
+
       const { error } = await supabase
         .from('funcionarios')
         .insert([{
@@ -111,7 +131,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
           cargo: data.cargo,
           departamento_id: data.departamento_id,
           salario: data.salario,
-          data_admissao: data.data_admissao,
+          data_admissao: dataAdmissaoFormatted, // Enviando no formato ISO (YYYY-MM-DD)
           status: data.status,
           created_by: user?.id || '',
         }]);
@@ -119,7 +139,17 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       if (error) throw error;
 
       toast.success('Funcionário adicionado com sucesso!');
-      form.reset();
+      form.reset({
+        nome: "",
+        cpf: "",
+        telefone: "",
+        email: "",
+        cargo: "",
+        departamento_id: "",
+        salario: 0,
+        data_admissao: new Date().toISOString().split('T')[0], // Reset com data atual
+        status: "ativo",
+      });
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -294,7 +324,12 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                   <FormItem>
                     <FormLabel>Data de Admissão *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        {...field}
+                        required
+                        max={new Date().toISOString().split('T')[0]} // Não permite datas futuras
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

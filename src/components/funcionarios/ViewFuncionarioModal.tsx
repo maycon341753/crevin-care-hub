@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Funcionario } from "@/types";
 import { User, Mail, Phone, Calendar, DollarSign, Building, Briefcase } from "lucide-react";
+import { formatBrazilianDate } from "@/lib/utils";
 
 interface ViewFuncionarioModalProps {
   open: boolean;
@@ -139,7 +140,7 @@ export function ViewFuncionarioModal({
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span className="text-sm">
-                    {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
+                    {formatBrazilianDate(funcionario.data_admissao)}
                   </span>
                 </div>
               </div>

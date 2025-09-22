@@ -110,9 +110,54 @@ export const formatBrazilianSalary = (value: number): string => {
 
 // Função para validar formato de salário brasileiro
 export const isValidBrazilianSalary = (value: string): boolean => {
-  if (!value) return true; // Campo vazio é válido
+  if (!value) return false;
+  const regex = /^\d{1,3}(\.\d{3})*,\d{2}$/;
+  return regex.test(value);
+};
+
+// Função para formatar data no padrão brasileiro DD/MM/AAAA
+export const formatBrazilianDate = (date: string | Date): string => {
+  if (!date) return '';
   
-  // Regex para formato brasileiro com separador de milhares: 1.234,56 ou 1234,56 ou 1234
-  const regex = /^\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?$/;
-  return regex.test(value.trim());
+  let dateObj: Date;
+  
+  if (typeof date === 'string') {
+    // Se a data está no formato YYYY-MM-DD (sem timezone), trata como data local
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [year, month, day] = date.split('-').map(Number);
+      dateObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-11 para meses
+    } else {
+      dateObj = new Date(date);
+    }
+  } else {
+    dateObj = date;
+  }
+  
+  // Verifica se a data é válida
+  if (isNaN(dateObj.getTime())) return '';
+  
+  return dateObj.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+// Função para converter data do formato DD/MM/AAAA para ISO (AAAA-MM-DD)
+export const parseBrazilianDate = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // Se já está no formato ISO, retorna como está
+  if (dateString.includes('-') && dateString.length === 10) {
+    return dateString;
+  }
+  
+  // Se está no formato DD/MM/AAAA, converte para ISO
+  const parts = dateString.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
+  return dateString;
 };

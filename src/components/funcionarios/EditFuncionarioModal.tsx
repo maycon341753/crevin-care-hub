@@ -96,7 +96,27 @@ export function EditFuncionarioModal({
   // Preenche o formulário quando o funcionário é selecionado
   useEffect(() => {
     if (funcionario) {
-      console.log('Funcionário selecionado:', funcionario); // Debug
+      console.log('Dados do funcionário recebidos:', funcionario);
+      console.log('Data de admissão original:', funcionario.data_admissao);
+      
+      // Garantir que a data esteja no formato correto para o input (YYYY-MM-DD)
+      let dataAdmissaoFormatted = funcionario.data_admissao;
+      if (funcionario.data_admissao) {
+        // Se a data vier no formato ISO com timezone, extrair apenas a parte da data
+        if (funcionario.data_admissao.includes('T')) {
+          dataAdmissaoFormatted = funcionario.data_admissao.split('T')[0];
+        }
+        // Se a data vier no formato DD/MM/AAAA, converter para YYYY-MM-DD
+        else if (funcionario.data_admissao.includes('/')) {
+          const parts = funcionario.data_admissao.split('/');
+          if (parts.length === 3) {
+            dataAdmissaoFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+      }
+      
+      console.log('Data de admissão formatada para input:', dataAdmissaoFormatted);
+      
       setFormData({
         nome: funcionario.nome,
         cpf: funcionario.cpf,
@@ -105,7 +125,7 @@ export function EditFuncionarioModal({
         cargo: funcionario.cargo,
         departamento_id: funcionario.departamento_id || '', // Garantir que não seja undefined
         salario: funcionario.salario ? formatSalaryInput(funcionario.salario.toString()) : "",
-        data_admissao: funcionario.data_admissao,
+        data_admissao: dataAdmissaoFormatted,
         status: funcionario.status,
       });
     }
