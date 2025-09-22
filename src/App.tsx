@@ -104,7 +104,6 @@ const App = () => (
             <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Agenda em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/lembretes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Lembretes em Desenvolvimento</h1></div></ProtectedRoute>} />
-            <Route path="/admin/*" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulos Administrativos em Desenvolvimento</h1></div></ProtectedRoute>} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

@@ -22,7 +22,11 @@ export function useCurrentUserProfile() {
 
   useEffect(() => {
     async function fetchUserProfile() {
+      console.log('🔍 useCurrentUserProfile - Iniciando busca do perfil');
+      console.log('👤 Usuário atual:', user);
+      
       if (!user?.id) {
+        console.log('❌ Nenhum usuário logado');
         setProfile(null);
         setLoading(false);
         return;
@@ -31,6 +35,8 @@ export function useCurrentUserProfile() {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('🔄 Buscando perfil para user_id:', user.id);
 
         const { data, error: profileError } = await supabase
           .from('profiles')
@@ -48,15 +54,18 @@ export function useCurrentUserProfile() {
           .eq('user_id', user.id)
           .single();
 
+        console.log('📊 Resultado da busca:', { data, profileError });
+
         if (profileError) {
-          console.error('Erro ao buscar perfil do usuário:', profileError);
+          console.error('❌ Erro ao buscar perfil do usuário:', profileError);
           setError(profileError.message);
           setProfile(null);
         } else {
+          console.log('✅ Perfil encontrado:', data);
           setProfile(data);
         }
       } catch (err) {
-        console.error('Erro inesperado ao buscar perfil:', err);
+        console.error('❌ Erro inesperado ao buscar perfil:', err);
         setError('Erro inesperado ao carregar perfil do usuário');
         setProfile(null);
       } finally {
@@ -70,6 +79,15 @@ export function useCurrentUserProfile() {
   const isDeveloper = profile?.role === 'developer';
   const isAdmin = profile?.role === 'admin';
   const isUser = profile?.role === 'user';
+
+  console.log('🎯 useCurrentUserProfile - Estado final:', {
+    profile,
+    loading,
+    error,
+    isDeveloper,
+    isAdmin,
+    isUser
+  });
 
   return {
     profile,

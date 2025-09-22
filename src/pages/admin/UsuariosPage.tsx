@@ -83,30 +83,6 @@ export default function UsuariosPage() {
   const { toast } = useToast();
   const { isDeveloper, loading: profileLoading } = useCurrentUserProfile();
 
-  // Se não for developer, não renderizar a página
-  if (profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isDeveloper) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Restrito</h2>
-          <p className="text-gray-600">Esta página é acessível apenas para desenvolvedores.</p>
-        </div>
-      </div>
-    );
-  }
-
   const fetchUsers = useCallback(async () => {
     console.log('🔄 Carregando usuários...');
     setLoading(true);
@@ -150,6 +126,30 @@ export default function UsuariosPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Verificações condicionais APÓS todos os hooks
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isDeveloper) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Restrito</h2>
+          <p className="text-gray-600">Esta página é acessível apenas para desenvolvedores.</p>
+        </div>
+      </div>
+    );
+  }
 
   const filteredUsers = users.filter(user =>
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())

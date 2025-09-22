@@ -111,15 +111,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Verificar se há uma sessão ativa antes de tentar fazer logout
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Se não há sessão, apenas limpar o estado local
+        setSession(null);
+        setUser(null);
+        toast({
+          title: "Logout realizado",
+          description: "Você foi desconectado do sistema.",
+        });
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
       const authError = error as AuthError;
-      toast({
-        variant: "destructive",
-        title: "Erro no logout",
-        description: authError.message,
-      });
+      
+      // Se o erro for relacionado à sessão ausente, apenas limpar o estado
+      if (authError.message.includes('session') || authError.message.includes('missing')) {
+        setSession(null);
+        setUser(null);
+        toast({
+          title: "Logout realizado",
+          description: "Você foi desconectado do sistema.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro no logout",
+          description: authError.message,
+        });
+      }
     } finally {
       setLoading(false);
     }
