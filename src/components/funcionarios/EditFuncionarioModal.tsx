@@ -96,13 +96,14 @@ export function EditFuncionarioModal({
   // Preenche o formulário quando o funcionário é selecionado
   useEffect(() => {
     if (funcionario) {
+      console.log('Funcionário selecionado:', funcionario); // Debug
       setFormData({
         nome: funcionario.nome,
         cpf: funcionario.cpf,
         telefone: funcionario.telefone,
         email: funcionario.email,
         cargo: funcionario.cargo,
-        departamento_id: funcionario.departamento_id,
+        departamento_id: funcionario.departamento_id || '', // Garantir que não seja undefined
         salario: funcionario.salario ? formatSalaryInput(funcionario.salario.toString()) : "",
         data_admissao: funcionario.data_admissao,
         status: funcionario.status,
@@ -129,6 +130,12 @@ export function EditFuncionarioModal({
     e.preventDefault();
     if (!funcionario) return;
 
+    // Validação do departamento_id
+    if (!formData.departamento_id || formData.departamento_id.trim() === '') {
+      toast.error('Por favor, selecione um departamento');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -141,7 +148,7 @@ export function EditFuncionarioModal({
           telefone: formData.telefone.replace(/\D/g, ''), // Remove formatação do telefone
           email: formData.email || null,
           cargo: formData.cargo,
-          departamento_id: formData.departamento_id || null,
+          departamento_id: formData.departamento_id, // Removido o || null
           salario: formData.salario ? parseBrazilianSalary(formData.salario) : null,
           data_admissao: formData.data_admissao,
           status: formData.status,
@@ -285,7 +292,11 @@ export function EditFuncionarioModal({
                 <Label htmlFor="departamento">Departamento *</Label>
                 <Select
                   value={formData.departamento_id}
-                  onValueChange={(value) => handleInputChange("departamento_id", value)}
+                  onValueChange={(value) => {
+                    console.log('Departamento selecionado:', value); // Debug
+                    handleInputChange("departamento_id", value);
+                  }}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um departamento" />

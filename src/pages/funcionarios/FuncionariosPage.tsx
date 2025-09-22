@@ -125,6 +125,35 @@ export default function FuncionariosPage() {
     console.log("Funcionário atualizado:", updatedFuncionario);
   };
 
+  const handleDeleteFuncionario = async (funcionario: Funcionario) => {
+    if (!confirm(`Tem certeza que deseja excluir o funcionário ${funcionario.nome}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('funcionarios')
+        .delete()
+        .eq('id', funcionario.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Funcionário excluído com sucesso.",
+      });
+
+      fetchFuncionarios();
+    } catch (error) {
+      console.error('Erro ao excluir funcionário:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o funcionário.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredFuncionarios = funcionarios.filter((funcionario) => {
     const matchesSearch = funcionario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          funcionario.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -326,7 +355,7 @@ export default function FuncionariosPage() {
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFuncionario(funcionario)}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Excluir
                           </DropdownMenuItem>
