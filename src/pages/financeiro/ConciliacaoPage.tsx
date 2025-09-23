@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 import AddContaBancariaModal from '@/components/financeiro/AddContaBancariaModal';
+import AddMovimentoBancarioModal from '@/components/financeiro/AddMovimentoBancarioModal';
 
 interface MovimentoBancario {
   id: string;
@@ -34,10 +35,16 @@ interface MovimentoBancario {
   valor: number;
   tipo: 'entrada' | 'saida';
   status_conciliacao: 'conciliado' | 'pendente' | 'divergente';
-  conta_bancaria: string;
+  conta_bancaria_id: string;
   documento?: string;
   observacoes?: string;
   created_at: string;
+  conta_bancaria?: {
+    nome: string;
+    banco: string;
+    agencia: string;
+    conta: string;
+  };
 }
 
 interface ContaBancaria {
@@ -69,7 +76,10 @@ const ConciliacaoPage = () => {
     try {
       const { data, error } = await supabase
         .from('movimentos_bancarios')
-        .select('*')
+        .select(`
+          *,
+          conta_bancaria:contas_bancarias(nome, banco, agencia, conta)
+        `)
         .order('data_movimento', { ascending: false });
 
       if (error) throw error;
@@ -168,7 +178,7 @@ const ConciliacaoPage = () => {
     const matchesSearch = movimento.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          movimento.documento?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || movimento.status_conciliacao === statusFilter;
-    const matchesConta = contaFilter === 'todas' || movimento.conta_bancaria === contaFilter;
+    const matchesConta = contaFilter === 'todas' || movimento.conta_bancaria_id === contaFilter;
     const matchesTipo = tipoFilter === 'todos' || movimento.tipo === tipoFilter;
     
     let matchesData = true;
@@ -209,6 +219,7 @@ const ConciliacaoPage = () => {
         </div>
         <div className="flex gap-2">
           <AddContaBancariaModal onContaAdded={fetchData} />
+          <AddMovimentoBancarioModal onMovimentoAdded={fetchData} />
           <Button variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             Importar OFX
@@ -418,7 +429,16 @@ const ConciliacaoPage = () => {
                       </span>
                     </td>
                     <td className="p-2">
-                      {contasBancarias.find(c => c.id === movimento.conta_bancaria)?.nome || 'N/A'}
+                      {movimento.conta_bancaria ? (
+                        <div>
+                          <p className="font-medium">{movimento.conta_bancaria.nome}</p>
+                          <p className="text-sm text-gray-500">
+                            {movimento.conta_bancaria.banco} - Ag: {movimento.conta_bancaria.agencia}, Conta: {movimento.conta_bancaria.conta}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
                     </td>
                     <td className="p-2">{getStatusBadge(movimento.status_conciliacao)}</td>
                     <td className="p-2">

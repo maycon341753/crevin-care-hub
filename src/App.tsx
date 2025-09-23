@@ -23,6 +23,7 @@ import FinanceiroPage from "./pages/financeiro/FinanceiroPage";
 import ContasPagarPage from "./pages/financeiro/ContasPagarPage";
 import ContasReceberPage from "./pages/financeiro/ContasReceberPage";
 import ConciliacaoPage from "./pages/financeiro/ConciliacaoPage";
+import ContasBancariasPage from "./pages/financeiro/ContasBancariasPage";
 import NovoFornecedorPage from "./pages/fornecedores/NovoFornecedorPage";
 import ProfilesPage from "./pages/profiles/ProfilesPage";
 import AuditLogsPage from "./pages/audit/AuditLogsPage";
@@ -111,6 +112,7 @@ const App = () => (
             <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />
             <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><ContasPagarPage /></ProtectedRoute>} />
             <Route path="/financeiro/contas-receber" element={<ProtectedRoute><ContasReceberPage /></ProtectedRoute>} />
+            <Route path="/financeiro/contas-bancarias" element={<ProtectedRoute><ContasBancariasPage /></ProtectedRoute>} />
             <Route path="/financeiro/conciliacao" element={<ProtectedRoute><ConciliacaoPage /></ProtectedRoute>} />
             <Route path="/fornecedores" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Fornecedores em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedorPage /></ProtectedRoute>} />

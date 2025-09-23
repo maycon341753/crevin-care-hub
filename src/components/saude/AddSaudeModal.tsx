@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import DateSeparateInput from "@/components/ui/date-separate-input";
 
 interface Idoso {
   id: string;
@@ -186,16 +187,13 @@ export function AddSaudeModal({ open, onOpenChange, onSuccess }: AddSaudeModalPr
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="data_registro">Data do Registro *</Label>
-              <Input
-                id="data_registro"
-                type="date"
-                value={formData.data_registro}
-                onChange={(e) => setFormData({ ...formData, data_registro: e.target.value })}
-                required
-              />
-            </div>
+            <DateSeparateInput
+              id="data_registro"
+              label="Data do Registro"
+              value={formData.data_registro}
+              onChange={(value) => setFormData({ ...formData, data_registro: value })}
+              required
+            />
 
             <div className="space-y-2">
               <Label htmlFor="hora_registro">Hora do Registro</Label>

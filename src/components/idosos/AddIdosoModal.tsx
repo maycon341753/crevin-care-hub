@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
+import DateSeparateInput from "@/components/ui/date-separate-input";
 
 interface AddIdosoModalProps {
   open: boolean;
@@ -141,30 +142,13 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
-              <Input
-                id="data_nascimento"
-                type="text"
-                value={formData.data_nascimento}
-                onChange={(e) => {
-                  let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-                  
-                  // Aplica a máscara dd/mm/yyyy
-                  if (value.length >= 2) {
-                    value = value.substring(0, 2) + '/' + value.substring(2);
-                  }
-                  if (value.length >= 5) {
-                    value = value.substring(0, 5) + '/' + value.substring(5, 9);
-                  }
-                  
-                  setFormData({ ...formData, data_nascimento: value });
-                }}
-                placeholder="dd/mm/yyyy"
-                maxLength={10}
-                required
-              />
-            </div>
+            <DateSeparateInput
+              id="data_nascimento"
+              label="Data de Nascimento"
+              value={formData.data_nascimento || ""}
+              onChange={(value) => setFormData({ ...formData, data_nascimento: value })}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

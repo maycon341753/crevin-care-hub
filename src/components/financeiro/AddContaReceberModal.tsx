@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatCurrencyInput, parseBrazilianCurrency } from '@/lib/utils';
+import { formatCurrencyInput, parseBrazilianCurrency, isValidBrazilianCurrency } from '@/lib/utils';
 import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
