@@ -62,10 +62,11 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- 6. Criar trigger para atualizar updated_at
-CREATE TRIGGER update_movimentos_bancarios_updated_at 
-BEFORE UPDATE ON public.movimentos_bancarios 
-FOR EACH ROW EXECUTE FUNCTION update_movimentos_bancarios_updated_at();
+-- 6. Criar trigger para atualizar updated_at (removendo primeiro se existir)
+DROP TRIGGER IF EXISTS update_movimentos_bancarios_updated_at ON public.movimentos_bancarios;
+CREATE TRIGGER update_movimentos_bancarios_updated_at
+    BEFORE UPDATE ON public.movimentos_bancarios
+    FOR EACH ROW EXECUTE FUNCTION update_movimentos_bancarios_updated_at();
 
 -- 7. Criar função para atualizar saldo das contas bancárias
 CREATE OR REPLACE FUNCTION atualizar_saldo_conta_bancaria()
@@ -113,10 +114,11 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- 8. Criar trigger para atualizar saldo automaticamente
+-- 8. Criar trigger para atualizar saldo automaticamente (removendo primeiro se existir)
+DROP TRIGGER IF EXISTS trigger_atualizar_saldo_conta_bancaria ON public.movimentos_bancarios;
 CREATE TRIGGER trigger_atualizar_saldo_conta_bancaria
-AFTER INSERT OR UPDATE OR DELETE ON public.movimentos_bancarios
-FOR EACH ROW EXECUTE FUNCTION atualizar_saldo_conta_bancaria();
+    AFTER INSERT OR UPDATE OR DELETE ON public.movimentos_bancarios
+    FOR EACH ROW EXECUTE FUNCTION atualizar_saldo_conta_bancaria();
 
 -- 9. Comentário na tabela
 COMMENT ON TABLE public.movimentos_bancarios IS 'Movimentações bancárias (extratos) para conciliação';

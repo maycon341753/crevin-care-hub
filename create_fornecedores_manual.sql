@@ -40,6 +40,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Remover trigger se já existir
+DROP TRIGGER IF EXISTS update_fornecedores_updated_at ON public.fornecedores;
+
+-- Criar trigger para atualizar updated_at
 CREATE TRIGGER update_fornecedores_updated_at
     BEFORE UPDATE ON public.fornecedores
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
