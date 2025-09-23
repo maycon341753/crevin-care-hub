@@ -178,7 +178,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
                 type="text"
                 value={formData.valor}
                 onChange={(e) => handleInputChange('valor', e.target.value)}
-                placeholder="0,00"
+                placeholder="Digite o valor em reais"
                 required
               />
             </div>

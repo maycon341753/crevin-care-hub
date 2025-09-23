@@ -202,12 +202,12 @@ export function EditQuartoModal({ open, onClose, quarto }: EditQuartoModalProps)
             <Label htmlFor="valor_mensal">Valor Mensal (R$)</Label>
             <Input
               id="valor_mensal"
-              type="number"
+              type="text"
               step="0.01"
               min="0"
               value={formData.valor_mensal || ""}
               onChange={(e) => handleInputChange('valor_mensal', e.target.value ? parseFloat(e.target.value) : undefined)}
-              placeholder="0,00"
+              placeholder="Digite o valor mensal"
             />
           </div>
 

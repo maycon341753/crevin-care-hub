@@ -303,10 +303,9 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                     <FormLabel>Salário *</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        placeholder="0,00"
-                        step="0.01"
-                        min="0"
+                        id="salario"
+                        type="text"
+                        placeholder="Digite o salário"
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />

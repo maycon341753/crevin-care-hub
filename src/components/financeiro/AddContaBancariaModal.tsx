@@ -145,11 +145,11 @@ const AddContaBancariaModal: React.FC<AddContaBancariaModalProps> = ({ onContaAd
               <Label htmlFor="saldo_atual">Saldo Atual (R$)</Label>
               <Input
                 id="saldo_atual"
-                type="number"
-                step="0.01"
-                placeholder="0,00"
+                type="text"
+                placeholder="Digite o saldo atual"
                 value={formData.saldo_atual}
                 onChange={(e) => handleInputChange('saldo_atual', e.target.value)}
+                required
               />
             </div>
 
