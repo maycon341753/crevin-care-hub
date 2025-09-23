@@ -32,11 +32,20 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
 
   useEffect(() => {
     if (idoso) {
+      // Converter data do formato ISO (yyyy-mm-dd) para formato brasileiro (dd/mm/yyyy)
+      let dataNascimento = idoso.data_nascimento || "";
+      if (dataNascimento && dataNascimento.includes('-')) {
+        const [ano, mes, dia] = dataNascimento.split('-');
+        if (ano && mes && dia) {
+          dataNascimento = `${dia}/${mes}/${ano}`;
+        }
+      }
+
       setFormData({
         nome: idoso.nome || "",
         cpf: idoso.cpf || "",
         rg: idoso.rg || "",
-        data_nascimento: idoso.data_nascimento || "",
+        data_nascimento: dataNascimento,
         telefone: idoso.telefone || "",
         endereco: idoso.endereco || "",
         contato_emergencia: idoso.contato_emergencia || "",
@@ -51,13 +60,22 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
     setLoading(true);
 
     try {
+      // Converter data brasileira (dd/mm/yyyy) para formato ISO (yyyy-mm-dd)
+      let dataNascimento = formData.data_nascimento;
+      if (dataNascimento && dataNascimento.includes('/')) {
+        const [dia, mes, ano] = dataNascimento.split('/');
+        if (dia && mes && ano && ano.length === 4) {
+          dataNascimento = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
+      }
+
       const { error } = await supabase
         .from('idosos')
         .update({
           nome: formData.nome,
           cpf: formData.cpf?.replace(/\D/g, ''),
           rg: formData.rg,
-          data_nascimento: formData.data_nascimento,
+          data_nascimento: dataNascimento,
           telefone: formData.telefone?.replace(/\D/g, ''),
           endereco: formData.endereco,
           contato_emergencia: formData.contato_emergencia,
@@ -134,9 +152,23 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
               <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
               <Input
                 id="data_nascimento"
-                type="date"
+                type="text"
                 value={formData.data_nascimento}
-                onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                  
+                  // Aplica a máscara dd/mm/yyyy
+                  if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                  }
+                  if (value.length >= 5) {
+                    value = value.substring(0, 5) + '/' + value.substring(5, 9);
+                  }
+                  
+                  setFormData({ ...formData, data_nascimento: value });
+                }}
+                placeholder="dd/mm/yyyy"
+                maxLength={10}
                 required
               />
             </div>

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
 
@@ -28,24 +29,40 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Verificar se o usuário está autenticado
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Converter data brasileira (dd/mm/yyyy) para formato ISO (yyyy-mm-dd)
+      let dataNascimento = formData.data_nascimento;
+      if (dataNascimento && dataNascimento.includes('/')) {
+        const [dia, mes, ano] = dataNascimento.split('/');
+        if (dia && mes && ano && ano.length === 4) {
+          dataNascimento = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
+      }
+
       const { error } = await supabase
         .from('idosos')
         .insert([{
           nome: formData.nome,
           cpf: formData.cpf?.replace(/\D/g, ''),
           rg: formData.rg || null,
-          data_nascimento: formData.data_nascimento,
+          data_nascimento: dataNascimento,
           telefone: formData.telefone?.replace(/\D/g, '') || null,
           endereco: formData.endereco || null,
           contato_emergencia: formData.contato_emergencia || null,
           observacoes_medicas: formData.observacoes_medicas || null,
           ativo: formData.ativo ?? true,
+          created_by: user.id, // Adicionar o ID do usuário autenticado
         }]);
 
       if (error) throw error;
@@ -128,9 +145,23 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
               <Label htmlFor="data_nascimento">Data de Nascimento *</Label>
               <Input
                 id="data_nascimento"
-                type="date"
+                type="text"
                 value={formData.data_nascimento}
-                onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                  
+                  // Aplica a máscara dd/mm/yyyy
+                  if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                  }
+                  if (value.length >= 5) {
+                    value = value.substring(0, 5) + '/' + value.substring(5, 9);
+                  }
+                  
+                  setFormData({ ...formData, data_nascimento: value });
+                }}
+                placeholder="dd/mm/yyyy"
+                maxLength={10}
                 required
               />
             </div>

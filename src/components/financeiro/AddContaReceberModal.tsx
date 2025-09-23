@@ -126,6 +126,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
       valor: '',
       data_vencimento: '',
       categoria_id: '',
+      administrador_id: '',
       idoso_id: '',
       pagador_nome: '',
       pagador_cpf: '',
@@ -221,7 +222,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
                 <option value="">Selecione um administrador</option>
                 {administradores.map((admin) => (
                   <option key={admin.id} value={admin.id}>
-                    {admin.nome}
+                    {admin.full_name}
                   </option>
                 ))}
               </select>

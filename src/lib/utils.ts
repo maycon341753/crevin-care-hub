@@ -25,13 +25,20 @@ export const formatCurrencyInput = (value: string): string => {
   // Remove tudo que não é dígito
   let numbers = value.replace(/\D/g, '');
   
-  // Se não há números, retorna 0,00
-  if (!numbers) return '0,00';
+  // Se não há números, retorna string vazia
+  if (!numbers) return '';
   
-  // Converte para centavos (adiciona zeros à esquerda se necessário)
-  numbers = numbers.padStart(3, '0');
+  // Se tem apenas 1 dígito, não adiciona zeros à esquerda
+  if (numbers.length === 1) {
+    return `${numbers}`;
+  }
   
-  // Separa os centavos (últimos 2 dígitos)
+  // Se tem 2 dígitos, formata como 0,XX
+  if (numbers.length === 2) {
+    return `0,${numbers}`;
+  }
+  
+  // Para 3 ou mais dígitos, separa centavos (últimos 2 dígitos)
   const centavos = numbers.slice(-2);
   const reais = numbers.slice(0, -2);
   
@@ -62,6 +69,9 @@ export const formatBrazilianCurrency = (value: number): string => {
 
 // Função para formatar número para exibição brasileira sem símbolo (1.234,56)
 export const formatBrazilianCurrencyValue = (value: number): string => {
+  // Se o valor for 0 ou null/undefined, retorna string vazia
+  if (!value || value === 0) return '';
+  
   return value.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -115,6 +125,9 @@ export const parseBrazilianSalary = (value: string): number => {
 
 // Função para formatar número para exibição de salário brasileiro (3.795,00)
 export const formatBrazilianSalary = (value: number): string => {
+  // Se o valor for 0 ou null/undefined, retorna string vazia
+  if (!value || value === 0) return '';
+  
   return value.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2

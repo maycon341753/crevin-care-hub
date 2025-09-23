@@ -345,7 +345,9 @@ export default function FuncionariosPage() {
                         {getStatusLabel(funcionario.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">R$ {formatBrazilianSalary(funcionario.salario || 0)}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {funcionario.salario ? `R$ ${formatBrazilianSalary(funcionario.salario)}` : '-'}
+                    </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       {formatBrazilianDate(funcionario.data_admissao)}
                     </TableCell>
