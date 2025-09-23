@@ -25,6 +25,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
+import AddContaBancariaModal from '@/components/financeiro/AddContaBancariaModal';
 
 interface MovimentoBancario {
   id: string;
@@ -207,6 +208,7 @@ const ConciliacaoPage = () => {
           <p className="text-gray-600">Concilie os movimentos bancários com o sistema</p>
         </div>
         <div className="flex gap-2">
+          <AddContaBancariaModal onContaAdded={fetchData} />
           <Button variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             Importar OFX

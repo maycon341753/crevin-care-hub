@@ -95,7 +95,6 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
       const contaData = {
         ...formData,
         valor: parseBrazilianCurrency(formData.valor),
-        funcionario_id: formData.funcionario_id || null,
         updated_at: new Date().toISOString()
       };
 

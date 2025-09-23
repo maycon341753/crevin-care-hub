@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Funcionario } from "@/types";
-import { User, Mail, Phone, MapPin, Calendar, DollarSign, Building2, FileText, Clock } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, DollarSign, Building2, FileText, Clock, Briefcase, Building } from "lucide-react";
 import { formatBrazilianSalary, formatBrazilianDate, formatBrazilianDateTime } from "@/lib/utils";
 
 interface ViewFuncionarioModalProps {

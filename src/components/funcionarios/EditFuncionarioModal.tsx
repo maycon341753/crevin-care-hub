@@ -36,6 +36,8 @@ export function EditFuncionarioModal({
   funcionario,
   onSuccess,
 }: EditFuncionarioModalProps) {
+  console.log('EditFuncionarioModal renderizado com:', { open, funcionario: !!funcionario });
+  
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -224,8 +226,6 @@ export function EditFuncionarioModal({
     onOpenChange(newOpen);
   };
 
-  if (!funcionario) return null;
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -235,28 +235,33 @@ export function EditFuncionarioModal({
             Editar Funcionário
           </DialogTitle>
           <DialogDescription>
-            Atualize as informações do funcionário {funcionario.nome}
+            {funcionario ? `Atualize as informações do funcionário ${funcionario.nome}` : 'Carregando...'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informações Pessoais */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Informações Pessoais</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange("nome", e.target.value)}
-                  placeholder="Digite o nome completo"
-                  required
-                />
-              </div>
+        {!funcionario ? (
+          <div className="flex justify-center items-center py-8">
+            <p>Carregando dados do funcionário...</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Informações Pessoais */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Informações Pessoais</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome Completo *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => handleInputChange("nome", e.target.value)}
+                    placeholder="Digite o nome completo"
+                    required
+                  />
+                </div>
 
-              <div className="space-y-2">
+                <div className="space-y-2">
                 <Label htmlFor="cpf">CPF *</Label>
                 <Input
                   id="cpf"
@@ -387,7 +392,8 @@ export function EditFuncionarioModal({
               {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -37,6 +37,12 @@ export default function FuncionariosPage() {
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
   const { toast } = useToast();
 
+  // Debug: Log do estado do modal
+  useEffect(() => {
+    console.log('Estado do modal de edição mudou:', isEditModalOpen);
+    console.log('Funcionário selecionado:', selectedFuncionario);
+  }, [isEditModalOpen, selectedFuncionario]);
+
   const fetchFuncionarios = useCallback(async () => {
     try {
       setLoading(true);
@@ -116,12 +122,17 @@ export default function FuncionariosPage() {
   };
 
   const handleEditFuncionario = (funcionario: Funcionario) => {
+    console.log('handleEditFuncionario chamado com:', funcionario);
+    console.log('Estado atual do modal antes:', isEditModalOpen);
     setSelectedFuncionario(funcionario);
     setIsEditModalOpen(true);
+    console.log('Modal deveria estar aberto agora');
   };
 
   const handleEditSuccess = (updatedFuncionario: Funcionario) => {
     fetchFuncionarios();
+    setIsEditModalOpen(false);
+    setSelectedFuncionario(null);
     console.log("Funcionário atualizado:", updatedFuncionario);
   };
 
@@ -388,9 +399,15 @@ export default function FuncionariosPage() {
       {/* Modal para editar funcionário */}
       <EditFuncionarioModal
         open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
+        onOpenChange={(open) => {
+          console.log('EditFuncionarioModal onOpenChange chamado com:', open);
+          setIsEditModalOpen(open);
+          if (!open) {
+            setSelectedFuncionario(null);
+          }
+        }}
         funcionario={selectedFuncionario}
-        onSuccess={handleModalClose}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );
