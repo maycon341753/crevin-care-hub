@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, 
@@ -389,21 +390,21 @@ const NotasFiscaisPage: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="data_emissao">Data de Emissão *</Label>
-                  <Input
+                  <DateInput
                     id="data_emissao"
-                    type="date"
                     value={formData.data_emissao}
-                    onChange={(e) => handleInputChange('data_emissao', e.target.value)}
+                    onChange={(value) => handleInputChange('data_emissao', value)}
                     required
+                    placeholder="dd/mm/aaaa"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-                  <Input
+                  <DateInput
                     id="data_vencimento"
-                    type="date"
                     value={formData.data_vencimento}
-                    onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
+                    onChange={(value) => handleInputChange('data_vencimento', value)}
+                    placeholder="dd/mm/aaaa"
                   />
                 </div>
                 <div className="space-y-2">

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import DateInput from '@/components/ui/date-input';
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
 import { ArrowLeft } from "lucide-react";
@@ -163,13 +164,12 @@ export function NovoIdosoPage() {
                   <Label htmlFor="data_nascimento" className="text-sm font-medium">
                     Data de Nascimento *
                   </Label>
-                  <Input
+                  <DateInput
                     id="data_nascimento"
-                    name="data_nascimento"
-                    type="date"
                     value={formData.data_nascimento}
-                    onChange={handleInputChange}
+                    onChange={(value) => setFormData({ ...formData, data_nascimento: value })}
                     required
+                    placeholder="dd/mm/aaaa"
                     className="mt-1"
                   />
                 </div>
@@ -192,13 +192,12 @@ export function NovoIdosoPage() {
                   <Label htmlFor="data_admissao" className="text-sm font-medium">
                     Data de Admissão *
                   </Label>
-                  <Input
+                  <DateInput
                     id="data_admissao"
-                    name="data_admissao"
-                    type="date"
                     value={formData.data_admissao}
-                    onChange={handleInputChange}
+                    onChange={(value) => setFormData({ ...formData, data_admissao: value })}
                     required
+                    placeholder="dd/mm/aaaa"
                     className="mt-1"
                   />
                 </div>

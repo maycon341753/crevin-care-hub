@@ -28,9 +28,11 @@ import NovoFornecedorPage from "./pages/fornecedores/NovoFornecedorPage";
 import FornecedoresPage from "./pages/fornecedores/FornecedoresPage";
 import EditarFornecedorPage from "./pages/fornecedores/EditarFornecedorPage";
 import NotasFiscaisPage from "./pages/fornecedores/NotasFiscaisPage";
+import LembretesPage from "./pages/LembretesPage";
 import ProfilesPage from "./pages/profiles/ProfilesPage";
 import AuditLogsPage from "./pages/audit/AuditLogsPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
+import AgendaPage from "./pages/agenda/AgendaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -122,8 +124,8 @@ const App = () => (
             <Route path="/fornecedores/editar/:id" element={<ProtectedRoute><EditarFornecedorPage /></ProtectedRoute>} />
             <Route path="/fornecedores/notas" element={<ProtectedRoute><NotasFiscaisPage /></ProtectedRoute>} />
             <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />
-            <Route path="/agenda" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Agenda em Desenvolvimento</h1></div></ProtectedRoute>} />
-            <Route path="/lembretes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Lembretes em Desenvolvimento</h1></div></ProtectedRoute>} />
+            <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
+            <Route path="/lembretes" element={<ProtectedRoute><LembretesPage /></ProtectedRoute>} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Funcionario } from "@/types";
 import { Edit } from "lucide-react";
-import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import { formatCPF, formatPhone, formatBrazilianSalary, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import DateInput from '@/components/ui/date-input';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -273,25 +274,23 @@ export function EditFuncionarioModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail *</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="funcionario@crevin.com"
-                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone *</Label>
+                <Label htmlFor="telefone">Telefone</Label>
                 <Input
                   id="telefone"
                   value={formData.telefone}
                   onChange={(e) => handleInputChange("telefone", e.target.value)}
                   placeholder="(61) 99999-9999"
-                  required
                 />
               </div>
             </div>
@@ -350,12 +349,12 @@ export function EditFuncionarioModal({
 
               <div className="space-y-2">
                 <Label htmlFor="data_admissao">Data de Admissão *</Label>
-                <Input
+                <DateInput
                   id="data_admissao"
-                  type="date"
                   value={formData.data_admissao}
-                  onChange={(e) => handleInputChange("data_admissao", e.target.value)}
+                  onChange={(value) => handleInputChange("data_admissao", value)}
                   required
+                  placeholder="dd/mm/aaaa"
                 />
               </div>
 

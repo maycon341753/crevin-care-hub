@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, User, Building2, DollarSign, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import DateInput from '@/components/ui/date-input';
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ const funcionarioSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF deve estar no formato 000.000.000-00"),
   rg: z.string().optional(),
-  telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  telefone: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   endereco: z.string().optional(),
   cargo: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres"),
@@ -242,7 +243,7 @@ export default function NovoFuncionarioPage() {
                   name="telefone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telefone *</FormLabel>
+                      <FormLabel>Telefone</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="(00) 00000-0000"
@@ -381,14 +382,13 @@ export default function NovoFuncionarioPage() {
                     <FormItem>
                       <FormLabel>Data de Admissão *</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="date"
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
+                        <DateInput
+                          id="data_admissao"
+                          value={field.value}
+                          onChange={field.onChange}
+                          required
+                          placeholder="dd/mm/aaaa"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCPF, formatPhone } from "@/lib/utils";
+import DateInput from '@/components/ui/date-input';
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ import { Funcionario, Departamento } from "@/types";
 const funcionarioSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF deve estar no formato 000.000.000-00"),
-  telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  telefone: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   cargo: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres"),
   departamento_id: z.string().min(1, "Selecione um departamento"),
@@ -217,7 +218,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                 name="telefone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone *</FormLabel>
+                    <FormLabel>Telefone</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="(61) 99999-9999"
@@ -323,11 +324,12 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                   <FormItem>
                     <FormLabel>Data de Admissão *</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field}
+                      <DateInput
+                        id="data_admissao"
+                        value={field.value}
+                        onChange={field.onChange}
                         required
-                        max={new Date().toISOString().split('T')[0]} // Não permite datas futuras
+                        placeholder="dd/mm/aaaa"
                       />
                     </FormControl>
                     <FormMessage />

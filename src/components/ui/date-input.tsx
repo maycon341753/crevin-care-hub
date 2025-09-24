@@ -26,12 +26,17 @@ const DateInput: React.FC<DateInputProps> = ({
   // Converte data ISO para formato brasileiro (dd/mm/yyyy)
   const formatToBrazilian = (isoDate: string): string => {
     if (!isoDate) return '';
-    const date = new Date(isoDate);
-    if (isNaN(date.getTime())) return '';
     
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
+    // Parse manual para evitar problemas de fuso horário
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return '';
+    
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    
+    // Valida se são números válidos
+    if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day))) return '';
     
     return `${day}/${month}/${year}`;
   };
