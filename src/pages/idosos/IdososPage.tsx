@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { EditIdosoModal } from "@/components/idosos/EditIdosoModal";
 import { DeleteIdosoModal } from "@/components/idosos/DeleteIdosoModal";
 import { formatCPF, formatPhone } from "@/lib/utils";
 import { Idoso } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 export default function IdososPage() {
   const [idosos, setIdosos] = useState<Idoso[]>([]);
@@ -22,6 +23,7 @@ export default function IdososPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedIdoso, setSelectedIdoso] = useState<Idoso | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchIdosos = useCallback(async () => {
     try {
@@ -120,10 +122,20 @@ export default function IdososPage() {
             Gerencie o cadastro dos idosos atendidos pela instituição
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Idoso
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => navigate('/idosos/lista-espera')} 
+            variant="outline" 
+            className="w-full sm:w-auto"
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            Lista de Espera
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Idoso
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

@@ -118,15 +118,24 @@ export const AddEventModal = ({ open, onOpenChange, onSuccess }: AddEventModalPr
   const fetchFuncionarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('funcionarios')
-        .select('id, nome, cargo')
-        .eq('status', 'ativo')
-        .order('nome');
+        .from('profiles')
+        .select('id, full_name, role')
+        .in('role', ['admin', 'developer'])
+        .eq('active', true)
+        .order('full_name');
 
       if (error) throw error;
-      setFuncionarios(data || []);
+      
+      // Mapear os dados para o formato esperado
+      const administradores = data?.map(profile => ({
+        id: profile.id,
+        nome: profile.full_name || 'Sem nome',
+        cargo: profile.role === 'developer' ? 'Desenvolvedor' : 'Administrador'
+      })) || [];
+      
+      setFuncionarios(administradores);
     } catch (error) {
-      console.error('Erro ao buscar funcionários:', error);
+      console.error('Erro ao buscar administradores:', error);
     }
   };
 

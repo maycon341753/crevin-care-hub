@@ -74,6 +74,7 @@ const navigationItems = [
     subItems: [
       { title: "Lista de Idosos", url: "/idosos" },
       { title: "Cadastrar Idoso", url: "/idosos/novo" },
+      { title: "Lista de Espera", url: "/idosos/lista-espera" },
       { title: "Quartos/Alas", url: "/idosos/quartos" },
       { title: "Saúde", url: "/idosos/saude" },
     ],
