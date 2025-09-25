@@ -319,7 +319,7 @@ export default function ListaEsperaPage() {
             setShowTransferModal(false);
             setSelectedIdoso(null);
           }}
-          onSuccess={() => {
+          onTransferSuccess={() => {
             fetchIdosos();
             setShowTransferModal(false);
             setSelectedIdoso(null);

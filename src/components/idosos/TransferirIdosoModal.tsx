@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, UserCheck } from "lucide-react";
 
@@ -41,12 +42,13 @@ export function TransferirIdosoModal({
   idoso,
   onTransferSuccess,
 }: TransferirIdosoModalProps) {
-  const [loading, setLoading] = useState(false);
   const [observacoesTransferencia, setObservacoesTransferencia] = useState("");
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleTransfer = async () => {
-    if (!idoso) return;
+    if (!idoso || !user) return;
 
     setLoading(true);
     try {
@@ -67,6 +69,7 @@ export function TransferirIdosoModal({
             observacoesTransferencia && `Transferência: ${observacoesTransferencia}`
           ].filter(Boolean).join('\n\n'),
           ativo: true,
+          created_by: user.id, // Adicionar o ID do usuário autenticado
         })
         .select()
         .single();
