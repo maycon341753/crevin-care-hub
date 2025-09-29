@@ -15,6 +15,7 @@ import NovoFuncionarioPage from "./pages/funcionarios/NovoFuncionarioPage";
 import AdvertenciasPage from "./pages/funcionarios/AdvertenciasPage";
 import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
+import DoacoesDinheiroPage from "./pages/doacoes/DoacoesDinheiroPage";
 import IdososPage from "./pages/idosos/IdososPage";
 import QuartosPage from "./pages/idosos/QuartosPage";
 import SaudePage from "./pages/idosos/SaudePage";
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/funcionarios/advertencias" element={<ProtectedRoute><AdvertenciasPage /></ProtectedRoute>} />
             <Route path="/funcionarios/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
+            <Route path="/doacoes/dinheiro" element={<ProtectedRoute><DoacoesDinheiroPage /></ProtectedRoute>} />
             <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/idosos" element={<ProtectedRoute><IdososPage /></ProtectedRoute>} />
             <Route path="/idosos/novo" element={<ProtectedRoute><NovoIdosoPage /></ProtectedRoute>} />

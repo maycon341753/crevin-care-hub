@@ -8,7 +8,6 @@ import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
-import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
   id: string;
@@ -23,13 +22,15 @@ interface ContaPagar {
   valor: number;
   data_vencimento: string;
   categoria_id: string;
-  administrador_id?: string;
   fornecedor_nome?: string;
   fornecedor_cnpj?: string;
   fornecedor_telefone?: string;
   forma_pagamento?: string;
   observacoes?: string;
   status: 'pendente' | 'pago' | 'vencido';
+  recorrente?: boolean;
+  frequencia_recorrencia?: string;
+  data_proxima_geracao?: string;
 }
 
 interface EditContaPagarModalProps {
@@ -52,15 +53,14 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
     valor: '',
     data_vencimento: '',
     categoria_id: '',
-    administrador_id: '',
     fornecedor_nome: '',
     fornecedor_cnpj: '',
     fornecedor_telefone: '',
     forma_pagamento: '',
     observacoes: '',
-    status: 'pendente' as 'pendente' | 'pago' | 'vencido'
+    recorrente: false,
+    frequencia_recorrencia: 'mensal'
   });
-  const { administradores, loading: loadingAdmins } = useAdministradores();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -70,13 +70,13 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
         valor: formatBrazilianCurrencyValue(conta.valor),
         data_vencimento: conta.data_vencimento,
         categoria_id: conta.categoria_id,
-        administrador_id: conta.administrador_id || '',
         fornecedor_nome: conta.fornecedor_nome || '',
         fornecedor_cnpj: conta.fornecedor_cnpj || '',
         fornecedor_telefone: conta.fornecedor_telefone || '',
         forma_pagamento: conta.forma_pagamento || '',
         observacoes: conta.observacoes || '',
-        status: conta.status
+        recorrente: conta.recorrente || false,
+        frequencia_recorrencia: conta.frequencia_recorrencia || 'mensal'
       });
     }
   }, [isOpen, conta]);
@@ -92,9 +92,33 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
     setLoading(true);
 
     try {
+      // Calcular próxima data de geração se for recorrente
+      let dataProximaGeracao = null;
+      if (formData.recorrente) {
+        const dataVencimento = new Date(formData.data_vencimento);
+        switch (formData.frequencia_recorrencia) {
+          case 'mensal':
+            dataProximaGeracao = new Date(dataVencimento.setMonth(dataVencimento.getMonth() + 1));
+            break;
+          case 'bimestral':
+            dataProximaGeracao = new Date(dataVencimento.setMonth(dataVencimento.getMonth() + 2));
+            break;
+          case 'trimestral':
+            dataProximaGeracao = new Date(dataVencimento.setMonth(dataVencimento.getMonth() + 3));
+            break;
+          case 'semestral':
+            dataProximaGeracao = new Date(dataVencimento.setMonth(dataVencimento.getMonth() + 6));
+            break;
+          case 'anual':
+            dataProximaGeracao = new Date(dataVencimento.setFullYear(dataVencimento.getFullYear() + 1));
+            break;
+        }
+      }
+
       const contaData = {
         ...formData,
         valor: parseBrazilianCurrency(formData.valor),
+        data_proxima_geracao: dataProximaGeracao ? dataProximaGeracao.toISOString().split('T')[0] : null,
         updated_at: new Date().toISOString()
       };
 
@@ -109,7 +133,11 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
         return;
       }
 
-      toast.success('Conta a pagar atualizada com sucesso!');
+      const mensagem = formData.recorrente 
+        ? `Conta recorrente (${formData.frequencia_recorrencia}) atualizada com sucesso!`
+        : 'Conta a pagar atualizada com sucesso!';
+      
+      toast.success(mensagem);
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
@@ -133,6 +161,13 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
         [field]: value
       }));
     }
+  };
+
+  const handleCheckboxChange = (field: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked
+    }));
   };
 
   const marcarComoPago = async () => {
@@ -240,23 +275,7 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
               </select>
             </div>
 
-            <div>
-              <Label htmlFor="administrador_id">Administrador Responsável (opcional)</Label>
-              <select
-                id="administrador_id"
-                value={formData.administrador_id}
-                onChange={(e) => handleInputChange('administrador_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loadingAdmins}
-              >
-                <option value="">Selecione um administrador</option>
-                {administradores.map((admin) => (
-                  <option key={admin.id} value={admin.id}>
-                    {admin.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+
 
             <div>
               <Label htmlFor="fornecedor_nome">Nome do Fornecedor</Label>
@@ -315,6 +334,40 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
                 placeholder="Informações adicionais..."
                 rows={3}
               />
+            </div>
+
+            {/* Campos de Recorrência */}
+            <div className="md:col-span-2 border-t pt-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <input
+                  type="checkbox"
+                  id="recorrente"
+                  checked={formData.recorrente}
+                  onChange={(e) => handleCheckboxChange('recorrente', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <Label htmlFor="recorrente" className="text-sm font-medium">
+                  Esta conta é recorrente
+                </Label>
+              </div>
+
+              {formData.recorrente && (
+                <div>
+                  <Label htmlFor="frequencia_recorrencia">Frequência de Recorrência</Label>
+                  <select
+                    id="frequencia_recorrencia"
+                    value={formData.frequencia_recorrencia}
+                    onChange={(e) => handleInputChange('frequencia_recorrencia', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="mensal">Mensal</option>
+                    <option value="bimestral">Bimestral</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

@@ -38,7 +38,9 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
     fornecedor_cnpj: '',
     fornecedor_telefone: '',
     forma_pagamento: '',
-    observacoes: ''
+    observacoes: '',
+    recorrente: false,
+    frequencia_recorrencia: 'mensal'
   });
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +56,9 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
         fornecedor_cnpj: '',
         fornecedor_telefone: '',
         forma_pagamento: '',
-        observacoes: ''
+        observacoes: '',
+        recorrente: false,
+        frequencia_recorrencia: 'mensal'
       });
     }
   }, [isOpen]);
@@ -78,6 +82,33 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
         created_by: userData.user?.id || '00000000-0000-0000-0000-000000000000'
       };
 
+      // Se for recorrente, adicionar campos específicos
+      if (formData.recorrente) {
+        const dataVencimento = new Date(formData.data_vencimento);
+        const proximaGeracao = new Date(dataVencimento);
+        
+        // Calcular próxima data baseada na frequência
+        switch (formData.frequencia_recorrencia) {
+          case 'mensal':
+            proximaGeracao.setMonth(proximaGeracao.getMonth() + 1);
+            break;
+          case 'bimestral':
+            proximaGeracao.setMonth(proximaGeracao.getMonth() + 2);
+            break;
+          case 'trimestral':
+            proximaGeracao.setMonth(proximaGeracao.getMonth() + 3);
+            break;
+          case 'semestral':
+            proximaGeracao.setMonth(proximaGeracao.getMonth() + 6);
+            break;
+          case 'anual':
+            proximaGeracao.setFullYear(proximaGeracao.getFullYear() + 1);
+            break;
+        }
+        
+        contaData.data_proxima_geracao = proximaGeracao.toISOString().split('T')[0];
+      }
+
       const { error } = await supabase
         .from('contas_pagar')
         .insert([contaData]);
@@ -88,7 +119,11 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
         return;
       }
 
-      toast.success('Conta a pagar criada com sucesso!');
+      toast.success(
+        formData.recorrente 
+          ? 'Conta recorrente criada com sucesso! As próximas parcelas serão geradas automaticamente.'
+          : 'Conta a pagar criada com sucesso!'
+      );
       onSuccess();
       resetForm();
     } catch (error) {
@@ -109,7 +144,9 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
       fornecedor_cnpj: '',
       fornecedor_telefone: '',
       forma_pagamento: '',
-      observacoes: ''
+      observacoes: '',
+      recorrente: false,
+      frequencia_recorrencia: 'mensal'
     });
   };
 
@@ -127,6 +164,13 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
         [field]: value
       }));
     }
+  };
+
+  const handleCheckboxChange = (field: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked
+    }));
   };
 
   return (
@@ -245,6 +289,40 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
                 rows={3}
               />
             </div>
+
+            {/* Campos de Recorrência */}
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="recorrente"
+                  checked={formData.recorrente}
+                  onChange={(e) => handleCheckboxChange('recorrente', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <Label htmlFor="recorrente" className="text-sm font-medium text-gray-700">
+                  Esta conta é recorrente
+                </Label>
+              </div>
+            </div>
+
+            {formData.recorrente && (
+              <div className="md:col-span-2">
+                <Label htmlFor="frequencia_recorrencia">Frequência de Recorrência</Label>
+                <select
+                  id="frequencia_recorrencia"
+                  value={formData.frequencia_recorrencia}
+                  onChange={(e) => handleInputChange('frequencia_recorrencia', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="mensal">Mensal</option>
+                  <option value="bimestral">Bimestral</option>
+                  <option value="trimestral">Trimestral</option>
+                  <option value="semestral">Semestral</option>
+                  <option value="anual">Anual</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

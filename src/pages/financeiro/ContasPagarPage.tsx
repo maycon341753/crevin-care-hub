@@ -16,7 +16,8 @@ import {
   Clock,
   XCircle,
   Edit,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ import { ptBR } from 'date-fns/locale';
 import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
 import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
+import { ContasRecorrentesService } from '@/services/contasRecorrentes';
 
 interface CategoriaFinanceira {
   id: string;
@@ -45,6 +47,9 @@ interface ContaPagar {
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   observacoes?: string;
   categorias_financeiras: CategoriaFinanceira;
+  recorrente?: boolean;
+  frequencia_recorrencia?: string;
+  data_proxima_geracao?: string;
 }
 
 const ContasPagarPage: React.FC = () => {
@@ -134,6 +139,47 @@ const ContasPagarPage: React.FC = () => {
     fetchContasPagar();
   };
 
+  const handleProcessarContasRecorrentes = async () => {
+    try {
+      setLoading(true);
+      await ContasRecorrentesService.verificarEGerarContas();
+      toast.success('Contas recorrentes processadas com sucesso!');
+      fetchContasPagar(); // Recarregar a lista
+    } catch (error) {
+      console.error('Erro ao processar contas recorrentes:', error);
+      toast.error('Erro ao processar contas recorrentes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para calcular próxima data de pagamento baseada na frequência
+  const calcularProximaDataPagamento = (dataVencimento: string, frequencia: string): string => {
+    const data = new Date(dataVencimento);
+    
+    switch (frequencia) {
+      case 'mensal':
+        data.setMonth(data.getMonth() + 1);
+        break;
+      case 'bimestral':
+        data.setMonth(data.getMonth() + 2);
+        break;
+      case 'trimestral':
+        data.setMonth(data.getMonth() + 3);
+        break;
+      case 'semestral':
+        data.setMonth(data.getMonth() + 6);
+        break;
+      case 'anual':
+        data.setFullYear(data.getFullYear() + 1);
+        break;
+      default:
+        data.setMonth(data.getMonth() + 1);
+    }
+    
+    return data.toISOString().split('T')[0];
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pendente: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pendente' },
@@ -192,10 +238,21 @@ const ContasPagarPage: React.FC = () => {
             Gerencie todas as contas a pagar da instituição
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Conta a Pagar
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleProcessarContasRecorrentes}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Processar Recorrentes
+          </Button>
+          <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Conta a Pagar
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
@@ -335,6 +392,17 @@ const ContasPagarPage: React.FC = () => {
                         Categoria: {conta.categorias_financeiras.nome}
                       </div>
                     </div>
+
+                    {/* Exibir próxima data de pagamento para contas recorrentes */}
+                    {conta.recorrente && conta.frequencia_recorrencia && (
+                      <div className="text-sm text-blue-600 mt-1">
+                        Próximo pagamento ({conta.frequencia_recorrencia}): {
+                          conta.data_proxima_geracao 
+                            ? formatBrazilianDate(conta.data_proxima_geracao)
+                            : formatBrazilianDate(calcularProximaDataPagamento(conta.data_vencimento, conta.frequencia_recorrencia))
+                        }
+                      </div>
+                    )}
 
                     {conta.data_pagamento && (
                       <div className="text-sm text-green-600 mt-1">

@@ -32,6 +32,7 @@ export default function IdososPage() {
       const { data, error } = await supabase
         .from('idosos')
         .select('*')
+        .eq('ativo', true)
         .order('nome');
 
       if (error) throw error;
