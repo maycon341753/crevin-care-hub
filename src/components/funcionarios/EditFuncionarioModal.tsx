@@ -96,43 +96,71 @@ export function EditFuncionarioModal({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Preenche o formulário quando o funcionário é selecionado
+  // Função para formatar salário durante a digitação
+  const formatSalaryInput = (value: string): string => {
+    // Remove tudo que não é dígito
+    const numericValue = value.replace(/\D/g, '');
+    
+    if (!numericValue) return '';
+    
+    // Converte para número e divide por 100 para ter os centavos
+    const number = parseInt(numericValue) / 100;
+    
+    // Formata como moeda brasileira
+    return number.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Carregar dados do funcionário quando o modal abrir
   useEffect(() => {
-    if (funcionario) {
-      console.log('Dados do funcionário recebidos:', funcionario);
-      console.log('Data de admissão original:', funcionario.data_admissao);
+    if (funcionario && open) {
+      console.log('Carregando dados do funcionário:', funcionario);
       
-      // Garantir que a data esteja no formato correto para o input (YYYY-MM-DD)
-      let dataAdmissaoFormatted = funcionario.data_admissao;
+      // Formatar data de admissão para o formato do input (YYYY-MM-DD)
+      let dataFormatada = "";
       if (funcionario.data_admissao) {
-        // Se a data vier no formato ISO com timezone, extrair apenas a parte da data
-        if (funcionario.data_admissao.includes('T')) {
-          dataAdmissaoFormatted = funcionario.data_admissao.split('T')[0];
-        }
-        // Se a data vier no formato DD/MM/AAAA, converter para YYYY-MM-DD
-        else if (funcionario.data_admissao.includes('/')) {
-          const parts = funcionario.data_admissao.split('/');
-          if (parts.length === 3) {
-            dataAdmissaoFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        try {
+          const date = new Date(funcionario.data_admissao);
+          if (!isNaN(date.getTime())) {
+            dataFormatada = date.toISOString().split('T')[0];
           }
+        } catch (error) {
+          console.error('Erro ao formatar data:', error);
         }
       }
-      
-      console.log('Data de admissão formatada para input:', dataAdmissaoFormatted);
-      
+
+      // Formatar salário para exibição
+      let salarioFormatado = "";
+      if (funcionario.salario) {
+        try {
+          // Se o salário já está como string formatada, usar diretamente
+          if (typeof funcionario.salario === 'string') {
+            salarioFormatado = funcionario.salario;
+          } else {
+            // Se é número, formatar
+            salarioFormatado = formatBrazilianSalary(funcionario.salario.toString());
+          }
+        } catch (error) {
+          console.error('Erro ao formatar salário:', error);
+          salarioFormatado = funcionario.salario?.toString() || "";
+        }
+      }
+
       setFormData({
-        nome: funcionario.nome,
-        cpf: funcionario.cpf,
-        telefone: funcionario.telefone,
-        email: funcionario.email,
-        cargo: funcionario.cargo,
-        departamento_id: funcionario.departamento_id || '', // Garantir que não seja undefined
-        salario: funcionario.salario ? formatSalaryInput(funcionario.salario.toString()) : "",
-        data_admissao: dataAdmissaoFormatted,
-        status: funcionario.status,
+        nome: funcionario.nome || "",
+        cpf: funcionario.cpf || "",
+        telefone: funcionario.telefone || "",
+        email: funcionario.email || "",
+        cargo: funcionario.cargo || "",
+        departamento_id: funcionario.departamento_id || "",
+        salario: salarioFormatado,
+        data_admissao: dataFormatada,
+        status: funcionario.status || "ativo",
       });
     }
-  }, [funcionario]);
+  }, [funcionario, open]);
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'salario') {
@@ -151,52 +179,113 @@ export function EditFuncionarioModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!funcionario) return;
+    
+    if (!funcionario) {
+      toast.error('Funcionário não encontrado');
+      return;
+    }
 
-    // Validação do departamento_id
-    if (!formData.departamento_id || formData.departamento_id.trim() === '') {
-      toast.error('Por favor, selecione um departamento');
+    // Validações básicas
+    if (!formData.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+
+    if (!formData.cpf.trim()) {
+      toast.error('CPF é obrigatório');
+      return;
+    }
+
+    if (!formData.cargo.trim()) {
+      toast.error('Cargo é obrigatório');
+      return;
+    }
+
+    if (!formData.departamento_id) {
+      toast.error('Departamento é obrigatório');
+      return;
+    }
+
+    if (!formData.salario.trim()) {
+      toast.error('Salário é obrigatório');
+      return;
+    }
+
+    if (!formData.data_admissao) {
+      toast.error('Data de admissão é obrigatória');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Atualizar funcionário no Supabase
-      const { error } = await supabase
-        .from('funcionarios')
-        .update({
-          nome: formData.nome,
-          cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação do CPF
-          telefone: formData.telefone.replace(/\D/g, ''), // Remove formatação do telefone
-          email: formData.email || null,
-          cargo: formData.cargo,
-          departamento_id: formData.departamento_id, // Removido o || null
-          salario: formData.salario ? parseBrazilianSalary(formData.salario) : null,
-          data_admissao: formData.data_admissao,
-          status: formData.status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', funcionario.id);
+      // Processar salário - remover formatação para salvar como número
+      let salarioNumerico: number;
+      try {
+        if (isValidBrazilianSalary(formData.salario)) {
+          salarioNumerico = parseBrazilianSalary(formData.salario);
+        } else {
+          // Tentar converter diretamente se não estiver no formato brasileiro
+          const salarioLimpo = formData.salario.replace(/[^\d,]/g, '').replace(',', '.');
+          salarioNumerico = parseFloat(salarioLimpo);
+          if (isNaN(salarioNumerico)) {
+            throw new Error('Salário inválido');
+          }
+        }
+      } catch (error) {
+        toast.error('Formato de salário inválido');
+        return;
+      }
 
-      if (error) throw error;
+      // Processar data
+      let dataFormatada: string;
+      try {
+        const date = new Date(formData.data_admissao);
+        if (isNaN(date.getTime())) {
+          throw new Error('Data inválida');
+        }
+        dataFormatada = date.toISOString().split('T')[0];
+      } catch (error) {
+        toast.error('Data de admissão inválida');
+        return;
+      }
 
-      const updatedFuncionario: Funcionario = {
-        ...funcionario,
-        nome: formData.nome,
-        cpf: formData.cpf,
-        telefone: formData.telefone,
-        email: formData.email,
-        cargo: formData.cargo,
+      const dadosAtualizados = {
+        nome: formData.nome.trim(),
+        cpf: formData.cpf.trim(),
+        telefone: formData.telefone.trim(),
+        email: formData.email.trim(),
+        cargo: formData.cargo.trim(),
         departamento_id: formData.departamento_id,
-        salario: formData.salario ? parseBrazilianSalary(formData.salario) : 0,
-        data_admissao: formData.data_admissao,
+        salario: salarioNumerico,
+        data_admissao: dataFormatada,
         status: formData.status,
-        updated_at: new Date().toISOString(),
       };
 
-      onSuccess(updatedFuncionario);
+      console.log('Dados para atualização:', dadosAtualizados);
+
+      const { data, error } = await supabase
+        .from('funcionarios')
+        .update(dadosAtualizados)
+        .eq('id', funcionario.id)
+        .select(`
+          *,
+          departamentos (
+            id,
+            nome
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
+
+      console.log('Funcionário atualizado com sucesso:', data);
+      
       toast.success('Funcionário atualizado com sucesso!');
+      onSuccess(data);
       onOpenChange(false);
     } catch (error: any) {
       console.error("Erro ao atualizar funcionário:", error);
