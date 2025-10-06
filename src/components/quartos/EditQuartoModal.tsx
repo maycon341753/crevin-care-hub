@@ -61,6 +61,32 @@ export function EditQuartoModal({ open, onClose, quarto }: EditQuartoModalProps)
     try {
       setLoading(true);
 
+      // Verificar se o número do quarto mudou
+      const numeroMudou = formData.numero !== quarto.numero;
+      
+      // Se o número mudou, verificar se já existe outro quarto com esse número
+      if (numeroMudou) {
+        const { data: quartoExistente, error: errorCheck } = await supabase
+          .from('quartos')
+          .select('id')
+          .eq('numero', formData.numero)
+          .single();
+
+        if (errorCheck && errorCheck.code !== 'PGRST116') {
+          // PGRST116 = "The result contains 0 rows" (não encontrou)
+          throw errorCheck;
+        }
+
+        if (quartoExistente) {
+          toast({
+            title: "Erro",
+            description: `Já existe um quarto com o número "${formData.numero}". Escolha outro número.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('quartos')
         .update({
@@ -85,13 +111,23 @@ export function EditQuartoModal({ open, onClose, quarto }: EditQuartoModalProps)
       });
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar quarto:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o quarto.",
-        variant: "destructive",
-      });
+      
+      // Tratamento específico para erro de constraint unique
+      if (error?.code === '23505' && error?.message?.includes('quartos_numero_key')) {
+        toast({
+          title: "Erro",
+          description: `O número "${formData.numero}" já está sendo usado por outro quarto. Escolha um número diferente.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar quarto",
+          description: error?.message || "Não foi possível atualizar o quarto.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
