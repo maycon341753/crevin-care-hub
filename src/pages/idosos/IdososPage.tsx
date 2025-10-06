@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -279,6 +279,14 @@ export default function IdososPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/idosos/${idoso.id}/prontuario-nutricional`)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
                           <Button
                             variant="outline"
                             size="sm"
