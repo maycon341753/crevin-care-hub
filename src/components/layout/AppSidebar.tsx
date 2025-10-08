@@ -88,6 +88,7 @@ const navigationItems = [
       { title: "Visão Geral", url: "/financeiro" },
       { title: "Contas a Pagar", url: "/financeiro/contas-pagar" },
       { title: "Contas a Receber", url: "/financeiro/contas-receber" },
+      { title: "Receitas Futuras", url: "/financeiro/receitas-futuras" },
       { title: "Contas Bancárias", url: "/financeiro/contas-bancarias" },
       { title: "Conciliação Bancária", url: "/financeiro/conciliacao" },
     ],

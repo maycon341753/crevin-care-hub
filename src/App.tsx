@@ -26,6 +26,7 @@ import ProntuarioNutricionalList from "./pages/idosos/ProntuarioNutricionalList"
 import FinanceiroPage from "./pages/financeiro/FinanceiroPage";
 import ContasPagarPage from "./pages/financeiro/ContasPagarPage";
 import ContasReceberPage from "./pages/financeiro/ContasReceberPage";
+import ReceitasFuturasPage from "./pages/financeiro/ReceitasFuturasPage";
 import ConciliacaoPage from "./pages/financeiro/ConciliacaoPage";
 import ContasBancariasPage from "./pages/financeiro/ContasBancariasPage";
 import NovoFornecedorPage from "./pages/fornecedores/NovoFornecedorPage";
@@ -125,6 +126,7 @@ const App = () => (
             <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />
             <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><ContasPagarPage /></ProtectedRoute>} />
             <Route path="/financeiro/contas-receber" element={<ProtectedRoute><ContasReceberPage /></ProtectedRoute>} />
+            <Route path="/financeiro/receitas-futuras" element={<ProtectedRoute><ReceitasFuturasPage /></ProtectedRoute>} />
             <Route path="/financeiro/contas-bancarias" element={<ProtectedRoute><ContasBancariasPage /></ProtectedRoute>} />
             <Route path="/financeiro/conciliacao" element={<ProtectedRoute><ConciliacaoPage /></ProtectedRoute>} />
             <Route path="/fornecedores" element={<ProtectedRoute><FornecedoresPage /></ProtectedRoute>} />

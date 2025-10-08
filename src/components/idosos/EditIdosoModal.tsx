@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
-import DateSeparateInput from "@/components/ui/date-separate-input";
+import DateMonthYearInput from "@/components/ui/date-month-year-input";
 
 interface EditIdosoModalProps {
   open: boolean;
@@ -26,6 +26,9 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
     endereco: "",
     contato_emergencia: "",
     observacoes_medicas: "",
+    beneficio_tipo: null,
+    beneficio_valor: null,
+    contribuicao_percentual: 70,
     ativo: true,
   });
   const [loading, setLoading] = useState(false);
@@ -33,14 +36,8 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
 
   useEffect(() => {
     if (idoso) {
-      // Converter data do formato ISO (yyyy-mm-dd) para formato brasileiro (dd/mm/yyyy)
-      let dataNascimento = idoso.data_nascimento || "";
-      if (dataNascimento && dataNascimento.includes('-')) {
-        const [ano, mes, dia] = dataNascimento.split('-');
-        if (ano && mes && dia) {
-          dataNascimento = `${dia}/${mes}/${ano}`;
-        }
-      }
+      // Usar data no formato ISO (yyyy-mm-dd), que é o esperado pelo DateSeparateInput
+      const dataNascimento = idoso.data_nascimento || "";
 
       setFormData({
         nome: idoso.nome || "",
@@ -51,6 +48,9 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
         endereco: idoso.endereco || "",
         contato_emergencia: idoso.contato_emergencia || "",
         observacoes_medicas: idoso.observacoes_medicas || "",
+        beneficio_tipo: idoso.beneficio_tipo ?? null,
+        beneficio_valor: idoso.beneficio_valor ?? null,
+        contribuicao_percentual: idoso.contribuicao_percentual ?? 70,
         ativo: idoso.ativo !== undefined ? idoso.ativo : true,
       });
     }
@@ -81,6 +81,9 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
           endereco: formData.endereco,
           contato_emergencia: formData.contato_emergencia,
           observacoes_medicas: formData.observacoes_medicas,
+          beneficio_tipo: formData.beneficio_tipo ?? null,
+          beneficio_valor: formData.beneficio_valor ?? null,
+          contribuicao_percentual: formData.contribuicao_percentual ?? 70,
           ativo: formData.ativo,
         })
         .eq('id', idoso.id);
@@ -149,7 +152,7 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
               />
             </div>
 
-            <DateSeparateInput
+            <DateMonthYearInput
               id="data_nascimento"
               label="Data de Nascimento"
               value={formData.data_nascimento || ""}
@@ -204,6 +207,55 @@ export function EditIdosoModal({ open, onClose, idoso }: EditIdosoModalProps) {
                 <SelectItem value="false">Inativo</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Campos de Benefício e Contribuição */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="beneficio_tipo">Tipo de Benefício</Label>
+              <Select
+                value={formData.beneficio_tipo ?? ''}
+                onValueChange={(value) => setFormData({ ...formData, beneficio_tipo: value || null })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aposentadoria">Aposentadoria</SelectItem>
+                  <SelectItem value="loas">LOAS</SelectItem>
+                  <SelectItem value="bpc">BPC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="beneficio_valor">Valor do Benefício</Label>
+              <Input
+                id="beneficio_valor"
+                type="number"
+                step="0.01"
+                value={formData.beneficio_valor ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({ ...formData, beneficio_valor: val ? Number(val) : null });
+                }}
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contribuicao_percentual">Contribuição (%)</Label>
+              <Input
+                id="contribuicao_percentual"
+                type="number"
+                step="0.01"
+                value={formData.contribuicao_percentual ?? 70}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({ ...formData, contribuicao_percentual: val ? Number(val) : 70 });
+                }}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

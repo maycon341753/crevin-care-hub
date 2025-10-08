@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
-import DateSeparateInput from "@/components/ui/date-separate-input";
+import DateMonthYearInput from "@/components/ui/date-month-year-input";
 
 interface AddIdosoModalProps {
   open: boolean;
@@ -26,6 +26,9 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
     endereco: "",
     contato_emergencia: "",
     observacoes_medicas: "",
+    beneficio_tipo: null,
+    beneficio_valor: null,
+    contribuicao_percentual: 70,
     ativo: true,
   });
   const [loading, setLoading] = useState(false);
@@ -62,6 +65,9 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
           endereco: formData.endereco || null,
           contato_emergencia: formData.contato_emergencia || null,
           observacoes_medicas: formData.observacoes_medicas || null,
+          beneficio_tipo: formData.beneficio_tipo ?? null,
+          beneficio_valor: formData.beneficio_valor ?? null,
+          contribuicao_percentual: formData.contribuicao_percentual ?? 70,
           ativo: formData.ativo ?? true,
           created_by: user.id, // Adicionar o ID do usuário autenticado
         }]);
@@ -82,6 +88,9 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
         endereco: "",
         contato_emergencia: "",
         observacoes_medicas: "",
+        beneficio_tipo: null,
+        beneficio_valor: null,
+        contribuicao_percentual: 70,
         ativo: true,
       });
 
@@ -142,7 +151,7 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
               />
             </div>
 
-            <DateSeparateInput
+            <DateMonthYearInput
               id="data_nascimento"
               label="Data de Nascimento"
               value={formData.data_nascimento || ""}
@@ -191,6 +200,55 @@ export function AddIdosoModal({ open, onClose }: AddIdosoModalProps) {
               placeholder="Informações médicas relevantes..."
               rows={3}
             />
+        </div>
+
+          {/* Campos de Benefício e Contribuição */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="beneficio_tipo">Tipo de Benefício</Label>
+              <Select
+                value={formData.beneficio_tipo ?? ''}
+                onValueChange={(value) => setFormData({ ...formData, beneficio_tipo: value || null })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aposentadoria">Aposentadoria</SelectItem>
+                  <SelectItem value="loas">LOAS</SelectItem>
+                  <SelectItem value="bpc">BPC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="beneficio_valor">Valor do Benefício</Label>
+              <Input
+                id="beneficio_valor"
+                type="number"
+                step="0.01"
+                value={formData.beneficio_valor ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({ ...formData, beneficio_valor: val ? Number(val) : null });
+                }}
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contribuicao_percentual">Contribuição (%)</Label>
+              <Input
+                id="contribuicao_percentual"
+                type="number"
+                step="0.01"
+                value={formData.contribuicao_percentual ?? 70}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({ ...formData, contribuicao_percentual: val ? Number(val) : 70 });
+                }}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

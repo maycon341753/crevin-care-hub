@@ -25,6 +25,9 @@ export function NovoIdosoPage() {
     endereco: "",
     contato_emergencia: "",
     observacoes_medicas: "",
+    beneficio_tipo: null,
+    beneficio_valor: null,
+    contribuicao_percentual: 70,
     ativo: true,
     data_admissao: new Date().toISOString().split('T')[0], // Data atual como padrão
   });
@@ -57,6 +60,9 @@ export function NovoIdosoPage() {
           endereco: formData.endereco || null,
           contato_emergencia: formData.contato_emergencia || null,
           observacoes_medicas: formData.observacoes_medicas || null,
+          beneficio_tipo: formData.beneficio_tipo ?? null,
+          beneficio_valor: formData.beneficio_valor ?? null,
+          contribuicao_percentual: formData.contribuicao_percentual ?? 70,
           ativo: formData.ativo ?? true,
           data_admissao: formData.data_admissao || new Date().toISOString().split('T')[0],
           created_by: user.id, // Adicionar o ID do usuário logado
@@ -259,6 +265,68 @@ export function NovoIdosoPage() {
                     rows={4}
                     className="mt-1 resize-none"
                   />
+                </div>
+              </div>
+
+              {/* Benefícios e Contribuição */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Benefícios</h3>
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+                  <div>
+                    <Label htmlFor="beneficio_tipo" className="text-sm font-medium">
+                      Tipo de Benefício
+                    </Label>
+                    <Select
+                      value={formData.beneficio_tipo ?? ''}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, beneficio_tipo: value || null }))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="aposentadoria">Aposentadoria</SelectItem>
+                        <SelectItem value="loas">LOAS</SelectItem>
+                        <SelectItem value="bpc">BPC</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="beneficio_valor" className="text-sm font-medium">
+                      Valor do Benefício
+                    </Label>
+                    <Input
+                      id="beneficio_valor"
+                      name="beneficio_valor"
+                      type="number"
+                      step="0.01"
+                      value={formData.beneficio_valor ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({ ...prev, beneficio_valor: val ? Number(val) : null }));
+                      }}
+                      placeholder="0,00"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contribuicao_percentual" className="text-sm font-medium">
+                      Contribuição (%)
+                    </Label>
+                    <Input
+                      id="contribuicao_percentual"
+                      name="contribuicao_percentual"
+                      type="number"
+                      step="0.01"
+                      value={formData.contribuicao_percentual ?? 70}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({ ...prev, contribuicao_percentual: val ? Number(val) : 70 }));
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
               </div>
 

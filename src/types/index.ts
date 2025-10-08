@@ -10,6 +10,9 @@ export interface Idoso {
   endereco: string | null;
   contato_emergencia: string | null;
   observacoes_medicas: string | null;
+  beneficio_tipo?: 'aposentadoria' | 'loas' | 'bpc' | null;
+  beneficio_valor?: number | null;
+  contribuicao_percentual?: number | null;
   ativo: boolean;
   created_at: string;
   updated_at: string;
