@@ -77,6 +77,7 @@ const navigationItems = [
       { title: "Lista de Espera", url: "/idosos/lista-espera" },
       { title: "Quartos/Alas", url: "/idosos/quartos" },
       { title: "Saúde", url: "/idosos/saude" },
+      { title: "Prontuário Médico", url: "/idosos/prontuario-medico" },
       { title: "Prontuário Nutricional", url: "/idosos/prontuario-nutricional" },
     ],
   },
