@@ -224,8 +224,20 @@ export default function ProntuarioNutricional() {
     setLoading(true);
 
     try {
+      // Sanitizar campos com CHECK constraints: converter string vazia para null
       const dataToSave = {
         ...prontuario,
+        // Se não usa prótese ou não selecionado, enviar null
+        protese_adaptada:
+          (prontuario.denticao === 'protese-sup' || prontuario.denticao === 'protese-inf')
+            ? (prontuario.protese_adaptada || null)
+            : null,
+        // Campos com enum no banco: enviar null quando vazio
+        mastigacao: prontuario.mastigacao || null,
+        consistencia_alimentacao: prontuario.consistencia_alimentacao || null,
+        aceitacao_alimentos: prontuario.aceitacao_alimentos || null,
+        aceitacao_liquidos: prontuario.aceitacao_liquidos || null,
+        habito_intestinal: prontuario.habito_intestinal || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -544,7 +556,7 @@ export default function ProntuarioNutricional() {
                 <Label className="text-base font-medium">Como é a dentição do idoso?</Label>
                 <RadioGroup
                   value={prontuario.denticao}
-                  onValueChange={(value) => handleInputChange('denticao', value)}
+                  onValueChange={(value) => handleInputChange('denticao', value.replace('protese-sup','protese_sup').replace('protese-inf','protese_inf').replace('ausencia','ausencia_dentes'))}
                   className="grid grid-cols-2 gap-4 mt-2"
                 >
                   <div className="flex items-center space-x-2">
