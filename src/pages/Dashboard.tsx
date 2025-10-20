@@ -45,21 +45,24 @@ export default function Dashboard() {
         setLoading(true);
         
         // Carregar estatísticas básicas
-        const [funcionariosRes, idososRes, doacoesRes, departamentosRes] = await Promise.all([
+        const [funcionariosRes, idososRes, contasReceberRes, departamentosRes, doacoesRes] = await Promise.all([
           supabase.from('funcionarios').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
           supabase.from('idosos').select('*', { count: 'exact', head: true }).eq('ativo', true),
-          supabase.from('doacoes_dinheiro').select('valor').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-          supabase.from('departamentos').select('*', { count: 'exact', head: true }).eq('ativo', true)
+          supabase.from('contas_receber').select('valor').eq('status', 'pendente'),
+          supabase.from('departamentos').select('*', { count: 'exact', head: true }).eq('ativo', true),
+          supabase.from('doacoes_dinheiro').select('valor').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
         ]);
 
-        // Calcular receita mensal (soma das doações do mês atual)
-        const receitaMensal = doacoesRes.data?.reduce((acc, d) => acc + d.valor, 0) || 0;
+        // Calcular receitas futuras (soma das contas a receber pendentes)
+        const receitasFuturas = contasReceberRes.data?.reduce((acc, c) => acc + c.valor, 0) || 0;
+        // Calcular doações do mês atual
+        const doacoesMes = doacoesRes.data?.reduce((acc, d) => acc + d.valor, 0) || 0;
 
         setStats({
           funcionariosAtivos: funcionariosRes.count || 0,
           idososAssistidos: idososRes.count || 0,
-          receitaMensal: receitaMensal,
-          doacoesMes: receitaMensal, // Por enquanto, receita = doações
+          receitaMensal: receitasFuturas,
+          doacoesMes: doacoesMes,
         });
 
         // Carregar atividades recentes (últimas doações e funcionários cadastrados)
@@ -117,7 +120,7 @@ export default function Dashboard() {
 
         // Verificar meta de doações (exemplo: R$ 10.000 por mês)
         const metaDoacao = 10000;
-        const percentualMeta = (receitaMensal / metaDoacao) * 100;
+        const percentualMeta = (stats.receitaMensal / metaDoacao) * 100;
         
         if (percentualMeta < 50) {
           alertsData.push({
@@ -136,7 +139,7 @@ export default function Dashboard() {
         const funcionariosPresentes = Math.floor(totalFuncionarios * 0.85); // Simulação: 85% presentes
         const totalIdosos = idososRes.count || 0;
         const ocupacaoQuartos = totalIdosos > 0 ? Math.min((totalIdosos / 50) * 100, 100) : 0; // Assumindo 50 quartos
-        const metaDoacoesPercent = Math.min((receitaMensal / metaDoacao) * 100, 100);
+        const metaDoacoesPercent = Math.min((stats.receitaMensal / metaDoacao) * 100, 100);
 
         setQuickStats({
           ocupacaoQuartos: Math.round(ocupacaoQuartos),
@@ -179,7 +182,7 @@ export default function Dashboard() {
       bgColor: "bg-secondary-light",
     },
     {
-      title: "Receita Mensal",
+      title: "Receitas Futuras",
       value: `R$ ${stats.receitaMensal.toLocaleString()}`,
       change: "0%",
       trend: "up",
