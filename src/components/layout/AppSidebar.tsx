@@ -79,6 +79,7 @@ const navigationItems = [
       { title: "Saúde", url: "/idosos/saude" },
       { title: "Prontuário Médico", url: "/idosos/prontuario-medico" },
       { title: "Prontuário Nutricional", url: "/idosos/prontuario-nutricional" },
+      { title: "Avaliação Fisioterapêutica", url: "/idosos/prontuario-fisioterapeutico" },
     ],
   },
   {

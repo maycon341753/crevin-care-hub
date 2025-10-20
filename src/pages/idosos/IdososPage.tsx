@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock, FileText } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock, FileText, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,8 +284,18 @@ export default function IdososPage() {
                           size="sm"
                           onClick={() => navigate(`/idosos/${idoso.id}/prontuario-nutricional`)}
                           className="h-8 w-8 p-0"
+                          title="Prontuário Nutricional"
                         >
                           <FileText className="h-4 w-4" />
+                        </Button>
+                          <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/idosos/${idoso.id}/prontuario-fisioterapeutico`)}
+                          className="h-8 w-8 p-0"
+                          title="Avaliação Fisioterapêutica"
+                        >
+                          <Activity className="h-4 w-4" />
                         </Button>
                           <Button
                             variant="outline"

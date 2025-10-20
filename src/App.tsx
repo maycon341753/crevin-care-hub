@@ -25,6 +25,8 @@ import ProntuarioNutricional from "./pages/idosos/ProntuarioNutricional";
 import ProntuarioNutricionalList from "./pages/idosos/ProntuarioNutricionalList";
 import ProntuarioMedico from "./pages/idosos/ProntuarioMedico";
 import ProntuarioMedicoList from "./pages/idosos/ProntuarioMedicoList";
+import ProntuarioFisioterapeutico from "./pages/idosos/ProntuarioFisioterapeutico";
+import ProntuarioFisioterapeuticoList from "./pages/idosos/ProntuarioFisioterapeuticoList";
 import FinanceiroPage from "./pages/financeiro/FinanceiroPage";
 import ContasPagarPage from "./pages/financeiro/ContasPagarPage";
 import ContasReceberPage from "./pages/financeiro/ContasReceberPage";
@@ -122,6 +124,8 @@ const App = () => (
             <Route path="/idosos/:idosoId/prontuario-nutricional" element={<ProtectedRoute><ProntuarioNutricional /></ProtectedRoute>} />
             <Route path="/idosos/prontuario-medico" element={<ProtectedRoute><ProntuarioMedicoList /></ProtectedRoute>} />
             <Route path="/idosos/:idosoId/prontuario-medico" element={<ProtectedRoute><ProntuarioMedico /></ProtectedRoute>} />
+            <Route path="/idosos/prontuario-fisioterapeutico" element={<ProtectedRoute><ProntuarioFisioterapeuticoList /></ProtectedRoute>} />
+            <Route path="/idosos/:idosoId/prontuario-fisioterapeutico" element={<ProtectedRoute><ProntuarioFisioterapeutico /></ProtectedRoute>} />
             <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
