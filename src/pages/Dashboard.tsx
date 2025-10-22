@@ -28,7 +28,7 @@ export default function Dashboard() {
     funcionariosAtivos: 0,
     idososAssistidos: 0,
     receitaMensal: 0,
-    doacoesMes: 0,
+    contasPagar: 0,
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -45,24 +45,24 @@ export default function Dashboard() {
         setLoading(true);
         
         // Carregar estatísticas básicas
-        const [funcionariosRes, idososRes, contasReceberRes, departamentosRes, doacoesRes] = await Promise.all([
+        const [funcionariosRes, idososRes, contasReceberRes, departamentosRes, contasPagarRes] = await Promise.all([
           supabase.from('funcionarios').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
           supabase.from('idosos').select('*', { count: 'exact', head: true }).eq('ativo', true),
           supabase.from('contas_receber').select('valor').eq('status', 'pendente'),
           supabase.from('departamentos').select('*', { count: 'exact', head: true }).eq('ativo', true),
-          supabase.from('doacoes_dinheiro').select('valor').gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+          supabase.from('contas_pagar').select('valor')
         ]);
 
         // Calcular receitas futuras (soma das contas a receber pendentes)
         const receitasFuturas = contasReceberRes.data?.reduce((acc, c) => acc + c.valor, 0) || 0;
-        // Calcular doações do mês atual
-        const doacoesMes = doacoesRes.data?.reduce((acc, d) => acc + d.valor, 0) || 0;
+        // Calcular total de contas a pagar
+        const totalContasPagar = contasPagarRes.data?.reduce((acc, c) => acc + c.valor, 0) || 0;
 
         setStats({
           funcionariosAtivos: funcionariosRes.count || 0,
           idososAssistidos: idososRes.count || 0,
           receitaMensal: receitasFuturas,
-          doacoesMes: doacoesMes,
+          contasPagar: totalContasPagar,
         });
 
         // Carregar atividades recentes (últimas doações e funcionários cadastrados)
@@ -191,8 +191,8 @@ export default function Dashboard() {
       bgColor: "bg-success-light",
     },
     {
-      title: "Doações (Mês)",
-      value: `R$ ${stats.doacoesMes.toLocaleString()}`,
+      title: "Contas a Pagar",
+      value: `R$ ${stats.contasPagar.toLocaleString()}`,
       change: "+0%",
       trend: "up",
       icon: HandHeart,

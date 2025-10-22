@@ -5,17 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Plus, Search, Edit, Trash2, Heart, DollarSign, Calendar, User } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AddDoacaoModal } from "@/components/doacoes/AddDoacaoModal";
 import { EditDoacaoModal } from "@/components/doacoes/EditDoacaoModal";
 import { DeleteDoacaoModal } from "@/components/doacoes/DeleteDoacaoModal";
 import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DoacoesPage() {
   const [doacoesDinheiro, setDoacoesDinheiro] = useState<any[]>([]);
   const [doacoesItens, setDoacoesItens] = useState<any[]>([]);
+  const [contasPagar, setContasPagar] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -40,8 +42,16 @@ export default function DoacoesPage() {
 
       if (itensError) throw itensError;
 
+      // Buscar contas a pagar para calcular despesas
+      const { data: contasPagarData, error: contasPagarError } = await supabase
+        .from('contas_pagar')
+        .select('valor, status');
+
+      if (contasPagarError) throw contasPagarError;
+
       setDoacoesDinheiro(dinheiroData || []);
       setDoacoesItens(itensData || []);
+      setContasPagar(contasPagarData || []);
     } catch (error) {
       console.error('Erro ao carregar doações:', error);
       toast({
@@ -69,6 +79,7 @@ export default function DoacoesPage() {
 
   const totalDoacoesDinheiro = doacoesDinheiro.reduce((acc, doacao) => acc + doacao.valor, 0);
   const totalDoacoesItens = doacoesItens.length;
+  const totalDespesas = contasPagar.reduce((acc, conta) => acc + conta.valor, 0);
 
   if (loading) {
     return (
@@ -137,11 +148,13 @@ export default function DoacoesPage() {
         <Card className="crevin-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Recibos Gerados
+              Total Despesas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">89</div>
+            <div className="text-xl sm:text-2xl font-bold text-destructive">
+              R$ {totalDespesas.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
       </div>

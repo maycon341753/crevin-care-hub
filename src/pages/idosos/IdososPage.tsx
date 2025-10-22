@@ -284,7 +284,7 @@ export default function IdososPage() {
                           size="sm"
                           onClick={() => navigate(`/idosos/${idoso.id}/prontuario-nutricional`)}
                           className="h-8 w-8 p-0"
-                          title="Prontuário Nutricional"
+                          title="Evolução Nutricional"
                         >
                           <FileText className="h-4 w-4" />
                         </Button>

@@ -314,7 +314,7 @@ const FinanceiroPage: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">A Pagar</p>
+                <p className="text-sm font-medium text-gray-600">Despesas</p>
                 <p className="text-2xl font-bold text-red-600">{formatCurrency(resumo.totalPagar)}</p>
               </div>
               <TrendingDown className="h-8 w-8 text-red-600" />
