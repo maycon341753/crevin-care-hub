@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
 
 interface RelatorioData {
   totalDoacoesDinheiro: number;
@@ -152,12 +153,245 @@ export default function DoacoesRelatoriosPage() {
     fetchRelatorioData();
   }, [fetchRelatorioData]);
 
-  const exportarRelatorio = () => {
-    // Implementar exportação para PDF/Excel
-    toast({
-      title: "Exportação",
-      description: "Funcionalidade de exportação em desenvolvimento",
-    });
+  // Função para exportar relatório em PDF
+  const exportarPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      let yPosition = 20;
+      
+      // === CABEÇALHO PROFISSIONAL ===
+      // Linha superior decorativa
+      doc.setDrawColor(59, 130, 246); // Azul
+      doc.setLineWidth(3);
+      doc.line(20, 15, pageWidth - 20, 15);
+      
+      // Título principal
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('RELATORIO DE DOACOES', pageWidth / 2, 30, { align: 'center' });
+      
+      // Subtítulo
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Crevin Care Hub - Sistema de Gestao', pageWidth / 2, 40, { align: 'center' });
+      
+      // Linha inferior do cabeçalho
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(1);
+      doc.line(20, 45, pageWidth - 20, 45);
+      
+      yPosition = 60;
+      
+      // === INFORMAÇÕES DO RELATÓRIO ===
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      
+      const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      doc.text(`Data de Geracao: ${dataAtual}`, 20, yPosition);
+      yPosition += 8;
+      
+      if (dataInicio && dataFim) {
+        doc.text(`Periodo Analisado: ${dataInicio} ate ${dataFim}`, 20, yPosition);
+      } else {
+        doc.text('Periodo Analisado: Todos os registros', 20, yPosition);
+      }
+      yPosition += 20;
+      
+      // === RESUMO EXECUTIVO ===
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('RESUMO EXECUTIVO', 20, yPosition);
+      yPosition += 15;
+      
+      // Caixa do resumo
+      doc.setDrawColor(59, 130, 246);
+      doc.setFillColor(245, 248, 255);
+      doc.roundedRect(20, yPosition - 5, pageWidth - 40, 50, 3, 3, 'FD');
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      
+      yPosition += 8;
+      doc.text(`Total Arrecadado (Dinheiro): ${formatBrazilianCurrency(relatorioData.totalDoacoesDinheiro)}`, 25, yPosition);
+      yPosition += 10;
+      doc.text(`Total de Doacoes (Itens): ${relatorioData.totalDoacoesItens} unidades`, 25, yPosition);
+      yPosition += 10;
+      doc.text(`Total de Despesas: ${formatBrazilianCurrency(relatorioData.totalDespesas)}`, 25, yPosition);
+      yPosition += 10;
+      
+      // Saldo líquido com destaque
+      const saldoPositivo = relatorioData.saldoLiquido >= 0;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(saldoPositivo ? 34 : 239, saldoPositivo ? 197 : 68, saldoPositivo ? 94 : 68);
+      doc.text(`Saldo Liquido: ${formatBrazilianCurrency(relatorioData.saldoLiquido)} ${saldoPositivo ? '(POSITIVO)' : '(NEGATIVO)'}`, 25, yPosition);
+      
+      yPosition += 25;
+      
+      // === EVOLUÇÃO MENSAL ===
+      if (relatorioData.doacoesPorMes.length > 0) {
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(59, 130, 246);
+        doc.text('EVOLUCAO MENSAL DAS DOACOES', 20, yPosition);
+        yPosition += 15;
+        
+        // Cabeçalho da tabela
+        doc.setFillColor(59, 130, 246);
+        doc.setTextColor(255, 255, 255);
+        doc.rect(20, yPosition - 5, pageWidth - 40, 12, 'F');
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('MES/ANO', 25, yPosition + 3);
+        doc.text('VALOR ARRECADADO', pageWidth - 80, yPosition + 3);
+        
+        yPosition += 15;
+        
+        // Dados da tabela
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        relatorioData.doacoesPorMes.forEach((item, index) => {
+          // Alternar cores das linhas
+          if (index % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(20, yPosition - 5, pageWidth - 40, 10, 'F');
+          }
+          
+          doc.text(item.mes, 25, yPosition);
+          doc.text(formatBrazilianCurrency(item.valor), pageWidth - 80, yPosition);
+          yPosition += 10;
+          
+          // Verificar se precisa de nova página
+          if (yPosition > pageHeight - 50) {
+            doc.addPage();
+            yPosition = 30;
+          }
+        });
+        
+        yPosition += 10;
+      }
+      
+      // === RANKING DOS MAIORES DOADORES ===
+      if (relatorioData.maioresDoadores.length > 0) {
+        // Verificar se precisa de nova página
+        if (yPosition > pageHeight - 100) {
+          doc.addPage();
+          yPosition = 30;
+        }
+        
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(59, 130, 246);
+        doc.text('TOP 10 - MAIORES DOADORES', 20, yPosition);
+        yPosition += 15;
+        
+        // Cabeçalho da tabela
+        doc.setFillColor(34, 197, 94);
+        doc.setTextColor(255, 255, 255);
+        doc.rect(20, yPosition - 5, pageWidth - 40, 12, 'F');
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('POSICAO', 25, yPosition + 3);
+        doc.text('NOME DO DOADOR', 60, yPosition + 3);
+        doc.text('VALOR TOTAL', pageWidth - 60, yPosition + 3);
+        
+        yPosition += 15;
+        
+        // Dados dos doadores
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        relatorioData.maioresDoadores.slice(0, 10).forEach((doador, index) => {
+          // Alternar cores das linhas
+          if (index % 2 === 0) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(20, yPosition - 5, pageWidth - 40, 10, 'F');
+          }
+          
+          // Posições para os 3 primeiros
+          let posicao = `${index + 1}o`;
+          if (index === 0) posicao = '1o LUGAR';
+          else if (index === 1) posicao = '2o LUGAR';
+          else if (index === 2) posicao = '3o LUGAR';
+          
+          doc.text(posicao, 25, yPosition);
+          doc.text(doador.nome, 60, yPosition);
+          doc.text(formatBrazilianCurrency(doador.valor), pageWidth - 60, yPosition);
+          yPosition += 10;
+        });
+        
+        yPosition += 15;
+      }
+      
+      // === ESTATÍSTICAS ADICIONAIS ===
+      if (yPosition > pageHeight - 80) {
+        doc.addPage();
+        yPosition = 30;
+      }
+      
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('ESTATISTICAS COMPLEMENTARES', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      
+      const totalDoadores = relatorioData.maioresDoadores.length;
+      const mediaDoacao = totalDoadores > 0 ? relatorioData.totalDoacoesDinheiro / totalDoadores : 0;
+      
+      doc.text(`Total de Doadores Unicos: ${totalDoadores}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Valor Medio por Doador: ${formatBrazilianCurrency(mediaDoacao)}`, 20, yPosition);
+      yPosition += 10;
+      
+      if (relatorioData.maioresDoadores.length > 0) {
+        const maiorDoacao = Math.max(...relatorioData.maioresDoadores.map(d => d.valor));
+        doc.text(`Maior Doacao Individual: ${formatBrazilianCurrency(maiorDoacao)}`, 20, yPosition);
+        yPosition += 10;
+      }
+      
+      // === RODAPÉ ===
+      const rodapeY = pageHeight - 20;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, rodapeY - 5, pageWidth - 20, rodapeY - 5);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Crevin Care Hub - Sistema de Gestao de Doacoes', 20, rodapeY);
+      doc.text(`Pagina 1 de 1 - Gerado em ${dataAtual}`, pageWidth - 20, rodapeY, { align: 'right' });
+      
+      // Salvar o PDF
+      const nomeArquivo = `relatorio-doacoes-detalhado-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(nomeArquivo);
+      
+      toast({
+        title: "PDF exportado com sucesso!",
+        description: "Relatório detalhado foi baixado para seu computador.",
+      });
+      
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast({
+        title: "Erro ao exportar PDF",
+        description: "Ocorreu um erro ao gerar o relatório em PDF.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -180,9 +414,9 @@ export default function DoacoesRelatoriosPage() {
             Análise detalhada das doações e despesas da instituição
           </p>
         </div>
-        <Button onClick={exportarRelatorio} className="flex items-center gap-2">
+        <Button onClick={exportarPDF} className="flex items-center gap-2">
           <Download className="h-4 w-4" />
-          Exportar Relatório
+          Exportar PDF
         </Button>
       </div>
 
@@ -225,9 +459,13 @@ export default function DoacoesRelatoriosPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <Button onClick={fetchRelatorioData} variant="outline">
               Atualizar Relatório
+            </Button>
+            <Button onClick={exportarPDF} variant="default" className="bg-red-600 hover:bg-red-700">
+              <FileText className="w-4 h-4 mr-2" />
+              Exportar PDF
             </Button>
           </div>
         </CardContent>
