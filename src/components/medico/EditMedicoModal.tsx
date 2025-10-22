@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import DateSeparateInput from "@/components/ui/date-separate-input";
 
-interface SaudeIdoso {
+interface MedicoIdoso {
   id: string;
   idoso_id: string;
   tipo_registro: 'consulta' | 'exame' | 'medicamento' | 'procedimento' | 'observacao';
@@ -32,14 +32,14 @@ interface Idoso {
   nome: string;
 }
 
-interface EditSaudeModalProps {
+interface EditMedicoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  registro: SaudeIdoso | null;
+  registro: MedicoIdoso | null;
   onSuccess: () => void;
 }
 
-export function EditSaudeModal({ open, onOpenChange, registro, onSuccess }: EditSaudeModalProps) {
+export function EditMedicoModal({ open, onOpenChange, registro, onSuccess }: EditMedicoModalProps) {
   const [loading, setLoading] = useState(false);
   const [idosos, setIdosos] = useState<Idoso[]>([]);
   const [formData, setFormData] = useState({
@@ -114,7 +114,7 @@ export function EditSaudeModal({ open, onOpenChange, registro, onSuccess }: Edit
 
       toast({
         title: "Sucesso",
-        description: "Registro de saúde atualizado com sucesso!",
+        description: "Registro médico atualizado com sucesso!",
       });
 
       onSuccess();
@@ -123,7 +123,7 @@ export function EditSaudeModal({ open, onOpenChange, registro, onSuccess }: Edit
       console.error('Erro ao atualizar registro:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o registro de saúde.",
+        description: "Não foi possível atualizar o registro médico.",
         variant: "destructive",
       });
     } finally {
@@ -157,7 +157,7 @@ export function EditSaudeModal({ open, onOpenChange, registro, onSuccess }: Edit
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Registro de Saúde</DialogTitle>
+          <DialogTitle>Editar Registro Médico</DialogTitle>
           <DialogDescription>
             Edite as informações do registro médico.
           </DialogDescription>

@@ -76,7 +76,7 @@ const navigationItems = [
       { title: "Cadastrar Idoso", url: "/idosos/novo" },
       { title: "Lista de Espera", url: "/idosos/lista-espera" },
       { title: "Quartos/Alas", url: "/idosos/quartos" },
-      { title: "Saúde", url: "/idosos/saude" },
+      { title: "Médico", url: "/idosos/medico" },
       { title: "Prontuário Médico", url: "/idosos/prontuario-medico" },
       { title: "Prontuário Nutricional", url: "/idosos/prontuario-nutricional" },
       { title: "Avaliação Fisioterapêutica", url: "/idosos/prontuario-fisioterapeutico" },

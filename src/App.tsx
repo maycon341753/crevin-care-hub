@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Loader2 } from "lucide-react";
+import ExemploImagem from "@/components/ExemploImagem";
+import TesteImagemSimples from "@/components/TesteImagemSimples";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -18,7 +20,7 @@ import DoacoesPage from "./pages/doacoes/DoacoesPage";
 import DoacoesDinheiroPage from "./pages/doacoes/DoacoesDinheiroPage";
 import IdososPage from "./pages/idosos/IdososPage";
 import QuartosPage from "./pages/idosos/QuartosPage";
-import SaudePage from "./pages/idosos/SaudePage";
+import MedicoPage from "./pages/idosos/MedicoPage";
 import { NovoIdosoPage } from "./pages/idosos/NovoIdosoPage";
 import ListaEsperaPage from "./pages/idosos/ListaEsperaPage";
 import ProntuarioNutricional from "./pages/idosos/ProntuarioNutricional";
@@ -119,7 +121,7 @@ const App = () => (
             <Route path="/idosos/novo" element={<ProtectedRoute><NovoIdosoPage /></ProtectedRoute>} />
             <Route path="/idosos/lista-espera" element={<ProtectedRoute><ListaEsperaPage /></ProtectedRoute>} />
             <Route path="/idosos/quartos" element={<ProtectedRoute><QuartosPage /></ProtectedRoute>} />
-            <Route path="/idosos/saude" element={<ProtectedRoute><SaudePage /></ProtectedRoute>} />
+            <Route path="/idosos/medico" element={<ProtectedRoute><MedicoPage /></ProtectedRoute>} />
             <Route path="/idosos/prontuario-nutricional" element={<ProtectedRoute><ProntuarioNutricionalList /></ProtectedRoute>} />
             <Route path="/idosos/:idosoId/prontuario-nutricional" element={<ProtectedRoute><ProntuarioNutricional /></ProtectedRoute>} />
             <Route path="/idosos/prontuario-medico" element={<ProtectedRoute><ProntuarioMedicoList /></ProtectedRoute>} />
@@ -144,6 +146,8 @@ const App = () => (
             <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
             <Route path="/lembretes" element={<ProtectedRoute><LembretesPage /></ProtectedRoute>} />
+            <Route path="/exemplo-imagem" element={<ProtectedRoute><ExemploImagem /></ProtectedRoute>} />
+            <Route path="/teste-imagem" element={<ProtectedRoute><TesteImagemSimples /></ProtectedRoute>} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

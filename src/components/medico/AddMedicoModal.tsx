@@ -14,13 +14,13 @@ interface Idoso {
   nome: string;
 }
 
-interface AddSaudeModalProps {
+interface AddMedicoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function AddSaudeModal({ open, onOpenChange, onSuccess }: AddSaudeModalProps) {
+export function AddMedicoModal({ open, onOpenChange, onSuccess }: AddMedicoModalProps) {
   const [loading, setLoading] = useState(false);
   const [idosos, setIdosos] = useState<Idoso[]>([]);
   const [formData, setFormData] = useState({
@@ -97,7 +97,7 @@ export function AddSaudeModal({ open, onOpenChange, onSuccess }: AddSaudeModalPr
 
       toast({
         title: "Sucesso",
-        description: "Registro de saúde criado com sucesso!",
+        description: "Registro médico criado com sucesso!",
       });
 
       // Reset form
@@ -121,7 +121,7 @@ export function AddSaudeModal({ open, onOpenChange, onSuccess }: AddSaudeModalPr
       console.error('Erro ao criar registro:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o registro de saúde.",
+        description: "Não foi possível criar o registro médico.",
         variant: "destructive",
       });
     } finally {
@@ -139,7 +139,7 @@ export function AddSaudeModal({ open, onOpenChange, onSuccess }: AddSaudeModalPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Registro de Saúde</DialogTitle>
+          <DialogTitle>Novo Registro Médico</DialogTitle>
           <DialogDescription>
             Adicione um novo registro médico para um idoso.
           </DialogDescription>

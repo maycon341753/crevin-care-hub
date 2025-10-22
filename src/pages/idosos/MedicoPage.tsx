@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
+import { Plus, Search, Heart, Calendar, Activity, Stethoscope, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Search, Heart, Activity, Stethoscope, Calendar } from "lucide-react";
-import { AddSaudeModal } from "@/components/saude/AddSaudeModal";
-import { EditSaudeModal } from "@/components/saude/EditSaudeModal";
 import { formatBrazilianDate } from "@/lib/utils";
+import { AddMedicoModal } from "@/components/medico/AddMedicoModal";
+import { EditMedicoModal } from "@/components/medico/EditMedicoModal";
 
-interface SaudeIdoso {
+interface MedicoIdoso {
   id: string;
   idoso_id: string;
   tipo_registro: 'consulta' | 'exame' | 'medicamento' | 'procedimento' | 'observacao';
@@ -32,21 +32,21 @@ interface SaudeIdoso {
   };
 }
 
-export default function SaudePage() {
-  const [registrosSaude, setRegistrosSaude] = useState<SaudeIdoso[]>([]);
-  const [filteredRegistros, setFilteredRegistros] = useState<SaudeIdoso[]>([]);
+export default function MedicoPage() {
+  const [registrosMedico, setRegistrosMedico] = useState<MedicoIdoso[]>([]);
+  const [filteredRegistros, setFilteredRegistros] = useState<MedicoIdoso[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [tipoFilter, setTipoFilter] = useState<string>("todos");
-  const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const [prioridadeFilter, setPrioridadeFilter] = useState<string>("todos");
+  const [tipoFilter, setTipoFilter] = useState("todos");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [prioridadeFilter, setPrioridadeFilter] = useState("todos");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedRegistro, setSelectedRegistro] = useState<SaudeIdoso | null>(null);
+  const [selectedRegistro, setSelectedRegistro] = useState<MedicoIdoso | null>(null);
   const { toast } = useToast();
 
-  // Função para buscar registros de saúde
-  const fetchRegistrosSaude = async () => {
+  // Função para buscar registros médicos
+  const fetchRegistrosMedico = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -61,12 +61,12 @@ export default function SaudePage() {
 
       if (error) throw error;
 
-      setRegistrosSaude(data || []);
+      setRegistrosMedico(data || []);
     } catch (error) {
-      console.error('Erro ao buscar registros de saúde:', error);
+      console.error('Erro ao buscar registros médicos:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os registros de saúde.",
+        description: "Não foi possível carregar os registros médicos.",
         variant: "destructive",
       });
     } finally {
@@ -91,7 +91,7 @@ export default function SaudePage() {
         description: "Registro excluído com sucesso!",
       });
 
-      fetchRegistrosSaude();
+      fetchRegistrosMedico();
     } catch (error) {
       console.error('Erro ao excluir registro:', error);
       toast({
@@ -104,7 +104,7 @@ export default function SaudePage() {
 
   // Função para filtrar registros
   const filterRegistros = () => {
-    let filtered = registrosSaude;
+    let filtered = registrosMedico;
 
     // Filtro por termo de busca
     if (searchTerm) {
@@ -168,34 +168,34 @@ export default function SaudePage() {
   };
 
   // Calcular estatísticas
-  const totalRegistros = registrosSaude.length;
-  const consultasHoje = registrosSaude.filter(r => 
+  const totalRegistros = registrosMedico.length;
+  const consultasHoje = registrosMedico.filter(r => 
     r.tipo_registro === 'consulta' && 
     new Date(r.data_registro).toDateString() === new Date().toDateString()
   ).length;
-  const examesPendentes = registrosSaude.filter(r => 
+  const examesPendentes = registrosMedico.filter(r => 
     r.tipo_registro === 'exame' && 
     r.status === 'ativo'
   ).length;
-  const registrosUrgentes = registrosSaude.filter(r => 
+  const registrosUrgentes = registrosMedico.filter(r => 
     r.prioridade === 'urgente' && 
     r.status === 'ativo'
   ).length;
 
   useEffect(() => {
-    fetchRegistrosSaude();
+    fetchRegistrosMedico();
   }, []);
 
   useEffect(() => {
     filterRegistros();
-  }, [registrosSaude, searchTerm, tipoFilter, statusFilter, prioridadeFilter]);
+  }, [registrosMedico, searchTerm, tipoFilter, statusFilter, prioridadeFilter]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Saúde dos Idosos</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Médico dos Idosos</h1>
           <p className="text-gray-600 mt-1">Gerencie consultas, exames e cuidados médicos</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export default function SaudePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRegistros}</div>
-            <p className="text-xs text-muted-foreground">Registros de saúde</p>
+            <p className="text-xs text-muted-foreground">Registros médicos</p>
           </CardContent>
         </Card>
 
@@ -255,7 +255,7 @@ export default function SaudePage() {
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre os registros de saúde</CardDescription>
+          <CardDescription>Filtre os registros médicos</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -326,7 +326,7 @@ export default function SaudePage() {
       {/* Tabela de Registros */}
       <Card>
         <CardHeader>
-          <CardTitle>Registros de Saúde</CardTitle>
+          <CardTitle>Registros Médicos</CardTitle>
           <CardDescription>
             {filteredRegistros.length} registro(s) encontrado(s)
           </CardDescription>
@@ -432,17 +432,17 @@ export default function SaudePage() {
       </Card>
 
       {/* Modais */}
-      <AddSaudeModal
+      <AddMedicoModal
         open={showAddModal}
         onOpenChange={setShowAddModal}
-        onSuccess={fetchRegistrosSaude}
+        onSuccess={fetchRegistrosMedico}
       />
 
-      <EditSaudeModal
+      <EditMedicoModal
         open={showEditModal}
         onOpenChange={setShowEditModal}
         registro={selectedRegistro}
-        onSuccess={fetchRegistrosSaude}
+        onSuccess={fetchRegistrosMedico}
       />
     </div>
   );
