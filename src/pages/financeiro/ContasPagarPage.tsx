@@ -17,7 +17,9 @@ import {
   XCircle,
   Edit,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Download
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -27,6 +29,7 @@ import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
 import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 import { ContasRecorrentesService } from '@/services/contasRecorrentes';
+import jsPDF from 'jspdf';
 
 interface CategoriaFinanceira {
   id: string;
@@ -153,6 +156,124 @@ const ContasPagarPage: React.FC = () => {
     }
   };
 
+  // Função para gerar relatório em PDF
+  const handleGerarRelatorioPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Configurar fonte para suportar caracteres especiais
+      doc.setFont('helvetica');
+      
+      // Título do relatório
+      doc.setFontSize(18);
+      doc.text('Relatório de Contas a Pagar', 20, 20);
+      
+      // Data de geração
+      doc.setFontSize(12);
+      doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 20, 30);
+      
+      // Resumo
+      doc.setFontSize(14);
+      doc.text('Resumo:', 20, 45);
+      doc.setFontSize(10);
+      doc.text(`Total Pendente: ${formatBrazilianCurrency(totalPendente)}`, 20, 55);
+      doc.text(`Total Pago: ${formatBrazilianCurrency(totalPago)}`, 20, 65);
+      doc.text(`Total Vencido: ${formatBrazilianCurrency(totalVencido)}`, 20, 75);
+      
+      // Cabeçalho da tabela
+      let yPosition = 90;
+      doc.setFontSize(8);
+      doc.text('Descrição', 20, yPosition);
+      doc.text('Valor', 80, yPosition);
+      doc.text('Vencimento', 110, yPosition);
+      doc.text('Fornecedor', 140, yPosition);
+      doc.text('Status', 170, yPosition);
+      
+      // Linha separadora
+      yPosition += 5;
+      doc.line(20, yPosition, 190, yPosition);
+      
+      // Dados das contas
+      yPosition += 10;
+      filteredContas.forEach((conta) => {
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.text(conta.descricao.substring(0, 25), 20, yPosition);
+        doc.text(formatBrazilianCurrency(conta.valor), 80, yPosition);
+        doc.text(formatBrazilianDate(conta.data_vencimento), 110, yPosition);
+        doc.text(conta.fornecedor_nome.substring(0, 15), 140, yPosition);
+        doc.text(conta.status, 170, yPosition);
+        
+        yPosition += 8;
+      });
+      
+      // Salvar o PDF
+      doc.save(`contas-a-pagar-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success('Relatório PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar relatório PDF:', error);
+      toast.error('Erro ao gerar relatório PDF');
+    }
+  };
+
+  // Função para gerar relatório em CSV
+  const handleGerarRelatorioCSV = () => {
+    try {
+      // Cabeçalho do CSV
+      const headers = [
+        'Descrição',
+        'Valor',
+        'Data Vencimento',
+        'Data Pagamento',
+        'Fornecedor',
+        'Categoria',
+        'Status',
+        'Forma Pagamento',
+        'Observações'
+      ];
+      
+      // Dados das contas
+      const csvData = filteredContas.map(conta => [
+        conta.descricao,
+        conta.valor.toString().replace('.', ','),
+        formatBrazilianDate(conta.data_vencimento),
+        conta.data_pagamento ? formatBrazilianDate(conta.data_pagamento) : '',
+        conta.fornecedor_nome,
+        conta.categorias_financeiras.nome,
+        conta.status,
+        conta.forma_pagamento || '',
+        conta.observacoes || ''
+      ]);
+      
+      // Combinar cabeçalho e dados
+      const allData = [headers, ...csvData];
+      
+      // Converter para string CSV
+      const csvContent = allData.map(row => 
+        row.map(field => `"${field}"`).join(';')
+      ).join('\n');
+      
+      // Criar e baixar o arquivo
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `contas-a-pagar-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Relatório CSV gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar relatório CSV:', error);
+      toast.error('Erro ao gerar relatório CSV');
+    }
+  };
+
   // Função para calcular próxima data de pagamento baseada na frequência
   const calcularProximaDataPagamento = (dataVencimento: string, frequencia: string): string => {
     const data = new Date(dataVencimento);
@@ -247,6 +368,24 @@ const ContasPagarPage: React.FC = () => {
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Processar Recorrentes
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleGerarRelatorioPDF}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Relatório PDF
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleGerarRelatorioCSV}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Relatório CSV
           </Button>
           <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
