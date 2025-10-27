@@ -35,6 +35,8 @@ interface ContaReceber {
   forma_pagamento?: string;
   observacoes?: string;
   status: 'pendente' | 'pago' | 'vencido';
+  recorrente?: boolean;
+  frequencia_recorrencia?: string;
 }
 
 interface EditContaReceberModalProps {
@@ -63,7 +65,9 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
     pagador_telefone: '',
     forma_pagamento: '',
     observacoes: '',
-    status: 'pendente' as 'pendente' | 'pago' | 'vencido'
+    status: 'pendente' as 'pendente' | 'pago' | 'vencido',
+    recorrente: false,
+    frequencia_recorrencia: 'mensal'
   });
   const [idosos, setIdosos] = useState<Idoso[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,7 +85,9 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
         pagador_telefone: conta.pagador_telefone || '',
         forma_pagamento: conta.forma_pagamento || '',
         observacoes: conta.observacoes || '',
-        status: conta.status
+        status: conta.status,
+        recorrente: conta.recorrente || false,
+        frequencia_recorrencia: conta.frequencia_recorrencia || 'mensal'
       });
       fetchIdosos();
     }
@@ -147,9 +153,9 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     // Aplicar formatação especial para o campo valor
-    if (field === 'valor') {
+    if (field === 'valor' && typeof value === 'string') {
       const formattedValue = formatCurrencyInput(value);
       setFormData(prev => ({
         ...prev,
@@ -342,6 +348,45 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
                 placeholder="Informações adicionais..."
                 rows={3}
               />
+            </div>
+
+            {/* Campos de Recorrência */}
+            <div className="md:col-span-2 border-t pt-4">
+              <h3 className="text-lg font-medium mb-3">Configurações de Recorrência</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="recorrente"
+                    checked={formData.recorrente}
+                    onChange={(e) => handleInputChange('recorrente', e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <Label htmlFor="recorrente" className="text-sm font-medium">
+                    Esta é uma conta recorrente
+                  </Label>
+                </div>
+
+                {formData.recorrente && (
+                  <div>
+                    <Label htmlFor="frequencia_recorrencia">Frequência</Label>
+                    <select
+                      id="frequencia_recorrencia"
+                      value={formData.frequencia_recorrencia}
+                      onChange={(e) => handleInputChange('frequencia_recorrencia', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="semanal">Semanal</option>
+                      <option value="mensal">Mensal</option>
+                      <option value="bimestral">Bimestral</option>
+                      <option value="trimestral">Trimestral</option>
+                      <option value="semestral">Semestral</option>
+                      <option value="anual">Anual</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

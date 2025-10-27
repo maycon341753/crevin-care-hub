@@ -44,6 +44,8 @@ interface ContaReceber {
   status: 'pendente' | 'recebido' | 'vencido' | 'cancelado';
   observacoes?: string;
   categorias_financeiras: CategoriaFinanceira;
+  recorrente?: boolean;
+  frequencia_recorrencia?: string;
 }
 
 interface ContaPagar {

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { useRecurringAccounts } from "@/hooks/useRecurringAccounts";
 import { Loader2 } from "lucide-react";
 import ExemploImagem from "@/components/ExemploImagem";
 import TesteImagemSimples from "@/components/TesteImagemSimples";
@@ -51,6 +52,9 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  
+  // Inicializa o processamento de contas recorrentes quando o usuário está autenticado
+  useRecurringAccounts();
 
   if (loading) {
     return (
