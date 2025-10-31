@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { DocumentosMedicosUpload } from '@/components/documentos/DocumentosMedicosUpload';
+import { DocumentosMedicosList } from '@/components/documentos/DocumentosMedicosList';
 import { Idoso } from "@/types";
 
 interface ProntuarioMedicoRecord {
@@ -40,6 +42,7 @@ export default function ProntuarioMedico() {
     idoso_id: idosoId || "",
     status: 'ativo',
   });
+  const [refreshDocumentos, setRefreshDocumentos] = useState(0);
 
   useEffect(() => {
     if (idosoId) {
@@ -263,6 +266,23 @@ export default function ProntuarioMedico() {
                 />
               </div>
             </CardContent>
+          </Card>
+
+          {/* Documentos Médicos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">Documentos Médicos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <DocumentosMedicosUpload 
+                 idosoId={idosoId!} 
+                 onUploadSuccess={() => setRefreshDocumentos(prev => prev + 1)}
+               />
+               <DocumentosMedicosList 
+                 idosoId={idosoId!} 
+                 refreshTrigger={refreshDocumentos}
+               />
+             </CardContent>
           </Card>
 
           <div className="flex justify-end">

@@ -260,6 +260,60 @@ export type Database = {
         }
         Relationships: []
       }
+        documentos_medicos: {
+      Row: {
+        id: string
+        idoso_id: string
+        nome_arquivo: string
+        tipo_arquivo: string
+        tamanho_arquivo: number | null
+        caminho_storage: string
+        descricao: string | null
+        uploaded_by: string | null
+        created_at: string
+        updated_at: string
+      }
+      Insert: {
+        id?: string
+        idoso_id: string
+        nome_arquivo: string
+        tipo_arquivo?: string
+        tamanho_arquivo?: number | null
+        caminho_storage: string
+        descricao?: string | null
+        uploaded_by?: string | null
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        idoso_id?: string
+        nome_arquivo?: string
+        tipo_arquivo?: string
+        tamanho_arquivo?: number | null
+        caminho_storage?: string
+        descricao?: string | null
+        uploaded_by?: string | null
+        created_at?: string
+        updated_at?: string
+      }
+      Relationships: [
+        {
+          foreignKeyName: "documentos_medicos_idoso_id_fkey"
+          columns: ["idoso_id"]
+          isOneToOne: false
+          referencedRelation: "idosos"
+          referencedColumns: ["id"]
+        },
+        {
+          foreignKeyName: "documentos_medicos_uploaded_by_fkey"
+          columns: ["uploaded_by"]
+          isOneToOne: false
+          referencedRelation: "users"
+          referencedColumns: ["id"]
+        }
+      ]
+    }
     }
     Views: {
       [_ in never]: never
