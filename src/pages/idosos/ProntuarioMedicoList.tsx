@@ -165,7 +165,7 @@ export default function ProntuarioMedicoList() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" /> Atualizado: {new Date(p.updated_at).toLocaleString()}
+                    <Calendar className="h-4 w-4" /> Atualizado: {new Date(p.updated_at).toLocaleDateString('pt-BR')}
                   </div>
                   <div>
                     <Badge variant={p.status === 'ativo' ? 'default' : 'secondary'}>{p.status}</Badge>

@@ -18,6 +18,15 @@ interface ProntuarioMedicoRecord {
   idoso_id: string;
   identificacao_paciente?: string;
   anamnese?: string;
+  // Campos específicos da anamnese
+  queixa_principal?: string;
+  historia_doenca_atual?: string;
+  historia_medica_pregressa?: string;
+  medicamentos_uso?: string;
+  alergias?: string;
+  historia_familiar?: string;
+  historia_social?: string;
+  revisao_sistemas?: string;
   exame_fisico?: string;
   hipoteses_diagnosticas?: string;
   diagnosticos_definitivos?: string;
@@ -166,8 +175,94 @@ export default function ProntuarioMedico() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" /> Anamnese</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Textarea value={prontuario.anamnese || ''} onChange={(e) => handleInputChange('anamnese', e.target.value)} rows={6} />
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="queixa_principal">Queixa Principal</Label>
+                <Textarea 
+                  id="queixa_principal" 
+                  value={prontuario.queixa_principal || ''} 
+                  onChange={(e) => handleInputChange('queixa_principal', e.target.value)} 
+                  rows={3}
+                  placeholder="Descreva a queixa principal do paciente..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="historia_doenca_atual">História da Doença Atual</Label>
+                <Textarea 
+                  id="historia_doenca_atual" 
+                  value={prontuario.historia_doenca_atual || ''} 
+                  onChange={(e) => handleInputChange('historia_doenca_atual', e.target.value)} 
+                  rows={4}
+                  placeholder="Descreva a história da doença atual..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="historia_medica_pregressa">História Médica Pregressa</Label>
+                <Textarea 
+                  id="historia_medica_pregressa" 
+                  value={prontuario.historia_medica_pregressa || ''} 
+                  onChange={(e) => handleInputChange('historia_medica_pregressa', e.target.value)} 
+                  rows={3}
+                  placeholder="Doenças anteriores, cirurgias, internações..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="medicamentos_uso">Medicamentos em Uso</Label>
+                <Textarea 
+                  id="medicamentos_uso" 
+                  value={prontuario.medicamentos_uso || ''} 
+                  onChange={(e) => handleInputChange('medicamentos_uso', e.target.value)} 
+                  rows={3}
+                  placeholder="Liste os medicamentos em uso atual..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="alergias">Alergias</Label>
+                <Textarea 
+                  id="alergias" 
+                  value={prontuario.alergias || ''} 
+                  onChange={(e) => handleInputChange('alergias', e.target.value)} 
+                  rows={2}
+                  placeholder="Alergias medicamentosas, alimentares ou outras..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="historia_familiar">História Familiar</Label>
+                <Textarea 
+                  id="historia_familiar" 
+                  value={prontuario.historia_familiar || ''} 
+                  onChange={(e) => handleInputChange('historia_familiar', e.target.value)} 
+                  rows={3}
+                  placeholder="Histórico de doenças na família..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="historia_social">História Social</Label>
+                <Textarea 
+                  id="historia_social" 
+                  value={prontuario.historia_social || ''} 
+                  onChange={(e) => handleInputChange('historia_social', e.target.value)} 
+                  rows={3}
+                  placeholder="Hábitos de vida, profissão, condições sociais..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="revisao_sistemas">Revisão de Sistemas</Label>
+                <Textarea 
+                  id="revisao_sistemas" 
+                  value={prontuario.revisao_sistemas || ''} 
+                  onChange={(e) => handleInputChange('revisao_sistemas', e.target.value)} 
+                  rows={4}
+                  placeholder="Revisão por sistemas (cardiovascular, respiratório, digestivo, etc.)..."
+                />
+              </div>
             </CardContent>
           </Card>
 
