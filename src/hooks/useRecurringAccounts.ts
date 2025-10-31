@@ -31,10 +31,8 @@ export function useRecurringAccounts() {
   };
 
   const startRecurringProcessing = () => {
-    // Processa imediatamente ao iniciar
-    processRecurringAccountsWithToast();
-    
     // Configura processamento a cada 24 horas (86400000 ms)
+    // Removido o processamento imediato para evitar criação desnecessária de contas
     intervalRef.current = setInterval(processRecurringAccountsWithToast, 24 * 60 * 60 * 1000);
   };
 
