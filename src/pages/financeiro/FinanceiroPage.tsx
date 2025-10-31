@@ -3,92 +3,79 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Plus, 
-  Search, 
-  Filter, 
+  DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  DollarSign, 
   Calendar,
-  AlertTriangle,
+  FileText,
+  Download,
+  Search,
+  Filter,
+  Plus,
+  Edit,
+  Trash2,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import AddContaReceberModal from '@/components/financeiro/AddContaReceberModal';
-import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
-import EditContaReceberModal from '@/components/financeiro/EditContaReceberModal';
-import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
-
-interface CategoriaFinanceira {
-  id: string;
-  nome: string;
-  tipo: 'receita' | 'despesa';
-  cor: string;
-}
+import AddContaReceberModal from '@/components/financeiro/AddContaReceberModal';
+import EditContaReceberModal from '@/components/financeiro/EditContaReceberModal';
+import AddContaPagarModal from '@/components/financeiro/AddContaPagarModal';
+import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
 
 interface ContaReceber {
   id: string;
   descricao: string;
   valor: number;
   data_vencimento: string;
-  data_recebimento?: string;
-  categoria_id: string;
-  pagador_nome?: string;
-  forma_pagamento?: string;
-  status: 'pendente' | 'recebido' | 'vencido' | 'cancelado';
+  status: 'pendente' | 'pago' | 'vencido';
+  categoria_id?: string;
   observacoes?: string;
-  categorias_financeiras: CategoriaFinanceira;
   recorrente?: boolean;
-  frequencia_recorrencia?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ContaPagar {
   id: string;
   descricao: string;
+  fornecedor: string;
   valor: number;
   data_vencimento: string;
-  data_pagamento?: string;
-  categoria_id: string;
-  fornecedor_nome: string;
-  forma_pagamento?: string;
-  status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  status: 'pendente' | 'pago' | 'vencido';
+  categoria_id?: string;
   observacoes?: string;
-  categorias_financeiras: CategoriaFinanceira;
+  created_at: string;
+  updated_at: string;
 }
 
-interface ResumoFinanceiro {
-  totalReceber: number;
-  totalPagar: number;
-  receitasRecebidas: number;
-  despesasPagas: number;
-  contasVencidas: number;
+interface Categoria {
+  id: string;
+  nome: string;
+  tipo: 'receita' | 'despesa';
+  cor?: string;
 }
 
 const FinanceiroPage: React.FC = () => {
   const [contasReceber, setContasReceber] = useState<ContaReceber[]>([]);
   const [contasPagar, setContasPagar] = useState<ContaPagar[]>([]);
-  const [categorias, setCategorias] = useState<CategoriaFinanceira[]>([]);
-  const [resumo, setResumo] = useState<ResumoFinanceiro>({
-    totalReceber: 0,
-    totalPagar: 0,
-    receitasRecebidas: 0,
-    despesasPagas: 0,
-    contasVencidas: 0
-  });
-  
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
-  const [loading, setLoading] = useState(true);
-  
-  // Modais
-  const [showAddReceberModal, setShowAddReceberModal] = useState(false);
-  const [showAddPagarModal, setShowAddPagarModal] = useState(false);
+  const [isContaReceberModalOpen, setIsContaReceberModalOpen] = useState(false);
+  const [isContaPagarModalOpen, setIsContaPagarModalOpen] = useState(false);
   const [editingContaReceber, setEditingContaReceber] = useState<ContaReceber | null>(null);
   const [editingContaPagar, setEditingContaPagar] = useState<ContaPagar | null>(null);
 
@@ -99,11 +86,20 @@ const FinanceiroPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      await Promise.all([
-        fetchContasReceber(),
-        fetchContasPagar(),
-        fetchCategorias()
+      
+      const [contasReceberResponse, contasPagarResponse, categoriasResponse] = await Promise.all([
+        supabase.from('contas_receber').select('*').order('data_vencimento', { ascending: true }),
+        supabase.from('contas_pagar').select('*').order('data_vencimento', { ascending: true }),
+        supabase.from('categorias_financeiras').select('*').order('nome')
       ]);
+
+      if (contasReceberResponse.error) throw contasReceberResponse.error;
+      if (contasPagarResponse.error) throw contasPagarResponse.error;
+      if (categoriasResponse.error) throw categoriasResponse.error;
+
+      setContasReceber(contasReceberResponse.data || []);
+      setContasPagar(contasPagarResponse.data || []);
+      setCategorias(categoriasResponse.data || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados financeiros');
@@ -112,250 +108,300 @@ const FinanceiroPage: React.FC = () => {
     }
   };
 
-  const fetchContasReceber = async () => {
-    const { data, error } = await supabase
-      .from('contas_receber')
-      .select(`
-        *,
-        categorias_financeiras (
-          id,
-          nome,
-          tipo,
-          cor
-        )
-      `)
-      .order('data_vencimento', { ascending: true });
+  // Cálculos financeiros
+  const totalReceber = contasReceber
+    .filter(conta => conta.status !== 'pago')
+    .reduce((sum, conta) => sum + conta.valor, 0);
 
-    if (error) {
-      console.error('Erro ao buscar contas a receber:', error);
-      return;
-    }
+  const totalPagar = contasPagar
+    .filter(conta => conta.status !== 'pago')
+    .reduce((sum, conta) => sum + conta.valor, 0);
 
-    setContasReceber(data || []);
-  };
+  const totalRecebido = contasReceber
+    .filter(conta => conta.status === 'pago')
+    .reduce((sum, conta) => sum + conta.valor, 0);
 
-  const fetchContasPagar = async () => {
-    const { data, error } = await supabase
-      .from('contas_pagar')
-      .select(`
-        *,
-        categorias_financeiras (
-          id,
-          nome,
-          tipo,
-          cor
-        )
-      `)
-      .order('data_vencimento', { ascending: true });
+  const totalPago = contasPagar
+    .filter(conta => conta.status === 'pago')
+    .reduce((sum, conta) => sum + conta.valor, 0);
 
-    if (error) {
-      console.error('Erro ao buscar contas a pagar:', error);
-      return;
-    }
+  const saldoAtual = totalRecebido - totalPago;
 
-    setContasPagar(data || []);
-  };
-
-  const fetchCategorias = async () => {
-    const { data, error } = await supabase
-      .from('categorias_financeiras')
-      .select('*')
-      .eq('ativo', true)
-      .order('nome');
-
-    if (error) {
-      console.error('Erro ao buscar categorias:', error);
-      return;
-    }
-
-    setCategorias(data || []);
-  };
-
-  // Calcular resumo financeiro
-  useEffect(() => {
-    const totalReceber = contasReceber
-      .filter(conta => conta.status === 'pendente')
-      .reduce((sum, conta) => sum + conta.valor, 0);
-
-    const totalPagar = contasPagar
-      .filter(conta => conta.status === 'pendente')
-      .reduce((sum, conta) => sum + conta.valor, 0);
-
-    const receitasRecebidas = contasReceber
-      .filter(conta => conta.status === 'recebido')
-      .reduce((sum, conta) => sum + conta.valor, 0);
-
-    const despesasPagas = contasPagar
-      .filter(conta => conta.status === 'pago')
-      .reduce((sum, conta) => sum + conta.valor, 0);
-
-    const hoje = new Date().toISOString().split('T')[0];
-    const contasVencidas = [
-      ...contasReceber.filter(conta => conta.status === 'pendente' && conta.data_vencimento < hoje),
-      ...contasPagar.filter(conta => conta.status === 'pendente' && conta.data_vencimento < hoje)
-    ].length;
-
-    setResumo({
-      totalReceber,
-      totalPagar,
-      receitasRecebidas,
-      despesasPagas,
-      contasVencidas
-    });
-  }, [contasReceber, contasPagar]);
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pendente: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pendente' },
-      recebido: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Recebido' },
-      pago: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Pago' },
-      vencido: { color: 'bg-red-100 text-red-800', icon: AlertTriangle, label: 'Vencido' },
-      cancelado: { color: 'bg-gray-100 text-gray-800', icon: XCircle, label: 'Cancelado' }
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig];
-    const Icon = config?.icon || Clock;
-
-    return (
-      <Badge className={config?.color || 'bg-gray-100 text-gray-800'}>
-        <Icon className="w-3 h-3 mr-1" />
-        {config?.label || status}
-      </Badge>
-    );
-  };
-
-  const formatCurrency = (value: number) => {
-    return formatBrazilianCurrency(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return formatBrazilianDate(dateString);
-  };
-
+  // Funções de filtro
   const filteredContasReceber = contasReceber.filter(conta => {
-    const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conta.pagador_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || conta.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const filteredContasPagar = contasPagar.filter(conta => {
     const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conta.fornecedor_nome.toLowerCase().includes(searchTerm.toLowerCase());
+                         conta.fornecedor.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || conta.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  // Funções de CRUD
   const handleDeleteContaReceber = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta conta a receber?')) return;
+    try {
+      const { error } = await supabase
+        .from('contas_receber')
+        .delete()
+        .eq('id', id);
 
-    const { error } = await supabase
-      .from('contas_receber')
-      .delete()
-      .eq('id', id);
+      if (error) throw error;
 
-    if (error) {
+      setContasReceber(prev => prev.filter(conta => conta.id !== id));
+      toast.success('Conta a receber excluída com sucesso');
+    } catch (error) {
+      console.error('Erro ao excluir conta a receber:', error);
       toast.error('Erro ao excluir conta a receber');
-      return;
     }
-
-    toast.success('Conta a receber excluída com sucesso');
-    fetchContasReceber();
   };
 
   const handleDeleteContaPagar = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta conta a pagar?')) return;
+    try {
+      const { error } = await supabase
+        .from('contas_pagar')
+        .delete()
+        .eq('id', id);
 
-    const { error } = await supabase
-      .from('contas_pagar')
-      .delete()
-      .eq('id', id);
+      if (error) throw error;
 
-    if (error) {
+      setContasPagar(prev => prev.filter(conta => conta.id !== id));
+      toast.success('Conta a pagar excluída com sucesso');
+    } catch (error) {
+      console.error('Erro ao excluir conta a pagar:', error);
       toast.error('Erro ao excluir conta a pagar');
-      return;
     }
+  };
 
-    toast.success('Conta a pagar excluída com sucesso');
-    fetchContasPagar();
+  // Função para gerar relatório CSV
+  const handleGerarRelatorioCSV = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const contasReceberMes = contasReceber.filter(conta => {
+      const dataVencimento = new Date(conta.data_vencimento);
+      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+    });
+    
+    const contasPagarMes = contasPagar.filter(conta => {
+      const dataVencimento = new Date(conta.data_vencimento);
+      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+    });
+
+    const totalReceberMes = contasReceberMes.reduce((sum, conta) => sum + conta.valor, 0);
+    const totalPagarMes = contasPagarMes.reduce((sum, conta) => sum + conta.valor, 0);
+
+    let csvContent = 'Relatório Financeiro - ' + format(new Date(), 'MMMM yyyy', { locale: ptBR }) + '\n\n';
+    csvContent += 'RESUMO FINANCEIRO\n';
+    csvContent += 'Total a Receber,' + formatBrazilianCurrency(totalReceberMes) + '\n';
+    csvContent += 'Total a Pagar,' + formatBrazilianCurrency(totalPagarMes) + '\n';
+    csvContent += 'Saldo Previsto,' + formatBrazilianCurrency(totalReceberMes - totalPagarMes) + '\n\n';
+    
+    csvContent += 'CONTAS A RECEBER\n';
+    csvContent += 'Descrição,Valor,Vencimento,Status\n';
+    contasReceberMes.forEach(conta => {
+      csvContent += `"${conta.descricao}",${conta.valor},${formatBrazilianDate(conta.data_vencimento)},${conta.status}\n`;
+    });
+    
+    csvContent += '\nCONTAS A PAGAR\n';
+    csvContent += 'Descrição,Fornecedor,Valor,Vencimento,Status\n';
+    contasPagarMes.forEach(conta => {
+      csvContent += `"${conta.descricao}","${conta.fornecedor}",${conta.valor},${formatBrazilianDate(conta.data_vencimento)},${conta.status}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `relatorio-financeiro-${format(new Date(), 'yyyy-MM')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Relatório CSV gerado com sucesso');
+  };
+
+  // Função para gerar relatório PDF
+  const handleGerarRelatorioPDF = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const contasReceberMes = contasReceber.filter(conta => {
+      const dataVencimento = new Date(conta.data_vencimento);
+      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+    });
+    
+    const contasPagarMes = contasPagar.filter(conta => {
+      const dataVencimento = new Date(conta.data_vencimento);
+      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+    });
+
+    const totalReceberMes = contasReceberMes.reduce((sum, conta) => sum + conta.valor, 0);
+    const totalPagarMes = contasPagarMes.reduce((sum, conta) => sum + conta.valor, 0);
+
+    const doc = new jsPDF();
+    
+    // Cabeçalho
+    doc.setFontSize(20);
+    doc.text('Relatório Financeiro', 20, 20);
+    doc.setFontSize(12);
+    doc.text(format(new Date(), 'MMMM yyyy', { locale: ptBR }), 20, 30);
+    
+    // Resumo financeiro
+    doc.setFontSize(14);
+    doc.text('Resumo Financeiro', 20, 50);
+    doc.setFontSize(10);
+    doc.text(`Total a Receber: ${formatBrazilianCurrency(totalReceberMes)}`, 20, 60);
+    doc.text(`Total a Pagar: ${formatBrazilianCurrency(totalPagarMes)}`, 20, 70);
+    doc.text(`Saldo Previsto: ${formatBrazilianCurrency(totalReceberMes - totalPagarMes)}`, 20, 80);
+    
+    // Contas a Receber
+    if (contasReceberMes.length > 0) {
+      doc.setFontSize(14);
+      doc.text('Contas a Receber', 20, 100);
+      
+      const receberData = contasReceberMes.map(conta => [
+        conta.descricao,
+        formatBrazilianCurrency(conta.valor),
+        formatBrazilianDate(conta.data_vencimento),
+        conta.status === 'pago' ? 'Pago' : conta.status === 'vencido' ? 'Vencido' : 'Pendente'
+      ]);
+      
+      autoTable(doc, {
+        head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
+        body: receberData,
+        startY: 110,
+        styles: { fontSize: 8 }
+      });
+    }
+    
+    // Contas a Pagar
+    if (contasPagarMes.length > 0) {
+      const startY = contasReceberMes.length > 0 ? (doc as any).lastAutoTable.finalY + 20 : 110;
+      
+      doc.setFontSize(14);
+      doc.text('Contas a Pagar', 20, startY);
+      
+      const pagarData = contasPagarMes.map(conta => [
+        conta.descricao,
+        conta.fornecedor,
+        formatBrazilianCurrency(conta.valor),
+        formatBrazilianDate(conta.data_vencimento),
+        conta.status === 'pago' ? 'Pago' : conta.status === 'vencido' ? 'Vencido' : 'Pendente'
+      ]);
+      
+      autoTable(doc, {
+        head: [['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Status']],
+        body: pagarData,
+        startY: startY + 10,
+        styles: { fontSize: 8 }
+      });
+    }
+    
+    // Rodapé
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Página ${i} de ${pageCount}`, 20, doc.internal.pageSize.height - 10);
+      doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 120, doc.internal.pageSize.height - 10);
+    }
+    
+    doc.save(`relatorio-financeiro-${format(new Date(), 'yyyy-MM')}.pdf`);
+    toast.success('Relatório PDF gerado com sucesso');
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Pago</Badge>;
+      case 'vencido':
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Vencido</Badge>;
+      case 'pendente':
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="p-6 space-y-6">
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
-          <p className="text-gray-600">Gestão de contas a pagar e receber</p>
+          <h1 className="text-3xl font-bold">Financeiro</h1>
+          <p className="text-gray-600">Gestão financeira completa</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleGerarRelatorioCSV} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Relatório CSV
+          </Button>
+          <Button onClick={handleGerarRelatorioPDF} variant="outline">
+            <FileText className="w-4 h-4 mr-2" />
+            Relatório PDF
+          </Button>
         </div>
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">A Receber</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(resumo.totalReceber)}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Saldo Atual</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${saldoAtual >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatBrazilianCurrency(saldoAtual)}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Despesas</p>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(resumo.totalPagar)}</p>
-              </div>
-              <TrendingDown className="h-8 w-8 text-red-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Recebido</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatBrazilianCurrency(totalRecebido)}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Recebido</p>
-                <p className="text-2xl font-bold text-blue-600">{formatCurrency(resumo.receitasRecebidas)}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatBrazilianCurrency(totalReceber)}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pago</p>
-                <p className="text-2xl font-bold text-purple-600">{formatCurrency(resumo.despesasPagas)}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Vencidas</p>
-                <p className="text-2xl font-bold text-orange-600">{resumo.contasVencidas}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-orange-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">A Pagar</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {formatBrazilianCurrency(totalPagar)}
             </div>
           </CardContent>
         </Card>
@@ -363,40 +409,38 @@ const FinanceiroPage: React.FC = () => {
 
       {/* Filtros */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por descrição ou nome..."
+                  placeholder="Buscar por descrição..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8"
                 />
               </div>
             </div>
-            <div className="flex gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="todos">Todos os Status</option>
-                <option value="pendente">Pendente</option>
-                <option value="recebido">Recebido</option>
-                <option value="pago">Pago</option>
-                <option value="vencido">Vencido</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="vencido">Vencido</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabs de Contas */}
+      {/* Tabs */}
       <Tabs defaultValue="receber" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList>
           <TabsTrigger value="receber">Contas a Receber</TabsTrigger>
           <TabsTrigger value="pagar">Contas a Pagar</TabsTrigger>
         </TabsList>
@@ -404,9 +448,9 @@ const FinanceiroPage: React.FC = () => {
         <TabsContent value="receber" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Contas a Receber</h2>
-            <Button onClick={() => setShowAddReceberModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Conta a Receber
+            <Button onClick={() => setIsContaReceberModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Conta
             </Button>
           </div>
 
@@ -426,9 +470,6 @@ const FinanceiroPage: React.FC = () => {
                         Vencimento
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Pagador
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -438,41 +479,37 @@ const FinanceiroPage: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredContasReceber.map((conta) => (
-                      <tr key={conta.id} className="hover:bg-gray-50">
+                      <tr key={conta.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{conta.descricao}</div>
-                            <div className="text-sm text-gray-500">{conta.categorias_financeiras.nome}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                          {formatCurrency(conta.valor)}
+                          <div className="text-sm font-medium text-gray-900">{conta.descricao}</div>
+                          {conta.observacoes && (
+                            <div className="text-sm text-gray-500">{conta.observacoes}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(conta.data_vencimento)}
+                          {formatBrazilianCurrency(conta.valor)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {conta.pagador_nome || '-'}
+                          {formatBrazilianDate(conta.data_vencimento)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(conta.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => setEditingContaReceber(conta)}
                             >
-                              Editar
+                              <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteContaReceber(conta.id)}
-                              className="text-red-600 hover:text-red-700"
                             >
-                              Excluir
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>
@@ -488,9 +525,9 @@ const FinanceiroPage: React.FC = () => {
         <TabsContent value="pagar" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Contas a Pagar</h2>
-            <Button onClick={() => setShowAddPagarModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Conta a Pagar
+            <Button onClick={() => setIsContaPagarModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Conta
             </Button>
           </div>
 
@@ -504,13 +541,13 @@ const FinanceiroPage: React.FC = () => {
                         Descrição
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fornecedor
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Valor
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Vencimento
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fornecedor
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
@@ -522,41 +559,40 @@ const FinanceiroPage: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredContasPagar.map((conta) => (
-                      <tr key={conta.id} className="hover:bg-gray-50">
+                      <tr key={conta.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{conta.descricao}</div>
-                            <div className="text-sm text-gray-500">{conta.categorias_financeiras.nome}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">
-                          {formatCurrency(conta.valor)}
+                          <div className="text-sm font-medium text-gray-900">{conta.descricao}</div>
+                          {conta.observacoes && (
+                            <div className="text-sm text-gray-500">{conta.observacoes}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(conta.data_vencimento)}
+                          {conta.fornecedor}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {conta.fornecedor_nome}
+                          {formatBrazilianCurrency(conta.valor)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatBrazilianDate(conta.data_vencimento)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(conta.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => setEditingContaPagar(conta)}
                             >
-                              Editar
+                              <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteContaPagar(conta.id)}
-                              className="text-red-600 hover:text-red-700"
                             >
-                              Excluir
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>
@@ -570,56 +606,42 @@ const FinanceiroPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modais */}
-      {showAddReceberModal && (
-        <AddContaReceberModal
-          isOpen={showAddReceberModal}
-          onClose={() => setShowAddReceberModal(false)}
-          onSuccess={() => {
-            setShowAddReceberModal(false);
-            fetchContasReceber();
-          }}
-          categorias={categorias.filter(c => c.tipo === 'receita')}
-        />
-      )}
+      {/* Modals */}
+      <AddContaReceberModal
+        isOpen={isContaReceberModalOpen}
+        onClose={() => setIsContaReceberModalOpen(false)}
+        onSuccess={fetchData}
+        categorias={categorias}
+      />
 
-      {showAddPagarModal && (
-        <AddContaPagarModal
-          isOpen={showAddPagarModal}
-          onClose={() => setShowAddPagarModal(false)}
-          onSuccess={() => {
-            setShowAddPagarModal(false);
-            fetchContasPagar();
-          }}
-          categorias={categorias.filter(c => c.tipo === 'despesa')}
-        />
-      )}
+      <EditContaReceberModal
+        isOpen={!!editingContaReceber}
+        onClose={() => setEditingContaReceber(null)}
+        onSuccess={() => {
+          fetchData();
+          setEditingContaReceber(null);
+        }}
+        categorias={categorias}
+        conta={editingContaReceber}
+      />
 
-      {editingContaReceber && (
-        <EditContaReceberModal
-          isOpen={!!editingContaReceber}
-          onClose={() => setEditingContaReceber(null)}
-          onSuccess={() => {
-            setEditingContaReceber(null);
-            fetchContasReceber();
-          }}
-          conta={editingContaReceber}
-          categorias={categorias.filter(c => c.tipo === 'receita')}
-        />
-      )}
+      <AddContaPagarModal
+        isOpen={isContaPagarModalOpen}
+        onClose={() => setIsContaPagarModalOpen(false)}
+        onSuccess={fetchData}
+        categorias={categorias}
+      />
 
-      {editingContaPagar && (
-        <EditContaPagarModal
-          isOpen={!!editingContaPagar}
-          onClose={() => setEditingContaPagar(null)}
-          onSuccess={() => {
-            setEditingContaPagar(null);
-            fetchContasPagar();
-          }}
-          conta={editingContaPagar}
-          categorias={categorias.filter(c => c.tipo === 'despesa')}
-        />
-      )}
+      <EditContaPagarModal
+        isOpen={!!editingContaPagar}
+        onClose={() => setEditingContaPagar(null)}
+        onSuccess={() => {
+          fetchData();
+          setEditingContaPagar(null);
+        }}
+        categorias={categorias}
+        conta={editingContaPagar}
+      />
     </div>
   );
 };
