@@ -16,6 +16,7 @@ import AuthPage from "./pages/AuthPage";
 import FuncionariosPage from "./pages/funcionarios/FuncionariosPage";
 import NovoFuncionarioPage from "./pages/funcionarios/NovoFuncionarioPage";
 import AdvertenciasPage from "./pages/funcionarios/AdvertenciasPage";
+import AniversariantesPage from "./pages/funcionarios/AniversariantesPage";
 import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
 import DoacoesDinheiroPage from "./pages/doacoes/DoacoesDinheiroPage";
@@ -118,6 +119,7 @@ const App = () => (
             <Route path="/funcionarios" element={<ProtectedRoute><FuncionariosPage /></ProtectedRoute>} />
             <Route path="/funcionarios/novo" element={<ProtectedRoute><NovoFuncionarioPage /></ProtectedRoute>} />
             <Route path="/funcionarios/advertencias" element={<ProtectedRoute><AdvertenciasPage /></ProtectedRoute>} />
+            <Route path="/funcionarios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
             <Route path="/funcionarios/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
             <Route path="/doacoes/dinheiro" element={<ProtectedRoute><DoacoesDinheiroPage /></ProtectedRoute>} />

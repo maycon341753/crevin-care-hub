@@ -16,6 +16,7 @@ import {
   HandHeart,
   Banknote,
   AlertCircle,
+  Cake,
 } from "lucide-react";
 
 import {
@@ -63,6 +64,7 @@ const navigationItems = [
     subItems: [
       { title: "Lista de Funcionários", url: "/funcionarios" },
       { title: "Cadastrar Funcionário", url: "/funcionarios/novo" },
+      { title: "Aniversariantes", url: "/funcionarios/aniversariantes" },
       { title: "Departamentos", url: "/funcionarios/departamentos" },
       { title: "Advertências", url: "/funcionarios/advertencias" },
     ],

@@ -80,6 +80,7 @@ export type Database = {
           salario: number | null
           data_admissao: string
           data_demissao: string | null
+          data_nascimento: string | null
           status: "ativo" | "inativo" | "ferias" | "afastado"
           observacoes: string | null
           created_by: string
@@ -99,6 +100,7 @@ export type Database = {
           salario?: number | null
           data_admissao: string
           data_demissao?: string | null
+          data_nascimento?: string | null
           status?: "ativo" | "inativo" | "ferias" | "afastado"
           observacoes?: string | null
           created_by: string
@@ -118,6 +120,7 @@ export type Database = {
           salario?: number | null
           data_admissao?: string
           data_demissao?: string | null
+          data_nascimento?: string | null
           status?: "ativo" | "inativo" | "ferias" | "afastado"
           observacoes?: string | null
           created_by?: string
