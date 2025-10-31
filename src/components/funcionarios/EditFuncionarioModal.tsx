@@ -48,6 +48,7 @@ export function EditFuncionarioModal({
     departamento_id: "",
     salario: "",
     data_admissao: "",
+    data_nascimento: "",
     status: "ativo",
   });
 
@@ -119,15 +120,28 @@ export function EditFuncionarioModal({
       console.log('Carregando dados do funcionário:', funcionario);
       
       // Formatar data de admissão para o formato do input (YYYY-MM-DD)
-      let dataFormatada = "";
+      let dataAdmissaoFormatada = "";
       if (funcionario.data_admissao) {
         try {
           const date = new Date(funcionario.data_admissao);
           if (!isNaN(date.getTime())) {
-            dataFormatada = date.toISOString().split('T')[0];
+            dataAdmissaoFormatada = date.toISOString().split('T')[0];
           }
         } catch (error) {
-          console.error('Erro ao formatar data:', error);
+          console.error('Erro ao formatar data de admissão:', error);
+        }
+      }
+
+      // Formatar data de nascimento para o formato do input (YYYY-MM-DD)
+      let dataNascimentoFormatada = "";
+      if (funcionario.data_nascimento) {
+        try {
+          const date = new Date(funcionario.data_nascimento);
+          if (!isNaN(date.getTime())) {
+            dataNascimentoFormatada = date.toISOString().split('T')[0];
+          }
+        } catch (error) {
+          console.error('Erro ao formatar data de nascimento:', error);
         }
       }
 
@@ -156,7 +170,8 @@ export function EditFuncionarioModal({
         cargo: funcionario.cargo || "",
         departamento_id: funcionario.departamento_id || "",
         salario: salarioFormatado,
-        data_admissao: dataFormatada,
+        data_admissao: dataAdmissaoFormatada,
+        data_nascimento: dataNascimentoFormatada,
         status: funcionario.status || "ativo",
       });
     }
@@ -237,17 +252,32 @@ export function EditFuncionarioModal({
         return;
       }
 
-      // Processar data
-      let dataFormatada: string;
+      // Processar data de admissão
+      let dataAdmissaoFormatada: string;
       try {
         const date = new Date(formData.data_admissao);
         if (isNaN(date.getTime())) {
           throw new Error('Data inválida');
         }
-        dataFormatada = date.toISOString().split('T')[0];
+        dataAdmissaoFormatada = date.toISOString().split('T')[0];
       } catch (error) {
         toast.error('Data de admissão inválida');
         return;
+      }
+
+      // Processar data de nascimento (opcional)
+      let dataNascimentoFormatada: string | null = null;
+      if (formData.data_nascimento) {
+        try {
+          const date = new Date(formData.data_nascimento);
+          if (isNaN(date.getTime())) {
+            throw new Error('Data inválida');
+          }
+          dataNascimentoFormatada = date.toISOString().split('T')[0];
+        } catch (error) {
+          toast.error('Data de nascimento inválida');
+          return;
+        }
       }
 
       const dadosAtualizados = {
@@ -258,7 +288,8 @@ export function EditFuncionarioModal({
         cargo: formData.cargo.trim(),
         departamento_id: formData.departamento_id,
         salario: salarioNumerico,
-        data_admissao: dataFormatada,
+        data_admissao: dataAdmissaoFormatada,
+        data_nascimento: dataNascimentoFormatada,
         status: formData.status,
       };
 
@@ -305,6 +336,7 @@ export function EditFuncionarioModal({
       departamento_id: "",
       salario: "",
       data_admissao: "",
+      data_nascimento: "",
       status: "ativo",
     });
   };
@@ -380,6 +412,16 @@ export function EditFuncionarioModal({
                   value={formData.telefone}
                   onChange={(e) => handleInputChange("telefone", e.target.value)}
                   placeholder="(61) 99999-9999"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="data_nascimento">Data de Nascimento</Label>
+                <DateInput
+                  id="data_nascimento"
+                  value={formData.data_nascimento}
+                  onChange={(value) => handleInputChange("data_nascimento", value)}
+                  placeholder="dd/mm/aaaa"
                 />
               </div>
             </div>
