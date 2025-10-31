@@ -298,19 +298,6 @@ export function DocumentosMedicosUpload({ idosoId, onUploadSuccess }: Documentos
             </div>
           </div>
         )}
-
-        {/* Aviso sobre a criação da tabela */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-yellow-800">Configuração Necessária</h4>
-              <p className="text-sm text-yellow-700 mt-1">
-                Para usar esta funcionalidade, execute o arquivo <code>create_medical_documents_table.sql</code> no Supabase Dashboard para criar a tabela e configurar o storage.
-              </p>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
