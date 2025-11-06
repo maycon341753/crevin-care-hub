@@ -8,6 +8,7 @@ import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrencyInput, parseBrazilianCurrency, isValidBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
+import { calcularProximaDataVencimento } from '@/services/contasReceberRecorrentes';
 import { useAdministradores } from '@/hooks/useAdministradores';
 
 interface CategoriaFinanceira {
@@ -188,6 +189,47 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
         console.error('Erro ao marcar como pago:', error);
         toast.error('Erro ao marcar como pago');
         return;
+      }
+
+      // Se for recorrente, gerar a próxima parcela pendente
+      if (conta.recorrente) {
+        try {
+          const proximaDataVencimento = calcularProximaDataVencimento(
+            conta.data_vencimento,
+            conta.frequencia_recorrencia || 'mensal'
+          );
+
+          const novaConta = {
+            descricao: conta.descricao,
+            valor: conta.valor,
+            data_vencimento: proximaDataVencimento,
+            categoria_id: conta.categoria_id,
+            idoso_id: conta.idoso_id,
+            pagador_nome: conta.pagador_nome,
+            pagador_cpf: conta.pagador_cpf,
+            pagador_telefone: conta.pagador_telefone,
+            forma_pagamento: conta.forma_pagamento,
+            observacoes: conta.observacoes,
+            status: 'pendente',
+            recorrente: true,
+            frequencia_recorrencia: conta.frequencia_recorrencia || 'mensal',
+            created_at: new Date().toISOString()
+          };
+
+          const { error: insertError } = await supabase
+            .from('contas_receber')
+            .insert([novaConta]);
+
+          if (insertError) {
+            console.error('Erro ao gerar próxima parcela recorrente (receber):', insertError);
+            toast.warning('Conta marcada como paga, mas falhou gerar próxima recorrente');
+          } else {
+            toast.success('Próxima parcela recorrente criada (pendente)');
+          }
+        } catch (genErr) {
+          console.error('Erro ao processar próxima recorrente (receber):', genErr);
+          // Não bloqueia a marcação como paga
+        }
       }
 
       toast.success('Conta marcada como paga!');

@@ -191,6 +191,75 @@ const EditContaPagarModal: React.FC<EditContaPagarModalProps> = ({
         return;
       }
 
+      // Se for recorrente, gerar a próxima parcela pendente
+      if (conta.recorrente) {
+        try {
+          // Base: usar data_proxima_geracao se existir; senão, calcular a partir do vencimento
+          const baseDateStr = conta.data_proxima_geracao || conta.data_vencimento;
+          const baseDate = new Date(baseDateStr);
+
+          const calcNext = (d: Date, freq: string) => {
+            const next = new Date(d);
+            switch (freq) {
+              case 'mensal':
+                next.setMonth(next.getMonth() + 1);
+                break;
+              case 'bimestral':
+                next.setMonth(next.getMonth() + 2);
+                break;
+              case 'trimestral':
+                next.setMonth(next.getMonth() + 3);
+                break;
+              case 'semestral':
+                next.setMonth(next.getMonth() + 6);
+                break;
+              case 'anual':
+                next.setFullYear(next.getFullYear() + 1);
+                break;
+              default:
+                next.setMonth(next.getMonth() + 1);
+            }
+            return next;
+          };
+
+          const freq = conta.frequencia_recorrencia || 'mensal';
+          const proximaDataVencimento = calcNext(baseDate, freq);
+          const proximaDataGeracao = calcNext(proximaDataVencimento, freq);
+
+          const novaConta = {
+            descricao: conta.descricao,
+            valor: conta.valor,
+            data_vencimento: proximaDataVencimento.toISOString().split('T')[0],
+            categoria_id: conta.categoria_id,
+            fornecedor_nome: conta.fornecedor_nome,
+            fornecedor_cnpj: conta.fornecedor_cnpj,
+            fornecedor_telefone: conta.fornecedor_telefone,
+            forma_pagamento: conta.forma_pagamento,
+            observacoes: conta.observacoes,
+            status: 'pendente',
+            recorrente: true,
+            frequencia_recorrencia: freq,
+            data_proxima_geracao: proximaDataGeracao.toISOString().split('T')[0],
+            conta_origem_id: conta.id,
+            created_at: new Date().toISOString()
+          };
+
+          const { error: insertError } = await supabase
+            .from('contas_pagar')
+            .insert([novaConta]);
+
+          if (insertError) {
+            console.error('Erro ao gerar próxima parcela recorrente (pagar):', insertError);
+            toast.warning('Conta marcada como paga, mas falhou gerar próxima recorrente');
+          } else {
+            toast.success('Próxima parcela recorrente criada (pendente)');
+          }
+        } catch (genErr) {
+          console.error('Erro ao processar próxima recorrente (pagar):', genErr);
+          // Não bloqueia a marcação como paga
+        }
+      }
+
       toast.success('Conta marcada como paga!');
       onSuccess();
     } catch (error) {
