@@ -25,6 +25,7 @@ interface IdosoListaEspera {
   nome: string;
   cpf: string;
   data_nascimento: string;
+  sexo?: 'masculino' | 'feminino';
   telefone?: string;
   endereco?: string;
   responsavel_nome?: string;
@@ -45,6 +46,7 @@ interface FormData {
   nome: string;
   cpf: string;
   data_nascimento: string;
+  sexo: '' | 'masculino' | 'feminino';
   telefone: string;
   endereco: string;
   responsavel_nome: string;
@@ -60,6 +62,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
     nome: "",
     cpf: "",
     data_nascimento: "",
+    sexo: "",
     telefone: "",
     endereco: "",
     responsavel_nome: "",
@@ -75,6 +78,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
         nome: idoso.nome || "",
         cpf: formatCPF(idoso.cpf) || "",
         data_nascimento: idoso.data_nascimento || "",
+        sexo: idoso.sexo || "",
         telefone: idoso.telefone || "",
         endereco: idoso.endereco || "",
         responsavel_nome: idoso.responsavel_nome || "",
@@ -152,6 +156,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
           nome: formData.nome.trim(),
           cpf: formData.cpf.replace(/\D/g, ''),
           data_nascimento: formData.data_nascimento,
+          sexo: formData.sexo || null,
           telefone: formData.telefone.trim() || null,
           endereco: formData.endereco.trim() || null,
           responsavel_nome: formData.responsavel_nome.trim() || null,
@@ -242,6 +247,19 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
                 placeholder="dd/mm/aaaa"
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sexo">Sexo</Label>
+              <Select value={formData.sexo} onValueChange={(value) => setFormData({ ...formData, sexo: value as 'masculino' | 'feminino' })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o sexo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="feminino">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

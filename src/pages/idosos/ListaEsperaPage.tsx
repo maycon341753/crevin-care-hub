@@ -43,6 +43,7 @@ interface IdosoListaEspera {
   nome: string;
   cpf: string;
   data_nascimento: string;
+  sexo?: 'masculino' | 'feminino';
   telefone?: string;
   endereco?: string;
   responsavel_nome?: string;
