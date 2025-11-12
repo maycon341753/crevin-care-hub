@@ -6,7 +6,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Upload, Eye, Pencil, Info } from "lucide-react";
+import { Plus, Upload, Eye, Pencil, Info, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import AddLicencaModal from "@/components/obrigacoes/AddLicencaModal";
 import PdfViewerModal from "@/components/obrigacoes/PdfViewerModal";
 import EditLicencaModal from "@/components/obrigacoes/EditLicencaModal";
@@ -69,6 +80,7 @@ export default function LicencasFuncionamentoPage() {
   const [pdfTitle, setPdfTitle] = useState<string>("Visualizar PDF");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedLicenca, setSelectedLicenca] = useState<LicencaFuncionamento | null>(null);
 
   const fetchLicencas = async () => {
@@ -187,6 +199,34 @@ export default function LicencasFuncionamentoPage() {
     setShowInfo(true);
   };
 
+  const handleDelete = async (l: LicencaFuncionamento) => {
+    try {
+      setDeletingId(l.id);
+      // Remove arquivo do Storage se existir (best-effort)
+      if (l.arquivo_storage_path) {
+        const { error: storageErr } = await supabase.storage
+          .from("licencas")
+          .remove([l.arquivo_storage_path]);
+        if (storageErr) {
+          toast.warning("Arquivo não removido do Storage. Prosseguindo com exclusão do registro.");
+        }
+      }
+
+      const { error } = await supabase
+        .from("licencas_funcionamento")
+        .delete()
+        .eq("id", l.id);
+      if (error) throw error;
+
+      setLicencas((prev) => prev.filter((x) => x.id !== l.id));
+      toast.success("Licença excluída com sucesso.");
+    } catch (err: any) {
+      toast.error(`Falha ao excluir licença: ${err.message ?? "erro desconhecido"}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleEditSuccess = (updated: LicencaFuncionamento) => {
     // Atualização otimista: reflete imediatamente na tabela e status
     setLicencas((prev) => prev.map((l) => (l.id === updated.id ? { ...l, ...updated } : l)));
@@ -279,15 +319,46 @@ export default function LicencasFuncionamentoPage() {
                             <Pencil className="h-4 w-4 mr-2" />
                             Editar
                           </Button>
-                          <Button variant="outline" onClick={() => openInfo(l)}>
-                            <Info className="h-4 w-4 mr-2" />
-                            Detalhes
+                      <Button variant="outline" onClick={() => openInfo(l)}>
+                        <Info className="h-4 w-4 mr-2" />
+                        Detalhes
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={deletingId === l.id}
+                            title="Excluir licença"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir a licença "{l.titulo}"? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(l)}
+                              className="bg-red-600 hover:bg-red-700"
+                              disabled={deletingId === l.id}
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
                 {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
