@@ -7,7 +7,19 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM storage.buckets WHERE name = 'licencas'
   ) THEN
-    PERFORM storage.create_bucket('licencas', public := true);
+    -- Prefer using storage.create_bucket if available; otherwise insert directly
+    IF EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE p.proname = 'create_bucket' AND n.nspname = 'storage'
+    ) THEN
+      PERFORM storage.create_bucket('licencas', true);
+    ELSE
+      INSERT INTO storage.buckets (id, name, public)
+      VALUES ('licencas', 'licencas', true)
+      ON CONFLICT (id) DO NOTHING;
+    END IF;
   END IF;
 END $$;
 
