@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Search, User, Calendar, Activity, Edit, Trash2 } from "lucide-react";
+import { FileText, Plus, Search, User, Calendar, Activity, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface ProntuarioFisioterapeuticoListItem {
   id: string;
@@ -39,6 +46,8 @@ export default function ProntuarioFisioterapeuticoList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [prontuarios, setProntuarios] = useState<ProntuarioFisioterapeuticoListItem[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedProntuario, setSelectedProntuario] = useState<ProntuarioFisioterapeuticoListItem | null>(null);
 
   useEffect(() => {
     fetchProntuarios();
@@ -109,6 +118,16 @@ export default function ProntuarioFisioterapeuticoList() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const openDetails = (prontuario: ProntuarioFisioterapeuticoListItem) => {
+    setSelectedProntuario(prontuario);
+    setShowDetails(true);
+  };
+
+  const closeDetails = () => {
+    setShowDetails(false);
+    setSelectedProntuario(null);
+  };
+
   const deleteProntuario = async (id: string) => {
     try {
       const { error } = await supabase
@@ -156,7 +175,8 @@ export default function ProntuarioFisioterapeuticoList() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <>
+      <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -296,6 +316,15 @@ export default function ProntuarioFisioterapeuticoList() {
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openDetails(prontuario)}
+                      className="flex-1"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver informações
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/idosos/${prontuario.idoso_id}/prontuario-fisioterapeutico`)}
@@ -341,5 +370,55 @@ export default function ProntuarioFisioterapeuticoList() {
         </div>
       </div>
     </div>
+
+    <Dialog open={showDetails} onOpenChange={(open) => !open && closeDetails()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Informações da Avaliação</DialogTitle>
+          {selectedProntuario && (
+            <DialogDescription>
+              {selectedProntuario.idoso.nome} • {calculateAge(selectedProntuario.idoso.data_nascimento)} anos
+              {selectedProntuario.idoso.quarto && ` • Quarto ${selectedProntuario.idoso.quarto}`}
+            </DialogDescription>
+          )}
+        </DialogHeader>
+
+        {selectedProntuario && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>Atualizado em {formatDate(selectedProntuario.updated_at)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <span>Criado em {formatDate(selectedProntuario.created_at)}</span>
+            </div>
+
+            {selectedProntuario.diagnostico_fisioterapeutico && (
+              <div>
+                <p className="text-sm font-medium">Diagnóstico</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedProntuario.diagnostico_fisioterapeutico}
+                </p>
+              </div>
+            )}
+
+            {selectedProntuario.objetivos_tratamento && (
+              <div>
+                <p className="text-sm font-medium">Objetivos do Tratamento</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedProntuario.objetivos_tratamento}
+                </p>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <Button variant="outline" onClick={closeDetails} className="w-full">Fechar</Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
