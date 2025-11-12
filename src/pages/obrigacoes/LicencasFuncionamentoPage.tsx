@@ -187,6 +187,12 @@ export default function LicencasFuncionamentoPage() {
     setShowInfo(true);
   };
 
+  const handleEditSuccess = (updated: LicencaFuncionamento) => {
+    // Atualização otimista: reflete imediatamente na tabela e status
+    setLicencas((prev) => prev.map((l) => (l.id === updated.id ? { ...l, ...updated } : l)));
+    setSelectedLicenca(updated);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -306,7 +312,7 @@ export default function LicencasFuncionamentoPage() {
 
       <AddLicencaModal isOpen={showAdd} onClose={() => setShowAdd(false)} onSuccess={fetchLicencas} />
       <PdfViewerModal isOpen={showPdf} onClose={() => setShowPdf(false)} pdfUrl={pdfUrl} title={pdfTitle} />
-      <EditLicencaModal isOpen={showEdit} onClose={() => setShowEdit(false)} onSuccess={fetchLicencas} licenca={selectedLicenca} />
+      <EditLicencaModal isOpen={showEdit} onClose={() => setShowEdit(false)} onSuccess={handleEditSuccess} licenca={selectedLicenca} />
       <LicencaInfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} licenca={selectedLicenca} />
     </div>
   );

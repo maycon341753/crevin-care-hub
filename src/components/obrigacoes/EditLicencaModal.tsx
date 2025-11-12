@@ -21,7 +21,7 @@ type LicencaFuncionamento = {
 type EditLicencaModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updated: LicencaFuncionamento) => void;
   licenca: LicencaFuncionamento | null;
 };
 
@@ -53,7 +53,7 @@ export default function EditLicencaModal({ isOpen, onClose, onSuccess, licenca }
 
     try {
       setLoading(true);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("licencas_funcionamento")
         .update({
           titulo,
@@ -63,12 +63,24 @@ export default function EditLicencaModal({ isOpen, onClose, onSuccess, licenca }
           data_validade: dataValidade || null,
           observacoes: observacoes || null,
         })
-        .eq("id", licenca.id);
+        .eq("id", licenca.id)
+        .select()
+        .single();
 
       if (error) throw error;
 
       toast.success("Licença atualizada com sucesso");
-      onSuccess();
+      // Garante retorno do registro atualizado para atualização otimista
+      const updated: LicencaFuncionamento = {
+        id: data.id,
+        titulo: data.titulo,
+        emissor: data.emissor ?? null,
+        numero: data.numero ?? null,
+        data_emissao: data.data_emissao ?? null,
+        data_validade: data.data_validade ?? null,
+        observacoes: data.observacoes ?? null,
+      };
+      onSuccess(updated);
       onClose();
     } catch (err: any) {
       console.error("Erro ao atualizar licença:", err);
