@@ -65,21 +65,33 @@ export default function EditLicencaModal({ isOpen, onClose, onSuccess, licenca }
         })
         .eq("id", licenca.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
       toast.success("Licença atualizada com sucesso");
       // Garante retorno do registro atualizado para atualização otimista
-      const updated: LicencaFuncionamento = {
-        id: data.id,
-        titulo: data.titulo,
-        emissor: data.emissor ?? null,
-        numero: data.numero ?? null,
-        data_emissao: data.data_emissao ?? null,
-        data_validade: data.data_validade ?? null,
-        observacoes: data.observacoes ?? null,
+      // Se RLS impedir o retorno, faz fallback para os valores locais editados
+      const fallbackUpdated: LicencaFuncionamento = {
+        id: licenca.id,
+        titulo,
+        emissor: emissor || null,
+        numero: numero || null,
+        data_emissao: dataEmissao || null,
+        data_validade: dataValidade || null,
+        observacoes: observacoes || null,
       };
+      const updated: LicencaFuncionamento = data
+        ? {
+            id: data.id,
+            titulo: data.titulo,
+            emissor: data.emissor ?? null,
+            numero: data.numero ?? null,
+            data_emissao: data.data_emissao ?? null,
+            data_validade: data.data_validade ?? null,
+            observacoes: data.observacoes ?? null,
+          }
+        : fallbackUpdated;
       onSuccess(updated);
       onClose();
     } catch (err: any) {
