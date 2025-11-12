@@ -123,6 +123,7 @@ const navigationItems = [
     url: "/obrigacoes",
     icon: FileText,
     subItems: [
+      { title: "Licenças de Funcionamento", url: "/obrigacoes/licencas" },
       { title: "DAS Mensal", url: "/obrigacoes/das" },
       { title: "Portal do MEI", url: "/obrigacoes/mei" },
       { title: "Consulta CNPJ", url: "/obrigacoes/cnpj" },

@@ -48,6 +48,7 @@ import AuditLogsPage from "./pages/audit/AuditLogsPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
 import AgendaPage from "./pages/agenda/AgendaPage";
 import NotFound from "./pages/NotFound";
+import LicencasFuncionamentoPage from "./pages/obrigacoes/LicencasFuncionamentoPage";
 
 const queryClient = new QueryClient();
 
@@ -151,7 +152,8 @@ const App = () => (
             <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedorPage /></ProtectedRoute>} />
             <Route path="/fornecedores/editar/:id" element={<ProtectedRoute><EditarFornecedorPage /></ProtectedRoute>} />
             <Route path="/fornecedores/notas" element={<ProtectedRoute><NotasFiscaisPage /></ProtectedRoute>} />
-            <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações em Desenvolvimento</h1></div></ProtectedRoute>} />
+            <Route path="/obrigacoes" element={<ProtectedRoute><div className="p-6"><h1 className="text-2xl font-bold">Módulo de Obrigações</h1><p className="text-muted-foreground mt-2">Selecione uma opção no menu</p></div></ProtectedRoute>} />
+            <Route path="/obrigacoes/licencas" element={<ProtectedRoute><LicencasFuncionamentoPage /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
             <Route path="/lembretes" element={<ProtectedRoute><LembretesPage /></ProtectedRoute>} />
             <Route path="/exemplo-imagem" element={<ProtectedRoute><ExemploImagem /></ProtectedRoute>} />

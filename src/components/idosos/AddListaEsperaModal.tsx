@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -23,6 +30,7 @@ interface FormData {
   nome: string;
   cpf: string;
   data_nascimento: string;
+  sexo: '' | 'masculino' | 'feminino';
   telefone: string;
   endereco: string;
   responsavel_nome: string;
@@ -37,6 +45,7 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
     nome: "",
     cpf: "",
     data_nascimento: "",
+    sexo: "",
     telefone: "",
     endereco: "",
     responsavel_nome: "",
@@ -50,6 +59,7 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
       nome: "",
       cpf: "",
       data_nascimento: "",
+      sexo: "",
       telefone: "",
       endereco: "",
       responsavel_nome: "",
@@ -136,6 +146,7 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
           nome: formData.nome.trim(),
           cpf: formData.cpf.replace(/\D/g, ''),
           data_nascimento: formData.data_nascimento,
+          sexo: formData.sexo || null,
           telefone: formData.telefone.trim() || null,
           endereco: formData.endereco.trim() || null,
           responsavel_nome: formData.responsavel_nome.trim() || null,
@@ -205,6 +216,19 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
                 placeholder="dd/mm/aaaa"
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sexo">Sexo</Label>
+              <Select value={formData.sexo} onValueChange={(value) => setFormData({ ...formData, sexo: value as 'masculino' | 'feminino' })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o sexo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="feminino">Feminino</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
