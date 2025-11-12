@@ -229,7 +229,7 @@ export default function Dashboard() {
     },
     {
       title: "A Receber (abertas)",
-      value: `R$ ${stats.receitaMensal.toLocaleString()}`,
+      value: formatBrazilianCurrency(stats.receitaMensal),
       change: "0%",
       trend: "up",
       icon: DollarSign,
@@ -238,7 +238,7 @@ export default function Dashboard() {
     },
     {
       title: "Contas a Pagar",
-      value: `R$ ${stats.contasPagar.toLocaleString()}`,
+      value: formatBrazilianCurrency(stats.contasPagar),
       change: "+0%",
       trend: "up",
       icon: HandHeart,
