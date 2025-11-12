@@ -20,7 +20,8 @@ import {
   RefreshCw,
   Banknote,
   CreditCard,
-  Building2
+  Building2,
+  Trash
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -152,6 +153,31 @@ const ConciliacaoPage = () => {
     } catch (error) {
       console.error('Erro ao marcar divergência:', error);
       toast.error('Erro ao marcar divergência');
+    }
+  };
+
+  const handleExcluirMovimento = async (movimentoId: string) => {
+    try {
+      if (!movimentoId) {
+        toast.error('Movimento inválido');
+        return;
+      }
+
+      const confirmed = window.confirm('Tem certeza que deseja excluir este movimento bancário? Esta ação não pode ser desfeita.');
+      if (!confirmed) return;
+
+      const { error } = await supabase
+        .from('movimentos_bancarios')
+        .delete()
+        .eq('id', movimentoId);
+
+      if (error) throw error;
+
+      toast.success('Movimento bancário excluído com sucesso!');
+      await fetchMovimentos();
+    } catch (error) {
+      console.error('Erro ao excluir movimento bancário:', error);
+      toast.error('Não foi possível excluir o movimento bancário');
     }
   };
 
@@ -463,6 +489,15 @@ const ConciliacaoPage = () => {
                             </Button>
                           </>
                         )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleExcluirMovimento(movimento.id)}
+                          className="text-red-600 hover:text-red-700"
+                          title="Excluir movimento bancário"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>

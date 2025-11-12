@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,7 @@ interface ContaReceberResumo {
   valor: number;
   data_vencimento: string;
   status: 'pendente' | 'recebido' | 'vencido' | 'cancelado';
+  idoso_id?: string;
 }
 
 const ReceitasFuturasPage: React.FC = () => {
@@ -44,6 +45,7 @@ const ReceitasFuturasPage: React.FC = () => {
   const [categoriaMensalidades, setCategoriaMensalidades] = useState<CategoriaFinanceira | null>(null);
   const [receitasMes, setReceitasMes] = useState<ContaReceberResumo[]>([]);
   const [loadingReceitas, setLoadingReceitas] = useState(false);
+  const autoGeradoRef = useRef(false);
 
   useEffect(() => {
     fetchData();
@@ -93,7 +95,7 @@ const ReceitasFuturasPage: React.FC = () => {
       const fimMes = calcularFimDoMes(mesReferencia);
       const { data, error } = await supabase
         .from('contas_receber')
-        .select('id, descricao, valor, data_vencimento, status')
+        .select('id, descricao, valor, data_vencimento, status, idoso_id')
         .eq('categoria_id', categoriaMensalidades.id)
         .gte('data_vencimento', inicioMes)
         .lt('data_vencimento', fimMes)
@@ -112,6 +114,25 @@ const ReceitasFuturasPage: React.FC = () => {
   useEffect(() => {
     fetchReceitasDoMes();
   }, [mesReferencia, categoriaMensalidades]);
+
+  // Geração automática no primeiro dia do mês, se nada foi gerado
+  useEffect(() => {
+    if (!categoriaMensalidades) return;
+    if (autoGeradoRef.current) return;
+
+    const hoje = new Date();
+    const referenciaAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`;
+
+    if (
+      mesReferencia === referenciaAtual &&
+      hoje.getDate() === 1 &&
+      !loadingReceitas &&
+      receitasMes.length === 0
+    ) {
+      autoGeradoRef.current = true;
+      gerarMensalidades();
+    }
+  }, [mesReferencia, categoriaMensalidades, receitasMes, loadingReceitas]);
 
   const totalContribuicoes = useMemo(() => {
     return idosos.reduce((sum, i) => {
@@ -156,8 +177,11 @@ const ReceitasFuturasPage: React.FC = () => {
       const { data: userData } = await supabase.auth.getUser();
       const vencimento = mesReferencia; // usar primeiro dia do mês
 
+      // Evitar duplicatas: se já existir mensalidade para o idoso neste mês, não inserir
+      const existentesPorIdoso = new Set((receitasMes || []).map(r => r.idoso_id).filter(Boolean) as string[]);
+
       const inserts = idosos
-        .filter(i => (i.beneficio_valor || 0) > 0)
+        .filter(i => (i.beneficio_valor || 0) > 0 && !existentesPorIdoso.has(i.id))
         .map(i => ({
           descricao: `Mensalidade ${i.nome} ${new Date(vencimento).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
           valor: Number(((i.beneficio_valor || 0) * (i.contribuicao_percentual ?? 70) / 100).toFixed(2)),
@@ -169,6 +193,11 @@ const ReceitasFuturasPage: React.FC = () => {
           status: 'pendente',
           created_by: userData.user?.id || '00000000-0000-0000-0000-000000000000'
         }));
+
+      if (inserts.length === 0) {
+        toast.info('Mensalidades deste mês já estão geradas ou não há valores de benefício.');
+        return;
+      }
 
       const { error } = await supabase
         .from('contas_receber')
