@@ -6,9 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Upload, Eye } from "lucide-react";
+import { Plus, Upload, Eye, Pencil, Info } from "lucide-react";
 import AddLicencaModal from "@/components/obrigacoes/AddLicencaModal";
 import PdfViewerModal from "@/components/obrigacoes/PdfViewerModal";
+import EditLicencaModal from "@/components/obrigacoes/EditLicencaModal";
+import LicencaInfoModal from "@/components/obrigacoes/LicencaInfoModal";
 
 type LicencaFuncionamento = {
   id: string;
@@ -20,6 +22,7 @@ type LicencaFuncionamento = {
   arquivo_url?: string | null;
   arquivo_storage_path?: string | null;
   observacoes?: string | null;
+  created_by?: string | null;
 };
 
 function formatDate(date?: string | null) {
@@ -50,10 +53,13 @@ export default function LicencasFuncionamentoPage() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showPdf, setShowPdf] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfTitle, setPdfTitle] = useState<string>("Visualizar PDF");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [selectedLicenca, setSelectedLicenca] = useState<LicencaFuncionamento | null>(null);
 
   const fetchLicencas = async () => {
     try {
@@ -161,6 +167,16 @@ export default function LicencasFuncionamentoPage() {
     setShowPdf(true);
   };
 
+  const openEdit = (l: LicencaFuncionamento) => {
+    setSelectedLicenca(l);
+    setShowEdit(true);
+  };
+
+  const openInfo = (l: LicencaFuncionamento) => {
+    setSelectedLicenca(l);
+    setShowInfo(true);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -243,6 +259,14 @@ export default function LicencasFuncionamentoPage() {
                             <Eye className="h-4 w-4 mr-2" />
                             Ver PDF
                           </Button>
+                          <Button variant="outline" onClick={() => openEdit(l)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Editar
+                          </Button>
+                          <Button variant="outline" onClick={() => openInfo(l)}>
+                            <Info className="h-4 w-4 mr-2" />
+                            Detalhes
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -272,6 +296,8 @@ export default function LicencasFuncionamentoPage() {
 
       <AddLicencaModal isOpen={showAdd} onClose={() => setShowAdd(false)} onSuccess={fetchLicencas} />
       <PdfViewerModal isOpen={showPdf} onClose={() => setShowPdf(false)} pdfUrl={pdfUrl} title={pdfTitle} />
+      <EditLicencaModal isOpen={showEdit} onClose={() => setShowEdit(false)} onSuccess={fetchLicencas} licenca={selectedLicenca} />
+      <LicencaInfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} licenca={selectedLicenca} />
     </div>
   );
 }
