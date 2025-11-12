@@ -105,11 +105,11 @@ export default function EditLicencaModal({ isOpen, onClose, onSuccess, licenca }
             </div>
             <div>
               <Label>Data de Emissão</Label>
-              <DateInput value={dataEmissao} onChange={setDataEmissao} />
+              <DateInput value={dataEmissao ?? ""} onChange={setDataEmissao} />
             </div>
             <div>
               <Label>Validade</Label>
-              <DateInput value={dataValidade} onChange={setDataValidade} />
+              <DateInput value={dataValidade ?? ""} onChange={setDataValidade} />
             </div>
             <div className="md:col-span-2">
               <Label>Observações</Label>

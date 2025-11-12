@@ -28,8 +28,18 @@ type LicencaFuncionamento = {
 function formatDate(date?: string | null) {
   if (!date) return "-";
   try {
+    // Formato ISO sem hora (yyyy-mm-dd)
+    const isoMatch = /^\d{4}-\d{2}-\d{2}$/;
+    if (isoMatch.test(date)) {
+      const [year, month, day] = date.split("-");
+      return `${day}/${month}/${year}`;
+    }
+    // Outros formatos: fallback seguro
     const d = new Date(date);
-    return d.toLocaleDateString("pt-BR");
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("pt-BR");
+    }
+    return date;
   } catch {
     return date;
   }
