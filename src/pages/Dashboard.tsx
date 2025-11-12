@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Dados serão carregados do banco de dados
 
@@ -37,6 +38,14 @@ export default function Dashboard() {
     metaDoacoes: 0,
     funcionariosPresentes: 0,
   });
+  const [showContasModal, setShowContasModal] = useState(false);
+  const [contasCriticas, setContasCriticas] = useState<{
+    id: string;
+    descricao: string;
+    valor: number;
+    data_vencimento: string;
+    status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,6 +164,25 @@ export default function Dashboard() {
           metaDoacoes: Math.round(metaDoacoesPercent),
           funcionariosPresentes: totalFuncionarios > 0 ? Math.round((funcionariosPresentes / totalFuncionarios) * 100) : 0,
         });
+
+        // Carregar contas vencidas ou pendentes (Top 5)
+        const contasCriticasRes = await supabase
+          .from('contas_pagar')
+          .select('id, descricao, valor, data_vencimento, status')
+          .in('status', ['vencido', 'pendente'])
+          .order('data_vencimento', { ascending: true })
+          .limit(20);
+
+        const contasOrdenadas = (contasCriticasRes.data || [])
+          .sort((a: any, b: any) => {
+            const aScore = a.status === 'vencido' ? 0 : 1;
+            const bScore = b.status === 'vencido' ? 0 : 1;
+            if (aScore !== bScore) return aScore - bScore;
+            return new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime();
+          })
+          .slice(0, 5);
+
+        setContasCriticas(contasOrdenadas);
 
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
@@ -280,27 +308,43 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentActivity.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Nenhuma atividade recente</p>
+              {/* Blocos de atividades recentes removidos conforme solicitação */}
+              {/* Lista inline das 5 contas críticas (vencidas/pendentes) neste div */}
+              {contasCriticas && contasCriticas.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Contas vencidas/pendentes (top 5)</p>
+                  {contasCriticas.slice(0, 5).map((conta) => (
+                    <div key={conta.id} className="flex items-center justify-between p-2 rounded-md border hover:bg-accent/50 crevin-transition">
+                      <div className="min-w-0">
+                        <p className="text-sm truncate">{conta.descricao}</p>
+                        <p className="text-xs text-muted-foreground">Venc.: {formatBrazilianDate(conta.data_vencimento)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={conta.status === "vencido" ? "destructive" : "secondary"}
+                          className="text-xs capitalize"
+                        >
+                          {conta.status}
+                        </Badge>
+                        <span className="text-sm font-medium">{formatBrazilianCurrency(conta.valor ?? 0)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 crevin-transition">
-                    <div className="h-8 w-8 rounded-md bg-primary-light flex items-center justify-center flex-shrink-0">
-                      <activity.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground break-words">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                    </div>
-                  </div>
-                ))
+                <div className="p-3 rounded-md border">
+                  <p className="text-sm text-muted-foreground">Nenhuma conta vencida ou pendente.</p>
+                </div>
               )}
               <Button variant="outline" className="w-full mt-4 text-sm">
                 Ver todas as atividades
+              </Button>
+              <Button 
+                variant="default" 
+                className="w-full mt-2 text-sm"
+                onClick={() => setShowContasModal(true)}
+              >
+                Ver contas vencidas/pendentes
               </Button>
             </CardContent>
           </Card>
@@ -389,6 +433,43 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+      {/* Modal de contas vencidas/pendentes (Top 5) */}
+      <Dialog open={showContasModal} onOpenChange={setShowContasModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Contas vencidas ou pendentes (Top 5)</DialogTitle>
+          </DialogHeader>
+          {contasCriticas.length === 0 ? (
+            <div className="py-6 text-center text-muted-foreground text-sm">
+              Nenhuma conta vencida ou pendente encontrada.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {contasCriticas.map((conta) => (
+                <div
+                  key={conta.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    conta.status === 'vencido' ? 'bg-destructive/10' : 'bg-warning-light'
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-medium break-words">{conta.descricao}</p>
+                    <p className="text-xs text-muted-foreground">Vencimento: {formatBrazilianDate(conta.data_vencimento)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-semibold ${conta.status === 'vencido' ? 'text-red-600' : 'text-yellow-600'}`}>
+                      {formatBrazilianCurrency(conta.valor)}
+                    </p>
+                    <Badge variant={conta.status === 'vencido' ? 'destructive' : 'secondary'} className="text-xs">
+                      {conta.status === 'vencido' ? 'Vencido' : 'Pendente'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
