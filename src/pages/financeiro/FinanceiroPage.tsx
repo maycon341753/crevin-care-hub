@@ -127,6 +127,17 @@ const FinanceiroPage: React.FC = () => {
 
   const saldoAtual = totalRecebido - totalPago;
 
+  // Receitas do mês atual (a receber no mês: pendentes e vencidas dentro do mês)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const totalReceitasMes = contasReceber
+    .filter(conta => {
+      const data = new Date(conta.data_vencimento);
+      const isMesAtual = data.getMonth() === currentMonth && data.getFullYear() === currentYear;
+      return isMesAtual && conta.status !== 'pago';
+    })
+    .reduce((sum, conta) => sum + conta.valor, 0);
+
   // Funções de filtro
   const filteredContasReceber = contasReceber.filter(conta => {
     const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase());
@@ -357,7 +368,18 @@ const FinanceiroPage: React.FC = () => {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Receitas do Mês</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatBrazilianCurrency(totalReceitasMes)}
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo Atual</CardTitle>

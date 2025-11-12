@@ -61,25 +61,34 @@ export default function Dashboard() {
         const [funcionariosRes, idososRes, contasReceberRes, departamentosRes, contasPagarRes] = await Promise.all([
           supabase.from('funcionarios').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
           supabase.from('idosos').select('*', { count: 'exact', head: true }).eq('ativo', true),
-          // Buscar apenas contas a receber do mês atual
+          // Buscar contas a receber e filtrar no cliente (evita inconsistências de status)
           supabase.from('contas_receber')
-            .select('valor, data_vencimento')
-            .eq('status', 'pendente')
-            .gte('data_vencimento', inicioMes)
-            .lte('data_vencimento', fimMes),
+            .select('valor, data_vencimento, status'),
           supabase.from('departamentos').select('*', { count: 'exact', head: true }).eq('ativo', true),
           supabase.from('contas_pagar').select('valor')
         ]);
 
-        // Calcular receitas do mês atual (soma das contas a receber pendentes do mês)
-        const receitasMesAtual = contasReceberRes.data?.reduce((acc, c) => acc + c.valor, 0) || 0;
+        // Calcular receitas do mês atual (soma das contas a receber abertas do mês)
+        const receitasMesAtual = (contasReceberRes.data || [])
+          .filter((c: any) => {
+            const d = new Date(c.data_vencimento);
+            const isMesAtual = d >= new Date(inicioMes) && d <= new Date(fimMes);
+            const isAberta = c.status !== 'pago' && c.status !== 'recebido' && c.status !== 'cancelado';
+            return isMesAtual && isAberta;
+          })
+          .reduce((acc: number, c: any) => acc + Number(c.valor || 0), 0);
+
+        // Calcular total a receber (abertas), independente do mês
+        const receitasAbertasTotal = (contasReceberRes.data || [])
+          .filter((c: any) => c.status !== 'pago' && c.status !== 'recebido' && c.status !== 'cancelado')
+          .reduce((acc: number, c: any) => acc + Number(c.valor || 0), 0);
         // Calcular total de contas a pagar
         const totalContasPagar = contasPagarRes.data?.reduce((acc, c) => acc + c.valor, 0) || 0;
 
         setStats({
           funcionariosAtivos: funcionariosRes.count || 0,
           idososAssistidos: idososRes.count || 0,
-          receitaMensal: receitasMesAtual,
+          receitaMensal: receitasAbertasTotal,
           contasPagar: totalContasPagar,
         });
 
@@ -219,7 +228,7 @@ export default function Dashboard() {
       bgColor: "bg-secondary-light",
     },
     {
-      title: "Receitas do Mês",
+      title: "A Receber (abertas)",
       value: `R$ ${stats.receitaMensal.toLocaleString()}`,
       change: "0%",
       trend: "up",
