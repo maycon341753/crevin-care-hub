@@ -336,9 +336,6 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground">Nenhuma conta vencida ou pendente.</p>
                 </div>
               )}
-              <Button variant="outline" className="w-full mt-4 text-sm">
-                Ver todas as atividades
-              </Button>
               <Button 
                 variant="default" 
                 className="w-full mt-2 text-sm"

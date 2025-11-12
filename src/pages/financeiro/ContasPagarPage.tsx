@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -138,7 +138,7 @@ const ContasPagarPage: React.FC = () => {
       return;
     }
 
-    toast.success('Conta excluída com sucesso');
+    toast.success('Conta excluÃƒÂ­da com sucesso');
     fetchContasPagar();
   };
 
@@ -156,7 +156,7 @@ const ContasPagarPage: React.FC = () => {
     }
   };
 
-  // Função para gerar relatório em PDF
+  // FunÃƒÂ§ÃƒÂ£o para gerar relatÃƒÂ³rio em PDF
   const handleGerarRelatorioPDF = () => {
     try {
       const doc = new jsPDF();
@@ -164,11 +164,11 @@ const ContasPagarPage: React.FC = () => {
       // Configurar fonte para suportar caracteres especiais
       doc.setFont('helvetica');
       
-      // Título do relatório
+      // TÃƒÂ­tulo do relatÃƒÂ³rio
       doc.setFontSize(18);
-      doc.text('Relatório de Contas a Pagar', 20, 20);
+      doc.text('RelatÃƒÂ³rio de Contas a Pagar', 20, 20);
       
-      // Data de geração
+      // Data de geraÃƒÂ§ÃƒÂ£o
       doc.setFontSize(12);
       doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 20, 30);
       
@@ -180,10 +180,10 @@ const ContasPagarPage: React.FC = () => {
       doc.text(`Total Pago: ${formatBrazilianCurrency(totalPago)}`, 20, 65);
       doc.text(`Total Vencido: ${formatBrazilianCurrency(totalVencido)}`, 20, 75);
       
-      // Cabeçalho da tabela
+      // CabeÃƒÂ§alho da tabela
       let yPosition = 90;
       doc.setFontSize(8);
-      doc.text('Descrição', 20, yPosition);
+      doc.text('DescriÃƒÂ§ÃƒÂ£o', 20, yPosition);
       doc.text('Valor', 80, yPosition);
       doc.text('Vencimento', 110, yPosition);
       doc.text('Fornecedor', 140, yPosition);
@@ -212,19 +212,19 @@ const ContasPagarPage: React.FC = () => {
       
       // Salvar o PDF
       doc.save(`contas-a-pagar-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success('Relatório PDF gerado com sucesso!');
+      toast.success('RelatÃƒÂ³rio PDF gerado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar relatório PDF:', error);
-      toast.error('Erro ao gerar relatório PDF');
+      console.error('Erro ao gerar relatÃƒÂ³rio PDF:', error);
+      toast.error('Erro ao gerar relatÃƒÂ³rio PDF');
     }
   };
 
-  // Função para gerar relatório em CSV
+  // FunÃƒÂ§ÃƒÂ£o para gerar relatÃƒÂ³rio em CSV
   const handleGerarRelatorioCSV = () => {
     try {
-      // Cabeçalho do CSV
+      // CabeÃƒÂ§alho do CSV
       const headers = [
-        'Descrição',
+        'DescriÃƒÂ§ÃƒÂ£o',
         'Valor',
         'Data Vencimento',
         'Data Pagamento',
@@ -232,7 +232,7 @@ const ContasPagarPage: React.FC = () => {
         'Categoria',
         'Status',
         'Forma Pagamento',
-        'Observações'
+        'ObservaÃƒÂ§ÃƒÂµes'
       ];
       
       // Dados das contas
@@ -248,7 +248,7 @@ const ContasPagarPage: React.FC = () => {
         conta.observacoes || ''
       ]);
       
-      // Combinar cabeçalho e dados
+      // Combinar cabeÃƒÂ§alho e dados
       const allData = [headers, ...csvData];
       
       // Converter para string CSV
@@ -267,14 +267,14 @@ const ContasPagarPage: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Relatório CSV gerado com sucesso!');
+      toast.success('RelatÃƒÂ³rio CSV gerado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar relatório CSV:', error);
-      toast.error('Erro ao gerar relatório CSV');
+      console.error('Erro ao gerar relatÃƒÂ³rio CSV:', error);
+      toast.error('Erro ao gerar relatÃƒÂ³rio CSV');
     }
   };
 
-  // Função para calcular próxima data de pagamento baseada na frequência
+  // FunÃƒÂ§ÃƒÂ£o para calcular prÃƒÂ³xima data de pagamento baseada na frequÃƒÂªncia
   const calcularProximaDataPagamento = (dataVencimento: string, frequencia: string): string => {
     const data = new Date(dataVencimento);
     
@@ -299,6 +299,15 @@ const ContasPagarPage: React.FC = () => {
     }
     
     return data.toISOString().split('T')[0];
+  };
+
+  const getDisplayStatus = (conta: ContaPagar): 'pendente' | 'pago' | 'vencido' | 'cancelado' => {
+    try {
+      if (conta.recorrente && conta.status === 'pago') {
+        return 'pendente';
+      }
+    } catch {}
+    return conta.status;
   };
 
   const getStatusBadge = (status: string) => {
@@ -455,7 +464,7 @@ const ContasPagarPage: React.FC = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por descrição ou fornecedor..."
+                placeholder="Buscar por descriÃƒÂ§ÃƒÂ£o ou fornecedor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -509,7 +518,7 @@ const ContasPagarPage: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold">{conta.descricao}</h3>
-                      {getStatusBadge(conta.status)}
+                      {getStatusBadge(getDisplayStatus(conta))}
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
