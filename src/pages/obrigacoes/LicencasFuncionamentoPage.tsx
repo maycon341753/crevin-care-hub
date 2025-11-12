@@ -131,7 +131,12 @@ export default function LicencasFuncionamentoPage() {
       fetchLicencas();
     } catch (err) {
       console.error("Erro ao enviar PDF:", err);
-      toast.error("Falha no upload. Verifique se o bucket 'licencas' existe.");
+      const msg = (err as any)?.message?.toString?.() ?? "";
+      if (msg.includes("Bucket not found")) {
+        toast.error("Bucket 'licencas' não encontrado. Aplique a migration crevin-care-hub/supabase/migrations/20251112090500_create_storage_bucket_licencas.sql.");
+      } else {
+        toast.error("Falha no upload. Verifique se o bucket 'licencas' existe.");
+      }
     } finally {
       setUploadingId(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
