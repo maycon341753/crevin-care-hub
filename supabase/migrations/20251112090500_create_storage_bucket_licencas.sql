@@ -29,38 +29,50 @@ END $$;
 -- INSERT: allow authenticated users to upload into 'licencas'
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_insert_authenticated'
-  ) THEN
-    CREATE POLICY licencas_insert_authenticated ON storage.objects
-      FOR INSERT TO authenticated
-      WITH CHECK (bucket_id = 'licencas');
-  END IF;
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_insert_authenticated'
+    ) THEN
+      CREATE POLICY licencas_insert_authenticated ON storage.objects
+        FOR INSERT TO authenticated
+        WITH CHECK (bucket_id = 'licencas');
+    END IF;
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'Skipping policy licencas_insert_authenticated: insufficient privileges';
+  END;
 END $$;
 
 -- UPDATE: allow owners to update their own files in 'licencas'
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_update_owner'
-  ) THEN
-    CREATE POLICY licencas_update_owner ON storage.objects
-      FOR UPDATE TO authenticated
-      USING (bucket_id = 'licencas' AND owner = auth.uid())
-      WITH CHECK (bucket_id = 'licencas' AND owner = auth.uid());
-  END IF;
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_update_owner'
+    ) THEN
+      CREATE POLICY licencas_update_owner ON storage.objects
+        FOR UPDATE TO authenticated
+        USING (bucket_id = 'licencas' AND owner = auth.uid())
+        WITH CHECK (bucket_id = 'licencas' AND owner = auth.uid());
+    END IF;
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'Skipping policy licencas_update_owner: insufficient privileges';
+  END;
 END $$;
 
 -- DELETE: allow owners to delete their own files in 'licencas'
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_delete_owner'
-  ) THEN
-    CREATE POLICY licencas_delete_owner ON storage.objects
-      FOR DELETE TO authenticated
-      USING (bucket_id = 'licencas' AND owner = auth.uid());
-  END IF;
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'licencas_delete_owner'
+    ) THEN
+      CREATE POLICY licencas_delete_owner ON storage.objects
+        FOR DELETE TO authenticated
+        USING (bucket_id = 'licencas' AND owner = auth.uid());
+    END IF;
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'Skipping policy licencas_delete_owner: insufficient privileges';
+  END;
 END $$;
 
 COMMENT ON POLICY licencas_insert_authenticated ON storage.objects IS 'Permit upload para usuários autenticados no bucket licencas';
