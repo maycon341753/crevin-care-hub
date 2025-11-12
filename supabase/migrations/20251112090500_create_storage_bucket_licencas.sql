@@ -75,6 +75,4 @@ BEGIN
   END;
 END $$;
 
-COMMENT ON POLICY licencas_insert_authenticated ON storage.objects IS 'Permit upload para usuários autenticados no bucket licencas';
-COMMENT ON POLICY licencas_update_owner ON storage.objects IS 'Permite atualização apenas pelo dono no bucket licencas';
-COMMENT ON POLICY licencas_delete_owner ON storage.objects IS 'Permite exclusão apenas pelo dono no bucket licencas';
+-- Comments removed to avoid privilege errors when policies are skipped
