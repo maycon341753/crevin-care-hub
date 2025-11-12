@@ -30,6 +30,7 @@ import EditContaPagarModal from '@/components/financeiro/EditContaPagarModal';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
 import { ContasRecorrentesService } from '@/services/contasRecorrentes';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface CategoriaFinanceira {
   id: string;
@@ -156,66 +157,76 @@ const ContasPagarPage: React.FC = () => {
     }
   };
 
-  // FunÃƒÂ§ÃƒÂ£o para gerar relatÃƒÂ³rio em PDF
+  // Função para gerar relatório em PDF
   const handleGerarRelatorioPDF = () => {
     try {
       const doc = new jsPDF();
-      
-      // Configurar fonte para suportar caracteres especiais
+
+      // Cabeçalho
       doc.setFont('helvetica');
-      
-      // TÃƒÂ­tulo do relatÃƒÂ³rio
       doc.setFontSize(18);
-      doc.text('RelatÃƒÂ³rio de Contas a Pagar', 20, 20);
-      
-      // Data de geraÃƒÂ§ÃƒÂ£o
+      doc.text('Relatório de Contas a Pagar', 20, 20);
       doc.setFontSize(12);
       doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 20, 30);
-      
-      // Resumo
+
+      // Resumo financeiro
       doc.setFontSize(14);
-      doc.text('Resumo:', 20, 45);
+      doc.text('Resumo', 20, 48);
       doc.setFontSize(10);
-      doc.text(`Total Pendente: ${formatBrazilianCurrency(totalPendente)}`, 20, 55);
-      doc.text(`Total Pago: ${formatBrazilianCurrency(totalPago)}`, 20, 65);
-      doc.text(`Total Vencido: ${formatBrazilianCurrency(totalVencido)}`, 20, 75);
-      
-      // CabeÃƒÂ§alho da tabela
-      let yPosition = 90;
-      doc.setFontSize(8);
-      doc.text('DescriÃƒÂ§ÃƒÂ£o', 20, yPosition);
-      doc.text('Valor', 80, yPosition);
-      doc.text('Vencimento', 110, yPosition);
-      doc.text('Fornecedor', 140, yPosition);
-      doc.text('Status', 170, yPosition);
-      
-      // Linha separadora
-      yPosition += 5;
-      doc.line(20, yPosition, 190, yPosition);
-      
-      // Dados das contas
-      yPosition += 10;
-      filteredContas.forEach((conta) => {
-        if (yPosition > 270) {
-          doc.addPage();
-          yPosition = 20;
-        }
-        
-        doc.text(conta.descricao.substring(0, 25), 20, yPosition);
-        doc.text(formatBrazilianCurrency(conta.valor), 80, yPosition);
-        doc.text(formatBrazilianDate(conta.data_vencimento), 110, yPosition);
-        doc.text(conta.fornecedor_nome.substring(0, 15), 140, yPosition);
-        doc.text(conta.status, 170, yPosition);
-        
-        yPosition += 8;
+      doc.text(`Total Pendente: ${formatBrazilianCurrency(totalPendente)}`, 20, 58);
+      doc.text(`Total Pago: ${formatBrazilianCurrency(totalPago)}`, 20, 66);
+      doc.text(`Total Vencido: ${formatBrazilianCurrency(totalVencido)}`, 20, 74);
+
+      // Filtros aplicados
+      const categoriaNome = categoriaFilter === 'todas' 
+        ? 'Todas as categorias' 
+        : (categorias.find(c => c.id === categoriaFilter)?.nome || categoriaFilter);
+      const statusNome = statusFilter === 'todos' ? 'Todos os status' : statusFilter;
+      const busca = searchTerm ? `"${searchTerm}"` : '—';
+
+      doc.setFontSize(12);
+      doc.text('Filtros aplicados', 20, 90);
+      doc.setFontSize(9);
+      doc.text(`Busca: ${busca}`, 20, 98);
+      doc.text(`Status: ${statusNome}`, 80, 98);
+      doc.text(`Categoria: ${categoriaNome}`, 140, 98);
+
+      // Tabela de contas usando autoTable para melhor legibilidade
+      const body = filteredContas.map(conta => [
+        conta.descricao,
+        formatBrazilianCurrency(conta.valor),
+        formatBrazilianDate(conta.data_vencimento),
+        conta.fornecedor_nome,
+        conta.categorias_financeiras?.nome || '-',
+        conta.status
+      ]);
+
+      autoTable(doc, {
+        head: [[
+          'Descrição', 'Valor', 'Vencimento', 'Fornecedor', 'Categoria', 'Status'
+        ]],
+        body,
+        startY: 108,
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [240, 240, 240], textColor: 20 },
+        theme: 'striped',
       });
-      
-      // Salvar o PDF
-      doc.save(`contas-a-pagar-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success('RelatÃƒÂ³rio PDF gerado com sucesso!');
+
+      // Rodapé com legenda e paginação
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const h = doc.internal.pageSize.height;
+        doc.setFontSize(8);
+        doc.text('Legenda de status: pendente | pago | vencido | cancelado', 20, h - 12);
+        doc.text(`Página ${i} de ${pageCount}`, 20, h - 6);
+      }
+
+      doc.save(`contas-a-pagar-${format(new Date(), 'yyyy-MM')}.pdf`);
+      toast.success('Relatório PDF gerado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar relatÃƒÂ³rio PDF:', error);
-      toast.error('Erro ao gerar relatÃƒÂ³rio PDF');
+      console.error('Erro ao gerar relatório PDF:', error);
+      toast.error('Erro ao gerar relatório PDF');
     }
   };
 
