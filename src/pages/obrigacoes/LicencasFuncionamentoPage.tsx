@@ -134,6 +134,18 @@ export default function LicencasFuncionamentoPage() {
       const msg = (err as any)?.message?.toString?.() ?? "";
       if (msg.includes("Bucket not found")) {
         toast.error("Bucket 'licencas' não encontrado. Aplique a migration crevin-care-hub/supabase/migrations/20251112090500_create_storage_bucket_licencas.sql.");
+      } else if (
+        msg.includes("row-level security policy") ||
+        msg.toLowerCase().includes("rls") ||
+        msg.toLowerCase().includes("violates row-level security")
+      ) {
+        toast.error(
+          "Upload bloqueado por RLS no Storage. Crie uma política de INSERT para o bucket 'licencas' permitindo usuários autenticados."
+        );
+        console.warn(
+          "Dica de política SQL:",
+          "CREATE POLICY licencas_insert_auth ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'licencas');"
+        );
       } else {
         toast.error("Falha no upload. Verifique se o bucket 'licencas' existe.");
       }
