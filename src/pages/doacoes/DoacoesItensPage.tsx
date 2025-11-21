@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { generateGuiaDoacaoItens } from "@/components/GuiaDoacaoItens";
 
 type DoacaoItem = {
   id: string;
@@ -134,9 +135,13 @@ export default function DoacoesItensPage() {
                         {formatBrazilianDate(doacao.data_doacao)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" className="text-xs">
-                          <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Guia</span>
+                        <Button
+                          size="sm"
+                          className="text-xs rounded-full bg-gradient-to-r from-primary to-purple-600 text-white shadow-sm hover:shadow-md hover:from-primary/90 hover:to-purple-600/90 transition-all px-3 sm:px-4"
+                          onClick={() => handleGerarGuia(doacao)}
+                        >
+                          <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2 opacity-90" />
+                          <span className="hidden sm:inline font-medium">Guia</span>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -150,3 +155,23 @@ export default function DoacoesItensPage() {
     </div>
   );
 }
+  const handleGerarGuia = async (doacao: DoacaoItem) => {
+    try {
+      generateGuiaDoacaoItens({
+        doador_nome: doacao.doador_nome,
+        doador_cpf: doacao.doador_cpf,
+        item_nome: doacao.item_nome,
+        quantidade: doacao.quantidade,
+        protocolo: doacao.protocolo,
+        data_doacao: doacao.data_doacao,
+      });
+      const { error } = await supabase
+        .from('doacoes_itens')
+        .update({ guia_gerada: true })
+        .eq('id', doacao.id);
+      if (error) throw error;
+      // opcional: toast via sonner aqui, se quiser feedback
+    } catch (err) {
+      console.error('Erro ao gerar guia:', err);
+    }
+  };

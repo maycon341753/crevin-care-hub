@@ -288,13 +288,12 @@ export default function DoacoesDinheiroPage() {
                             <span className="hidden sm:inline">Editar</span>
                           </Button>
                           <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-xs"
+                            size="sm"
+                            className="text-xs rounded-full bg-gradient-to-r from-primary to-purple-600 text-white shadow-sm hover:shadow-md hover:from-primary/90 hover:to-purple-600/90 transition-all px-3 sm:px-4"
                             onClick={() => handleGerarRecibo(doacao)}
                           >
-                            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Recibo</span>
+                            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2 opacity-90" />
+                            <span className="hidden sm:inline font-medium">Recibo</span>
                           </Button>
                         </div>
                       </TableCell>

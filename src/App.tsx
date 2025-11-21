@@ -20,6 +20,7 @@ import AniversariantesPage from "./pages/funcionarios/AniversariantesPage";
 import DepartamentosPage from "./pages/departamentos/DepartamentosPage";
 import DoacoesPage from "./pages/doacoes/DoacoesPage";
 import DoacoesDinheiroPage from "./pages/doacoes/DoacoesDinheiroPage";
+import DoacoesRecibosPage from "./pages/doacoes/DoacoesRecibosPage";
 import DoacoesRelatoriosPage from "./pages/doacoes/DoacoesRelatoriosPage";
 import DoacoesItensPage from "./pages/doacoes/DoacoesItensPage";
 import IdososPage from "./pages/idosos/IdososPage";
@@ -125,6 +126,7 @@ const App = () => (
             <Route path="/funcionarios/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
             <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
             <Route path="/doacoes/dinheiro" element={<ProtectedRoute><DoacoesDinheiroPage /></ProtectedRoute>} />
+            <Route path="/doacoes/recibos" element={<ProtectedRoute><DoacoesRecibosPage /></ProtectedRoute>} />
             <Route path="/doacoes/itens" element={<ProtectedRoute><DoacoesItensPage /></ProtectedRoute>} />
             <Route path="/doacoes/relatorios" element={<ProtectedRoute><DoacoesRelatoriosPage /></ProtectedRoute>} />
             <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />

@@ -414,9 +414,12 @@ export default function DoacoesRelatoriosPage() {
             Análise detalhada das doações e despesas da instituição
           </p>
         </div>
-        <Button onClick={exportarPDF} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Exportar PDF
+        <Button
+          onClick={exportarPDF}
+          className="flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-sm hover:shadow-md hover:from-rose-600/90 hover:to-pink-600/90 transition-all px-4"
+        >
+          <Download className="h-4 w-4 opacity-90" />
+          <span className="font-medium">Exportar PDF</span>
         </Button>
       </div>
 
@@ -463,9 +466,12 @@ export default function DoacoesRelatoriosPage() {
             <Button onClick={fetchRelatorioData} variant="outline">
               Atualizar Relatório
             </Button>
-            <Button onClick={exportarPDF} variant="default" className="bg-red-600 hover:bg-red-700">
-              <FileText className="w-4 h-4 mr-2" />
-              Exportar PDF
+            <Button
+              onClick={exportarPDF}
+              className="rounded-full bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-sm hover:shadow-md hover:from-rose-600/90 hover:to-pink-600/90 transition-all px-4"
+            >
+              <FileText className="w-4 h-4 mr-2 opacity-90" />
+              <span className="font-medium">Exportar PDF</span>
             </Button>
           </div>
         </CardContent>

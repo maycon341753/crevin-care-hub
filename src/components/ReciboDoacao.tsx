@@ -19,6 +19,7 @@ export const generateReciboDoacao = (doacao: DoacaoData, config: ReciboConfig) =
   
   // Configurações do documento
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const lineHeight = 8;
   let currentY = 30;
@@ -46,22 +47,32 @@ export const generateReciboDoacao = (doacao: DoacaoData, config: ReciboConfig) =
     return y + (lines.length * lineHeight);
   };
 
-  // Cabeçalho - Logo e informações da CREVIN
-  currentY = addCenteredText('COMUNIDADE DE RENOVAÇÃO, ESPERANÇA E VIDA NOVA - CREVIN - LAR DO IDOSO', currentY, 14, true);
-  currentY += 5;
-  
-  currentY = addCenteredText('INSTITUIÇÃO FILANTRÓPICA - SEM FINS LUCRATIVOS', currentY, 10);
-  currentY = addCenteredText('CNPJ: 01.600.253/0001-69 - CF/DF: 07.537.062/001-42', currentY, 10);
-  currentY = addCenteredText('REGISTRO DE PESSOAS JURÍDICAS Nº 325, LIVRO A', currentY, 10);
-  currentY = addCenteredText('2º OFÍCIO DE REGISTRO CIVIL DE PESSOAS JURÍDICAS - BRASÍLIA/DF', currentY, 10);
-  currentY = addCenteredText('CEP: 73.330-083, QUADRA 63, LOTE 12, SETOR TRADICIONAL', currentY, 10);
-  currentY = addCenteredText('UTILIDADE PÚBLICA FEDERAL - PORTARIA Nº 124, DE 14/05/2009', currentY, 10);
-  
-  currentY += 15;
+  // Cabeçalho estilizado com cores de marca
+  doc.setFillColor(79, 70, 229); // indigo-600
+  doc.rect(0, 0, pageWidth, 28, 'F');
+  doc.setFillColor(147, 51, 234); // purple-600 (barra de destaque)
+  doc.rect(0, 26, pageWidth, 4, 'F');
+  doc.setTextColor(255, 255, 255);
+  currentY = 18;
+  currentY = addCenteredText('COMUNIDADE DE RENOVAÇÃO, ESPERANÇA E VIDA NOVA - CREVIN - LAR DO IDOSO', currentY, 12, true);
+  doc.setTextColor(255, 255, 255);
+  currentY = addCenteredText('INSTITUIÇÃO FILANTRÓPICA - SEM FINS LUCRATIVOS', currentY, 9);
+  currentY += 10;
 
-  // Título do recibo
-  currentY = addCenteredText(`RECIBO DOAÇÃO ${config.numeroRecibo}`, currentY, 16, true);
-  currentY += 15;
+  // Título do recibo + chip com número
+  doc.setTextColor(0, 0, 0);
+  currentY = addCenteredText('RECIBO DE DOAÇÃO', currentY, 16, true);
+  // Chip do número do recibo
+  doc.setDrawColor(79, 70, 229);
+  doc.setFillColor(243, 244, 255);
+  const chipWidth = 90;
+  const chipX = (pageWidth - chipWidth) / 2;
+  doc.roundedRect(chipX, currentY + 4, chipWidth, 12, 2, 2, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(79, 70, 229);
+  doc.text(`Recibo nº ${config.numeroRecibo}`, chipX + 6, currentY + 12);
+  currentY += 25;
 
   // Formatação da data
   const dataDoacao = new Date(doacao.data_doacao);
@@ -79,15 +90,32 @@ export const generateReciboDoacao = (doacao: DoacaoData, config: ReciboConfig) =
     currency: 'BRL'
   });
 
-  // Corpo do recibo - texto completo conforme especificação
-  const textoRecibo = `Comunidade de Renovação, esperança e vida nova, também designada pela sigla CREVIN - LAR DO IDOSO, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº 01.600.253/0001-69, com sede na avenida floriano peixoto, quadra 63, lote 12, setor tradicional, CEP: 73330-083 - Planaltina - Distrito federal, nesse ato representada por sua presidente, ZÉLIA DIAS DA SILVA, recebemos do Setor _________________ a importância de ${valorFormatado} referente a doação espontânea da sociedade, para manutenção da instituição.`;
+  // Corpo do recibo em box estilizado
+  const textoRecibo = `Comunidade de Renovação, esperança e vida nova, também designada pela sigla CREVIN - LAR DO IDOSO, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº 01.600.253/0001-69, com sede na avenida floriano peixoto, quadra 63, lote 12, setor tradicional, CEP: 73330-083 - Planaltina - Distrito Federal, nesse ato representada por sua presidente, ZÉLIA DIAS DA SILVA, recebemos do Setor _________________ a importância de ${valorFormatado} referente à doação espontânea da sociedade, para manutenção da instituição.`;
 
-  currentY = addJustifiedText(textoRecibo, currentY);
-  currentY += 15;
+  doc.setDrawColor(229, 231, 235);
+  doc.setFillColor(250, 250, 250);
+  doc.roundedRect(margin, currentY - 6, pageWidth - margin * 2, 40, 2, 2, 'FD');
+  currentY = addJustifiedText(textoRecibo, currentY, 11);
+  currentY += 10;
 
-  // Informações da doação
-  currentY = addJustifiedText(`Doador: ${doacao.doador_nome}`, currentY, 10);
-  currentY = addJustifiedText(`Forma de Pagamento: ${doacao.forma_pagamento.charAt(0).toUpperCase() + doacao.forma_pagamento.slice(1)}`, currentY, 10);
+  // Informações da doação com labels (robusto para valores ausentes)
+  const doadorNome = (doacao.doador_nome ?? '').trim() || 'Anônimo';
+  const formaPagamentoRaw = (doacao.forma_pagamento ?? '').trim();
+  const formaPagamentoFmt = formaPagamentoRaw
+    ? formaPagamentoRaw.charAt(0).toUpperCase() + formaPagamentoRaw.slice(1)
+    : 'Não informado';
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Doador:', margin, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(doadorNome, margin + 28, currentY);
+  currentY += 8;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Forma de Pagamento:', margin, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formaPagamentoFmt, margin + 58, currentY);
   currentY += 15;
 
   // Declaração de veracidade
@@ -98,18 +126,21 @@ export const generateReciboDoacao = (doacao: DoacaoData, config: ReciboConfig) =
   currentY = addCenteredText(`Planaltina - DF, ${dia} de ${mes} de ${ano}`, currentY);
   currentY += 30;
 
-  // Linha para assinatura
+  // Assinatura estilizada
   const lineY = currentY;
   doc.line(pageWidth / 2 - 40, lineY, pageWidth / 2 + 40, lineY);
   currentY += 10;
   currentY = addCenteredText('Presidente', currentY, 10);
 
-  // Rodapé com informações adicionais
-  currentY = doc.internal.pageSize.getHeight() - 30;
+  // Rodapé estilizado
+  doc.setFillColor(243, 244, 255);
+  doc.rect(0, pageHeight - 18, pageWidth, 18, 'F');
   doc.setFontSize(8);
   doc.setFont('helvetica', 'italic');
-  currentY = addCenteredText('Este recibo foi gerado automaticamente pelo sistema CREVIN Care Hub', currentY, 8);
-  currentY = addCenteredText(`ID da Doação: ${doacao.id}`, currentY, 8);
+  doc.setTextColor(79, 70, 229);
+  doc.text('Este recibo foi gerado automaticamente pelo sistema CREVIN Care Hub', margin, pageHeight - 8);
+  doc.setTextColor(147, 51, 234);
+  doc.text(`ID da Doação: ${doacao.id}`, pageWidth - margin - 60, pageHeight - 8);
 
   // Gerar nome do arquivo
   const nomeArquivo = `Recibo_Doacao_${config.numeroRecibo.replace(/\//g, '_')}_${doacao.doador_nome.replace(/\s+/g, '_')}.pdf`;
