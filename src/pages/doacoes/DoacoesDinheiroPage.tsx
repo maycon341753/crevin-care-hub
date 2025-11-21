@@ -1,13 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Search, Edit, Trash2, DollarSign, Calendar, User, Download, Receipt } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatBrazilianCurrency, formatBrazilianDate } from "@/lib/utils";
+import { formatBrazilianCurrency, formatBrazilianDate, formatCurrencyInput, parseBrazilianCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { generateReciboDoacao, generateNumeroRecibo } from "@/components/ReciboDoacao";
 
@@ -31,6 +46,17 @@ export default function DoacoesDinheiroPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [addForm, setAddForm] = useState({
+    doador_nome: "",
+    doador_cpf: "",
+    doador_email: "",
+    doador_telefone: "",
+    valor: "",
+    forma_pagamento: "dinheiro",
+    data_doacao: new Date().toISOString().slice(0, 10),
+    observacoes: "",
+  });
   const [editingDoacao, setEditingDoacao] = useState<DoacaoDinheiro | null>(null);
   const [deletingDoacao, setDeletingDoacao] = useState<DoacaoDinheiro | null>(null);
   const { toast } = useToast();
@@ -62,6 +88,93 @@ export default function DoacoesDinheiroPage() {
   useEffect(() => {
     fetchDoacoes();
   }, [fetchDoacoes]);
+
+  const handleAddInputChange = (field: keyof typeof addForm, value: string) => {
+    // Para o campo de valor, aplicamos a máscara e removemos zero à esquerda
+    if (field === "valor") {
+      const masked = formatCurrencyInput(value);
+      // Se a parte inteira tiver mais de 1 dígito e começar com zero, remove o zero inicial
+      const fixed = masked.replace(/^0(?=\d+,)/, "");
+      setAddForm((prev) => ({ ...prev, valor: fixed }));
+      return;
+    }
+
+    setAddForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmitNovaDoacao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id || "00000000-0000-0000-0000-000000000000";
+
+      const payloadBase: any = {
+        doador_nome: addForm.doador_nome.trim(),
+        doador_cpf: addForm.doador_cpf?.trim() || null,
+        doador_email: addForm.doador_email?.trim() || null,
+        doador_telefone: addForm.doador_telefone?.trim() || null,
+        valor: parseBrazilianCurrency(addForm.valor),
+        data_doacao: addForm.data_doacao,
+        observacoes: addForm.observacoes?.trim() || null,
+        status: "confirmada",
+        created_by: userId,
+      };
+
+      // Primeiro tenta com forma_pagamento (schema mais recente)
+      const payloadForma = { ...payloadBase, forma_pagamento: addForm.forma_pagamento };
+      let { error } = await supabase.from("doacoes_dinheiro").insert([payloadForma]);
+
+      // Fallback para tipo_pagamento (schema antigo)
+      if (error) {
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("forma_pagamento") || msg.includes("column \"forma_pagamento\"")) {
+          const mapTipo: Record<string, string> = {
+            pix: "PIX",
+            cartao: "Cartão",
+            dinheiro: "Dinheiro",
+            transferencia: "Transferência",
+            cheque: "Cheque",
+            boleto: "Boleto",
+          };
+          const payloadTipo = { ...payloadBase, tipo_pagamento: mapTipo[addForm.forma_pagamento] || addForm.forma_pagamento };
+          const retry = await supabase.from("doacoes_dinheiro").insert([payloadTipo]);
+          error = retry.error;
+        }
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Doação cadastrada",
+        description: "A nova doação foi adicionada com sucesso.",
+      });
+      setShowAddModal(false);
+      setAddForm({
+        doador_nome: "",
+        doador_cpf: "",
+        doador_email: "",
+        doador_telefone: "",
+        valor: "",
+        forma_pagamento: "dinheiro",
+        data_doacao: new Date().toISOString().slice(0, 10),
+        observacoes: "",
+      });
+      fetchDoacoes();
+    } catch (err: any) {
+      console.error("Erro ao adicionar doação:", err);
+      toast({
+        title: "Erro",
+        description: err?.message || "Não foi possível adicionar a doação.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleGerarRecibo = (doacao: DoacaoDinheiro) => {
     try {
@@ -305,6 +418,106 @@ export default function DoacoesDinheiroPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal: Nova Doação */}
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Nova Doação em Dinheiro</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitNovaDoacao} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Nome do Doador</Label>
+                <Input
+                  value={addForm.doador_nome}
+                  onChange={(e) => handleAddInputChange("doador_nome", e.target.value)}
+                  placeholder="Ex: João Silva"
+                  required
+                />
+              </div>
+              <div>
+                <Label>CPF</Label>
+                <Input
+                  value={addForm.doador_cpf}
+                  onChange={(e) => handleAddInputChange("doador_cpf", e.target.value)}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={addForm.doador_email}
+                  onChange={(e) => handleAddInputChange("doador_email", e.target.value)}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={addForm.doador_telefone}
+                  onChange={(e) => handleAddInputChange("doador_telefone", e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div>
+                <Label>Valor (R$)</Label>
+                <Input
+                  value={addForm.valor}
+                  onChange={(e) => handleAddInputChange("valor", e.target.value)}
+                  placeholder="0,00"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Forma de Pagamento</Label>
+                <Select
+                  value={addForm.forma_pagamento}
+                  onValueChange={(v) => handleAddInputChange("forma_pagamento", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data da Doação</Label>
+                <Input
+                  type="date"
+                  value={addForm.data_doacao}
+                  onChange={(e) => handleAddInputChange("data_doacao", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={addForm.observacoes}
+                  onChange={(e) => handleAddInputChange("observacoes", e.target.value)}
+                  placeholder="Notas adicionais"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddModal(false)} disabled={saving}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
