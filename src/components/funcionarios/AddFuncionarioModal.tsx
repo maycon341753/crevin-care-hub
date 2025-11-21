@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, formatPhone } from "@/lib/utils";
+import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
 import DateInput from '@/components/ui/date-input';
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,12 @@ const funcionarioSchema = z.object({
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   cargo: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres"),
   departamento_id: z.string().min(1, "Selecione um departamento"),
-  salario: z.number().min(0, "Salário deve ser maior que zero"),
+  // Salário digitado em formato brasileiro (ex: 1.234,56)
+  salario: z.string()
+    .min(1, "Salário é obrigatório")
+    .refine((val) => isValidBrazilianSalary(val), {
+      message: "Formato de salário inválido. Use o formato 1.234,56"
+    }),
   data_admissao: z.string().min(1, "Data de admissão é obrigatória"),
   status: z.enum(["ativo", "inativo", "ferias", "afastado"]),
 });
@@ -69,7 +74,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
       email: "",
       cargo: "",
       departamento_id: "",
-      salario: 0,
+      salario: "",
       data_admissao: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
       status: "ativo",
     },
@@ -131,7 +136,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
           email: data.email || null,
           cargo: data.cargo,
           departamento_id: data.departamento_id,
-          salario: data.salario,
+          salario: parseBrazilianSalary(data.salario),
           data_admissao: dataAdmissaoFormatted, // Enviando no formato ISO (YYYY-MM-DD)
           status: data.status,
           created_by: user?.id || '',
@@ -147,7 +152,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
         email: "",
         cargo: "",
         departamento_id: "",
-        salario: 0,
+        salario: "",
         data_admissao: new Date().toISOString().split('T')[0], // Reset com data atual
         status: "ativo",
       });
@@ -306,9 +311,12 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                       <Input
                         id="salario"
                         type="text"
-                        placeholder="Digite o salário"
+                        placeholder="0,00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const formatted = formatSalaryInput(e.target.value);
+                          field.onChange(formatted);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
