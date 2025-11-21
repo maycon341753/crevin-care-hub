@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import DateInput from '@/components/ui/date-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatCurrencyInput, parseBrazilianCurrency } from '@/lib/utils';
+import { formatSalaryInput, parseBrazilianCurrency } from '@/lib/utils';
 
 interface CategoriaFinanceira {
   id: string;
@@ -151,9 +151,9 @@ const AddContaPagarModal: React.FC<AddContaPagarModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    // Aplicar formatação especial para o campo valor
+    // Aplicar formatação especial para o campo valor sem inserir zeros à esquerda
     if (field === 'valor') {
-      const formattedValue = formatCurrencyInput(value);
+      const formattedValue = formatSalaryInput(value);
       setFormData(prev => ({
         ...prev,
         [field]: formattedValue
