@@ -92,6 +92,8 @@ const NotasFiscaisPage: React.FC = () => {
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNota, setEditingNota] = useState<NotaFiscal | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewingNota, setViewingNota] = useState<NotaFiscal | null>(null);
   const [formData, setFormData] = useState<NotaFiscalFormData>({
     numero: '',
     serie: '',
@@ -242,6 +244,11 @@ const NotasFiscaisPage: React.FC = () => {
       observacoes: nota.observacoes || ''
     });
     setIsDialogOpen(true);
+  };
+
+  const handleView = (nota: NotaFiscal) => {
+    setViewingNota(nota);
+    setIsViewOpen(true);
   };
 
   const handleDelete = async (id: string, numero: string) => {
@@ -478,6 +485,75 @@ const NotasFiscaisPage: React.FC = () => {
             </form>
           </DialogContent>
         </Dialog>
+        <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Visualizar Nota Fiscal</DialogTitle>
+              <DialogDescription>Confira os detalhes da nota fiscal selecionada</DialogDescription>
+            </DialogHeader>
+            {viewingNota && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Número</p>
+                  <p className="font-medium">{viewingNota.numero}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Série</p>
+                  <p className="font-medium">{viewingNota.serie || '-'}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Fornecedor</p>
+                  <p className="font-medium">{viewingNota.fornecedor_nome}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data de Emissão</p>
+                  <p className="font-medium">{formatDate(viewingNota.data_emissao)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data de Vencimento</p>
+                  <p className="font-medium">{viewingNota.data_vencimento ? formatDate(viewingNota.data_vencimento) : '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tipo</p>
+                  <p className="font-medium">{viewingNota.tipo === 'entrada' ? 'Entrada' : 'Saída'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium">{viewingNota.status.charAt(0).toUpperCase() + viewingNota.status.slice(1)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor Total</p>
+                  <p className="font-medium">{formatCurrency(viewingNota.valor_total)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Desconto</p>
+                  <p className="font-medium">{viewingNota.valor_desconto ? formatCurrency(viewingNota.valor_desconto) : '-'}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Valor Líquido</p>
+                  <p className="font-medium">{formatCurrency(viewingNota.valor_liquido)}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Observações</p>
+                  <p className="font-medium">{viewingNota.observacoes || '-'}</p>
+                </div>
+                {viewingNota.arquivo_url && (
+                  <div className="md:col-span-2">
+                    <a href={viewingNota.arquivo_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" className="flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Baixar Documento
+                      </Button>
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsViewOpen(false)}>Fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -613,6 +689,7 @@ const NotasFiscaisPage: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => handleView(nota)}
                     >
                       <Eye className="h-3 w-3" />
                     </Button>
