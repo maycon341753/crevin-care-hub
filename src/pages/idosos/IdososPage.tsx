@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Search, Edit, Trash2, Users, Calendar, Phone, MapPin, Clock, FileText, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,11 +54,23 @@ export default function IdososPage() {
     fetchIdosos();
   }, [fetchIdosos]);
 
-  const filteredIdosos = idosos.filter(idoso =>
-    idoso.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idoso.cpf.includes(searchTerm.replace(/\D/g, '')) ||
-    (idoso.telefone && idoso.telefone.includes(searchTerm.replace(/\D/g, '')))
-  );
+  const filteredIdosos = useMemo(() => {
+    const termText = searchTerm.trim().toLowerCase();
+    const termDigits = searchTerm.replace(/\D/g, "");
+
+    if (!termText && !termDigits) return idosos;
+
+    return idosos.filter((idoso) => {
+      const nomeMatches = idoso.nome.toLowerCase().includes(termText);
+      const cpfDigits = (idoso.cpf ?? "").replace(/\D/g, "");
+      const telefoneDigits = (idoso.telefone ?? "").replace(/\D/g, "");
+
+      const cpfMatches = termDigits.length > 0 && cpfDigits.includes(termDigits);
+      const telefoneMatches = termDigits.length > 0 && telefoneDigits.includes(termDigits);
+
+      return nomeMatches || cpfMatches || telefoneMatches;
+    });
+  }, [searchTerm, idosos]);
 
   const handleEdit = (idoso: Idoso) => {
     setSelectedIdoso(idoso);
