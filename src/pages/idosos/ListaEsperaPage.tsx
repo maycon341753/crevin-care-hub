@@ -65,6 +65,7 @@ export default function ListaEsperaPage() {
   const [selectedIdoso, setSelectedIdoso] = useState<IdosoListaEspera | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [sexoFiltro, setSexoFiltro] = useState<'todos' | 'masculino' | 'feminino'>('todos');
 
   const fetchIdosos = async () => {
     try {
@@ -92,6 +93,94 @@ export default function ListaEsperaPage() {
     idoso.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     idoso.cpf.includes(searchTerm) ||
     (idoso.responsavel_nome && idoso.responsavel_nome.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // Separação por sexo
+  const idososMasculinos = filteredIdosos.filter((i) => i.sexo === 'masculino');
+  const idososFemininos = filteredIdosos.filter((i) => i.sexo === 'feminino');
+
+  // Renderer de cartão para evitar duplicação
+  const renderIdosoCard = (idoso: IdosoListaEspera) => (
+    <Card key={idoso.id} className="hover:shadow-lg transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <User className="h-5 w-5 text-blue-600" />
+            {idoso.nome}
+          </CardTitle>
+          <div className="flex flex-col items-end gap-2">
+            {getStatusBadge(idoso.status)}
+            <Badge variant="outline" className="text-xs">
+              Posição: {idoso.posicao_fila}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="text-sm text-gray-600">
+          <p><strong>CPF:</strong> {idoso.cpf}</p>
+          <p><strong>Idade:</strong> {calculateIdade(idoso.data_nascimento)} anos</p>
+          <p><strong>Cadastro:</strong> {new Date(idoso.data_cadastro).toLocaleDateString('pt-BR')}</p>
+        </div>
+
+        {idoso.telefone && (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Phone className="h-4 w-4" />
+            {idoso.telefone}
+          </div>
+        )}
+
+        {idoso.endereco && (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <MapPin className="h-4 w-4" />
+            {idoso.endereco.length > 50 ? `${idoso.endereco.substring(0, 50)}...` : idoso.endereco}
+          </div>
+        )}
+
+        {idoso.responsavel_nome && (
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-sm font-medium text-gray-700">Responsável:</p>
+            <p className="text-sm text-gray-600">{idoso.responsavel_nome}</p>
+            {idoso.responsavel_telefone && (
+              <p className="text-sm text-gray-600">{idoso.responsavel_telefone}</p>
+            )}
+            {idoso.responsavel_parentesco && (
+              <p className="text-xs text-gray-500">({idoso.responsavel_parentesco})</p>
+            )}
+          </div>
+        )}
+
+        {idoso.observacoes && (
+          <div className="text-sm text-gray-600">
+            <p><strong>Observações:</strong></p>
+            <p className="text-xs bg-gray-50 p-2 rounded">
+              {idoso.observacoes.length > 100 ? `${idoso.observacoes.substring(0, 100)}...` : idoso.observacoes}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(idoso)}
+            className="flex-1"
+          >
+            Editar
+          </Button>
+          {idoso.status === 'aguardando' && (
+            <Button
+              size="sm"
+              onClick={() => handleTransfer(idoso)}
+              className="flex-1 flex items-center gap-1"
+            >
+              <UserCheck className="h-3 w-3" />
+              Transferir
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 
   const handleEdit = (idoso: IdosoListaEspera) => {
@@ -186,94 +275,89 @@ export default function ListaEsperaPage() {
             className="pl-10"
           />
         </div>
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant={sexoFiltro === 'todos' ? 'default' : 'outline'}
+            onClick={() => setSexoFiltro('todos')}
+          >
+            Todos
+          </Button>
+          <Button
+            variant={sexoFiltro === 'masculino' ? 'default' : 'outline'}
+            onClick={() => setSexoFiltro('masculino')}
+          >
+            Masculino
+          </Button>
+          <Button
+            variant={sexoFiltro === 'feminino' ? 'default' : 'outline'}
+            onClick={() => setSexoFiltro('feminino')}
+          >
+            Feminino
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredIdosos.map((idoso) => (
-          <Card key={idoso.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-600" />
-                  {idoso.nome}
-                </CardTitle>
-                <div className="flex flex-col items-end gap-2">
-                  {getStatusBadge(idoso.status)}
-                  <Badge variant="outline" className="text-xs">
-                    Posição: {idoso.posicao_fila}
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-sm text-gray-600">
-                <p><strong>CPF:</strong> {idoso.cpf}</p>
-                <p><strong>Idade:</strong> {calculateIdade(idoso.data_nascimento)} anos</p>
-                <p><strong>Cadastro:</strong> {new Date(idoso.data_cadastro).toLocaleDateString('pt-BR')}</p>
-              </div>
-
-              {idoso.telefone && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="h-4 w-4" />
-                  {idoso.telefone}
-                </div>
+      {/* Conteúdo condicionado ao filtro */}
+      {sexoFiltro === 'todos' && (
+        <div className="grid gap-8 md:grid-cols-2">
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Masculino ({idososMasculinos.length})
+            </h2>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {idososMasculinos.map(renderIdosoCard)}
+              {idososMasculinos.length === 0 && (
+                <p className="text-gray-500 text-sm">Nenhum cadastro masculino.</p>
               )}
-
-              {idoso.endereco && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  {idoso.endereco.length > 50 ? `${idoso.endereco.substring(0, 50)}...` : idoso.endereco}
-                </div>
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5 text-pink-600" />
+              Feminino ({idososFemininos.length})
+            </h2>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {idososFemininos.map(renderIdosoCard)}
+              {idososFemininos.length === 0 && (
+                <p className="text-gray-500 text-sm">Nenhum cadastro feminino.</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
 
-              {idoso.responsavel_nome && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700">Responsável:</p>
-                  <p className="text-sm text-gray-600">{idoso.responsavel_nome}</p>
-                  {idoso.responsavel_telefone && (
-                    <p className="text-sm text-gray-600">{idoso.responsavel_telefone}</p>
-                  )}
-                  {idoso.responsavel_parentesco && (
-                    <p className="text-xs text-gray-500">({idoso.responsavel_parentesco})</p>
-                  )}
-                </div>
-              )}
+      {sexoFiltro === 'masculino' && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-600" />
+            Masculino ({idososMasculinos.length})
+          </h2>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {idososMasculinos.map(renderIdosoCard)}
+            {idososMasculinos.length === 0 && (
+              <p className="text-gray-500 text-sm">Nenhum cadastro masculino.</p>
+            )}
+          </div>
+        </div>
+      )}
 
-              {idoso.observacoes && (
-                <div className="text-sm text-gray-600">
-                  <p><strong>Observações:</strong></p>
-                  <p className="text-xs bg-gray-50 p-2 rounded">
-                    {idoso.observacoes.length > 100 ? `${idoso.observacoes.substring(0, 100)}...` : idoso.observacoes}
-                  </p>
-                </div>
-              )}
+      {sexoFiltro === 'feminino' && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-pink-600" />
+            Feminino ({idososFemininos.length})
+          </h2>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {idososFemininos.map(renderIdosoCard)}
+            {idososFemininos.length === 0 && (
+              <p className="text-gray-500 text-sm">Nenhum cadastro feminino.</p>
+            )}
+          </div>
+        </div>
+      )}
 
-              <div className="flex gap-2 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(idoso)}
-                  className="flex-1"
-                >
-                  Editar
-                </Button>
-                {idoso.status === 'aguardando' && (
-                   <Button
-                     size="sm"
-                     onClick={() => handleTransfer(idoso)}
-                     className="flex-1 flex items-center gap-1"
-                   >
-                     <UserCheck className="h-3 w-3" />
-                     Transferir
-                   </Button>
-                 )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredIdosos.length === 0 && (
+      {sexoFiltro === 'todos' && (idososMasculinos.length + idososFemininos.length) === 0 && (
         <div className="text-center py-12">
           <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
