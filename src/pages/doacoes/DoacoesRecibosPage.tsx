@@ -101,8 +101,20 @@ export default function DoacoesRecibosPage() {
         .update({ recibo_gerado: true })
         .eq('id', doacao.id);
 
-      if (error) throw error;
-      toast.success(`Recibo ${numeroRecibo} gerado e marcado no sistema`);
+      if (error) {
+        // Se a coluna não existir no schema cache (migracão ainda não aplicada), não quebrar o fluxo
+        if (error.code === 'PGRST204' && (error.message || '').includes("recibo_gerado")) {
+          console.warn('Coluna recibo_gerado ausente em doacoes_dinheiro. Recibo gerado, mas status não marcado.', error);
+          toast.warning(
+            'Recibo gerado, porém a coluna "recibo_gerado" não existe na tabela doações. '
+            + 'Para corrigir, aplique a migração ou adicione a coluna no banco.'
+          );
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success(`Recibo ${numeroRecibo} gerado e marcado no sistema`);
+      }
       fetchData();
     } catch (err) {
       console.error('Erro ao gerar recibo:', err);
