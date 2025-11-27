@@ -21,21 +21,24 @@ const DateMonthYearInput: React.FC<DateMonthYearInputProps> = ({
 }) => {
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
+  const [day, setDay] = useState('');
 
   useEffect(() => {
     if (value && value.includes('-')) {
-      const [yearPart, monthPart] = value.split('-');
+      const [yearPart, monthPart, dayPart] = value.split('-');
       setMonth(monthPart || '');
       setYear(yearPart || '');
+      setDay(dayPart || '');
     } else {
       setMonth('');
       setYear('');
+      setDay('');
     }
   }, [value]);
 
-  const updateValue = (newMonth: string, newYear: string) => {
-    if (newMonth && newYear && newYear.length === 4) {
-      const isoDate = `${newYear}-${newMonth.padStart(2, '0')}-01`;
+  const updateValue = (newMonth: string, newYear: string, newDay: string) => {
+    if (newMonth && newYear && newDay && newYear.length === 4) {
+      const isoDate = `${newYear}-${newMonth.padStart(2, '0')}-${newDay.padStart(2, '0')}`;
       onChange(isoDate);
     } else {
       onChange('');
@@ -44,12 +47,23 @@ const DateMonthYearInput: React.FC<DateMonthYearInputProps> = ({
 
   const handleMonthChange = (newMonth: string) => {
     setMonth(newMonth);
-    updateValue(newMonth, year);
+    const maxDays = year && newMonth ? new Date(Number(year), Number(newMonth), 0).getDate() : 31;
+    const adjustedDay = day && Number(day) > maxDays ? String(maxDays).padStart(2, '0') : day;
+    if (adjustedDay !== day) setDay(adjustedDay);
+    updateValue(newMonth, year, adjustedDay);
   };
 
   const handleYearChange = (newYear: string) => {
     setYear(newYear);
-    updateValue(month, newYear);
+    const maxDays = newYear && month ? new Date(Number(newYear), Number(month), 0).getDate() : 31;
+    const adjustedDay = day && Number(day) > maxDays ? String(maxDays).padStart(2, '0') : day;
+    if (adjustedDay !== day) setDay(adjustedDay);
+    updateValue(month, newYear, adjustedDay);
+  };
+
+  const handleDayChange = (newDay: string) => {
+    setDay(newDay);
+    updateValue(month, year, newDay);
   };
 
   const months = [
@@ -68,6 +82,8 @@ const DateMonthYearInput: React.FC<DateMonthYearInputProps> = ({
   ];
 
   const years = Array.from({ length: 120 }, (_, i) => `${new Date().getFullYear() - i}`);
+  const maxDays = year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
+  const days = Array.from({ length: maxDays }, (_, i) => String(i + 1).padStart(2, '0'));
 
   return (
     <div className={className}>
@@ -76,7 +92,7 @@ const DateMonthYearInput: React.FC<DateMonthYearInputProps> = ({
           {label} {required && '*'}
         </Label>
       )}
-      <div className="grid grid-cols-2 gap-2 mt-1">
+      <div className="grid grid-cols-3 gap-2 mt-1">
         <div>
           <Select value={month} onValueChange={handleMonthChange}>
             <SelectTrigger>
@@ -110,6 +126,24 @@ const DateMonthYearInput: React.FC<DateMonthYearInputProps> = ({
           </Select>
           <Label className="text-xs text-muted-foreground text-center block mt-1">
             Ano
+          </Label>
+        </div>
+
+        <div>
+          <Select value={day} onValueChange={handleDayChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Dia" />
+            </SelectTrigger>
+            <SelectContent>
+              {days.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Label className="text-xs text-muted-foreground text-center block mt-1">
+            Dia
           </Label>
         </div>
       </div>
