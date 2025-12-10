@@ -35,7 +35,7 @@ interface ContaReceber {
   pagador_telefone?: string;
   forma_pagamento?: string;
   observacoes?: string;
-  status: 'pendente' | 'pago' | 'vencido';
+  status: 'pendente' | 'recebido' | 'vencido';
   recorrente?: boolean;
   frequencia_recorrencia?: string;
 }
@@ -66,7 +66,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
     pagador_telefone: '',
     forma_pagamento: '',
     observacoes: '',
-    status: 'pendente' as 'pendente' | 'pago' | 'vencido',
+  status: 'pendente' as 'pendente' | 'recebido' | 'vencido',
     recorrente: false,
     frequencia_recorrencia: 'mensal'
   });
@@ -176,19 +176,48 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
     setLoading(true);
 
     try {
+      const payloadRecebido = {
+        status: 'recebido',
+        data_recebimento: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as const;
+
       const { error } = await supabase
         .from('contas_receber')
-        .update({ 
-          status: 'pago',
-          data_pagamento: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(payloadRecebido)
         .eq('id', conta.id);
 
       if (error) {
-        console.error('Erro ao marcar como pago:', error);
-        toast.error('Erro ao marcar como pago');
-        return;
+        const msg = String((error as any)?.message || '');
+        const needsFallback =
+          msg.includes('data_recebimento') ||
+          msg.includes('invalid input value for enum') ||
+          msg.includes('status') ||
+          msg.includes('column') ||
+          msg.includes('does not exist');
+
+        if (needsFallback) {
+          const { error: fbError } = await supabase
+            .from('contas_receber')
+            .update({
+              status: 'pago',
+              data_pagamento: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', conta.id);
+
+          if (fbError) {
+            console.error('Erro ao marcar (fallback):', fbError);
+            toast.error('Erro ao marcar como pago/recebido');
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.error('Erro ao marcar como recebido:', error);
+          toast.error('Erro ao marcar como recebido');
+          setLoading(false);
+          return;
+        }
       }
 
       // Se for recorrente, gerar a próxima parcela pendente
@@ -222,7 +251,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
 
           if (insertError) {
             console.error('Erro ao gerar próxima parcela recorrente (receber):', insertError);
-            toast.warning('Conta marcada como paga, mas falhou gerar próxima recorrente');
+            toast.warning('Conta marcada como recebida, mas falhou gerar próxima recorrente');
           } else {
             toast.success('Próxima parcela recorrente criada (pendente)');
           }
@@ -232,11 +261,11 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
         }
       }
 
-      toast.success('Conta marcada como paga!');
+      toast.success('Conta marcada como recebida!');
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro ao marcar como pago');
+      toast.error('Erro ao marcar como recebido');
     } finally {
       setLoading(false);
     }
@@ -311,7 +340,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="pendente">Pendente</option>
-                <option value="pago">Pago</option>
+                <option value="recebido">Recebido</option>
                 <option value="vencido">Vencido</option>
               </select>
             </div>
@@ -434,7 +463,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
 
           <div className="flex justify-between pt-4">
             <div>
-              {conta.status !== 'pago' && (
+              {conta.status !== 'recebido' && (
                 <Button
                   type="button"
                   variant="outline"
@@ -442,7 +471,7 @@ const EditContaReceberModal: React.FC<EditContaReceberModalProps> = ({
                   disabled={loading}
                   className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
                 >
-                  Marcar como Pago
+                  Marcar como Recebido
                 </Button>
               )}
             </div>

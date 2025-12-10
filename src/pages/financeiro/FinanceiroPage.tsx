@@ -39,7 +39,7 @@ interface ContaReceber {
   descricao: string;
   valor: number;
   data_vencimento: string;
-  status: 'pendente' | 'pago' | 'vencido';
+  status: 'pendente' | 'recebido' | 'vencido';
   categoria_id?: string;
   observacoes?: string;
   recorrente?: boolean;
@@ -110,7 +110,7 @@ const FinanceiroPage: React.FC = () => {
 
   // Cálculos financeiros
   const totalReceber = contasReceber
-    .filter(conta => conta.status !== 'pago')
+    .filter(conta => conta.status !== 'recebido')
     .reduce((sum, conta) => sum + conta.valor, 0);
 
   const totalPagar = contasPagar
@@ -118,7 +118,7 @@ const FinanceiroPage: React.FC = () => {
     .reduce((sum, conta) => sum + conta.valor, 0);
 
   const totalRecebido = contasReceber
-    .filter(conta => conta.status === 'pago')
+    .filter(conta => conta.status === 'recebido')
     .reduce((sum, conta) => sum + conta.valor, 0);
 
   const totalPago = contasPagar
@@ -134,7 +134,7 @@ const FinanceiroPage: React.FC = () => {
     .filter(conta => {
       const data = new Date(conta.data_vencimento);
       const isMesAtual = data.getMonth() === currentMonth && data.getFullYear() === currentYear;
-      return isMesAtual && conta.status !== 'pago';
+      return isMesAtual && conta.status !== 'recebido';
     })
     .reduce((sum, conta) => sum + conta.valor, 0);
 
@@ -275,12 +275,12 @@ const FinanceiroPage: React.FC = () => {
       doc.setFontSize(14);
       doc.text('Contas a Receber', 20, 100);
       
-      const receberData = contasReceberMes.map(conta => [
-        conta.descricao,
-        formatBrazilianCurrency(conta.valor),
-        formatBrazilianDate(conta.data_vencimento),
-        conta.status === 'pago' ? 'Pago' : conta.status === 'vencido' ? 'Vencido' : 'Pendente'
-      ]);
+        const receberData = contasReceberMes.map(conta => [
+          conta.descricao,
+          formatBrazilianCurrency(conta.valor),
+          formatBrazilianDate(conta.data_vencimento),
+          conta.status === 'recebido' ? 'Recebido' : conta.status === 'vencido' ? 'Vencido' : 'Pendente'
+        ]);
       
       autoTable(doc, {
         head: [['Descrição', 'Valor', 'Vencimento', 'Status']],
@@ -328,6 +328,8 @@ const FinanceiroPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'recebido':
+        return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Recebido</Badge>;
       case 'pago':
         return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Pago</Badge>;
       case 'vencido':
@@ -452,7 +454,7 @@ const FinanceiroPage: React.FC = () => {
               <SelectContent>
                 <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="recebido">Recebido</SelectItem>
                 <SelectItem value="vencido">Vencido</SelectItem>
               </SelectContent>
             </Select>
