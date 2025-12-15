@@ -60,6 +60,16 @@ export default function DoacoesDinheiroPage() {
   const [editingDoacao, setEditingDoacao] = useState<DoacaoDinheiro | null>(null);
   const [deletingDoacao, setDeletingDoacao] = useState<DoacaoDinheiro | null>(null);
   const { toast } = useToast();
+  const [editForm, setEditForm] = useState({
+    doador_nome: "",
+    doador_cpf: "",
+    doador_email: "",
+    doador_telefone: "",
+    valor: "",
+    forma_pagamento: "dinheiro",
+    data_doacao: new Date().toISOString().slice(0, 10),
+    observacoes: "",
+  });
 
   const fetchDoacoes = useCallback(async () => {
     try {
@@ -197,6 +207,92 @@ export default function DoacoesDinheiroPage() {
         description: "Não foi possível gerar o recibo. Tente novamente.",
         variant: "destructive",
       });
+    }
+  };
+
+  useEffect(() => {
+    if (editingDoacao) {
+      setEditForm({
+        doador_nome: editingDoacao.doador_nome || "",
+        doador_cpf: editingDoacao.doador_cpf || "",
+        doador_email: editingDoacao.doador_email || "",
+        doador_telefone: editingDoacao.doador_telefone || "",
+        valor: (editingDoacao.valor ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        forma_pagamento: editingDoacao.forma_pagamento || "dinheiro",
+        data_doacao: editingDoacao.data_doacao?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+        observacoes: editingDoacao.observacoes || "",
+      });
+    }
+  }, [editingDoacao]);
+
+  const handleEditInputChange = (field: keyof typeof editForm, value: string) => {
+    if (field === "valor") {
+      const masked = formatCurrencyInput(value);
+      const fixed = masked.replace(/^0(?=\d+,)/, "");
+      setEditForm((prev) => ({ ...prev, valor: fixed }));
+      return;
+    }
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitEditarDoacao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDoacao) return;
+    try {
+      setSaving(true);
+      const payloadBase: any = {
+        doador_nome: editForm.doador_nome.trim(),
+        doador_cpf: editForm.doador_cpf?.trim() || null,
+        doador_email: editForm.doador_email?.trim() || null,
+        doador_telefone: editForm.doador_telefone?.trim() || null,
+        valor: parseBrazilianCurrency(editForm.valor),
+        data_doacao: editForm.data_doacao,
+        observacoes: editForm.observacoes?.trim() || null,
+      };
+
+      const payloadForma = { ...payloadBase, forma_pagamento: editForm.forma_pagamento };
+      let { error } = await supabase
+        .from("doacoes_dinheiro")
+        .update(payloadForma)
+        .eq("id", editingDoacao.id);
+
+      if (error) {
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("forma_pagamento") || msg.includes("column \"forma_pagamento\"")) {
+          const mapTipo: Record<string, string> = {
+            pix: "PIX",
+            cartao: "Cartão",
+            dinheiro: "Dinheiro",
+            transferencia: "Transferência",
+            cheque: "Cheque",
+            boleto: "Boleto",
+          };
+          const payloadTipo = { ...payloadBase, tipo_pagamento: mapTipo[editForm.forma_pagamento] || editForm.forma_pagamento };
+          const retry = await supabase
+            .from("doacoes_dinheiro")
+            .update(payloadTipo)
+            .eq("id", editingDoacao.id);
+          error = retry.error;
+        }
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Doação atualizada",
+        description: "As informações da doação foram atualizadas com sucesso.",
+      });
+      setEditingDoacao(null);
+      fetchDoacoes();
+    } catch (err: any) {
+      console.error("Erro ao atualizar doação:", err);
+      toast({
+        title: "Erro",
+        description: err?.message || "Não foi possível atualizar a doação.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -513,6 +609,106 @@ export default function DoacoesDinheiroPage() {
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Editar Doação */}
+      <Dialog open={!!editingDoacao} onOpenChange={(open) => !open && setEditingDoacao(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Doação em Dinheiro</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitEditarDoacao} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Nome do Doador</Label>
+                <Input
+                  value={editForm.doador_nome}
+                  onChange={(e) => handleEditInputChange("doador_nome", e.target.value)}
+                  placeholder="Ex: João Silva"
+                  required
+                />
+              </div>
+              <div>
+                <Label>CPF</Label>
+                <Input
+                  value={editForm.doador_cpf}
+                  onChange={(e) => handleEditInputChange("doador_cpf", e.target.value)}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={editForm.doador_email}
+                  onChange={(e) => handleEditInputChange("doador_email", e.target.value)}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={editForm.doador_telefone}
+                  onChange={(e) => handleEditInputChange("doador_telefone", e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div>
+                <Label>Valor (R$)</Label>
+                <Input
+                  value={editForm.valor}
+                  onChange={(e) => handleEditInputChange("valor", e.target.value)}
+                  placeholder="0,00"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Forma de Pagamento</Label>
+                <Select
+                  value={editForm.forma_pagamento}
+                  onValueChange={(v) => handleEditInputChange("forma_pagamento", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data da Doação</Label>
+                <Input
+                  type="date"
+                  value={editForm.data_doacao}
+                  onChange={(e) => handleEditInputChange("data_doacao", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={editForm.observacoes}
+                  onChange={(e) => handleEditInputChange("observacoes", e.target.value)}
+                  placeholder="Notas adicionais"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setEditingDoacao(null)} disabled={saving}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Salvando..." : "Salvar alterações"}
               </Button>
             </div>
           </form>
