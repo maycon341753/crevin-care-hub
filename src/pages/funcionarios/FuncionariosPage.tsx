@@ -25,6 +25,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Funcionario } from "@/types";
 import { formatBrazilianSalary, formatBrazilianDate } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function FuncionariosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -176,6 +178,49 @@ export default function FuncionariosPage() {
     return matchesSearch && matchesDepartment;
   });
 
+  const handleDownloadPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const titulo = "Lista de Funcionários";
+      doc.setFontSize(16);
+      doc.text(titulo, 14, 20);
+
+      const head = [["Nome", "Cargo", "Departamento", "Status", "Admissão", "Salário"]];
+      const body = filteredFuncionarios.map((f) => [
+        f.nome,
+        f.cargo,
+        f.departamentos?.nome || "N/A",
+        getStatusLabel(f.status),
+        formatBrazilianDate(f.data_admissao),
+        f.salario ? `R$ ${formatBrazilianSalary(f.salario)}` : "-"
+      ]);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 26,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [22, 163, 74] },
+        columnStyles: {
+          0: { cellWidth: 45 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 25 },
+        },
+      });
+
+      const data = new Date();
+      const nomeArquivo = `funcionarios_${String(data.getFullYear())}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}.pdf`;
+      doc.save(nomeArquivo);
+      toast({ title: "PDF gerado", description: "Download concluído com sucesso." });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({ title: "Erro", description: "Não foi possível gerar o PDF.", variant: "destructive" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -201,6 +246,14 @@ export default function FuncionariosPage() {
           >
             <Plus className="mr-2 h-4 w-4" />
             Novo Funcionário
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={handleDownloadPDF}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Baixar PDF
           </Button>
         </div>
       </div>
