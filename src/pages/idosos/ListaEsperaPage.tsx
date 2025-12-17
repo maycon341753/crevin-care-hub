@@ -121,7 +121,13 @@ export default function ListaEsperaPage() {
         <div className="text-sm text-gray-600">
           <p><strong>CPF:</strong> {idoso.cpf}</p>
           <p><strong>Idade:</strong> {calculateIdade(idoso.data_nascimento)} anos</p>
-          <p><strong>Cadastro:</strong> {new Date(idoso.data_cadastro).toLocaleDateString('pt-BR')}</p>
+          <p><strong>Cadastro:</strong> {idoso.data_cadastro ? (() => {
+            // Se for string ISO completa (ex: 2025-10-24T19:26:52...), pega só a data
+            // Se for só data (ex: 2025-10-24), mantém
+            const dataPart = idoso.data_cadastro.split('T')[0];
+            const [year, month, day] = dataPart.split('-');
+            return `${day}/${month}/${year}`;
+          })() : '-'}</p>
         </div>
 
         {idoso.telefone && (
