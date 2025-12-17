@@ -5,7 +5,7 @@ import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, User, Building2, DollarSign, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import { formatCPF, formatPhone, formatCurrencyInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
 import DateInput from '@/components/ui/date-input';
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -147,9 +147,11 @@ export default function NovoFuncionarioPage() {
 
   // Formatação automática de salário
   const handleSalaryChange = (value: string) => {
-    const formatted = formatSalaryInput(value);
+    const formatted = formatCurrencyInput(value);
     form.setValue('salario', formatted);
   };
+
+
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">

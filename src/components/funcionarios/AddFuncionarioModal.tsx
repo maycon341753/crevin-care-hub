@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, formatPhone, formatSalaryInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import { formatCPF, formatPhone, formatCurrencyInput, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
 import DateInput from '@/components/ui/date-input';
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -314,7 +314,7 @@ export function AddFuncionarioModal({ open, onOpenChange, onSuccess }: AddFuncio
                         placeholder="0,00"
                         {...field}
                         onChange={(e) => {
-                          const formatted = formatSalaryInput(e.target.value);
+                          const formatted = formatCurrencyInput(e.target.value);
                           field.onChange(formatted);
                         }}
                       />

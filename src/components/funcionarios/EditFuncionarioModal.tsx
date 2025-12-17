@@ -97,22 +97,7 @@ export function EditFuncionarioModal({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Função para formatar salário durante a digitação
-  const formatSalaryInput = (value: string): string => {
-    // Remove tudo que não é dígito
-    const numericValue = value.replace(/\D/g, '');
-    
-    if (!numericValue) return '';
-    
-    // Converte para número e divide por 100 para ter os centavos
-    const number = parseInt(numericValue) / 100;
-    
-    // Formata como moeda brasileira
-    return number.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+
 
   // Carregar dados do funcionário quando o modal abrir
   useEffect(() => {
@@ -179,7 +164,7 @@ export function EditFuncionarioModal({
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'salario') {
-      const formatted = formatSalaryInput(value);
+      const formatted = formatCurrencyInput(value);
       setFormData(prev => ({
         ...prev,
         [field]: formatted

@@ -25,12 +25,15 @@ export const formatCurrencyInput = (value: string): string => {
   // Remove tudo que não é dígito
   let numbers = value.replace(/\D/g, '');
   
+  // Remove zeros à esquerda
+  numbers = numbers.replace(/^0+/, '');
+  
   // Se não há números, retorna string vazia
   if (!numbers) return '';
   
-  // Se tem apenas 1 dígito, não adiciona zeros à esquerda
+  // Se tem apenas 1 dígito, formata como 0,0X
   if (numbers.length === 1) {
-    return `${numbers}`;
+    return `0,0${numbers}`;
   }
   
   // Se tem 2 dígitos, formata como 0,XX
