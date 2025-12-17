@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatBrazilianCurrency, formatBrazilianDate, formatCurrencyInput, parseBrazilianCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { generateReciboDoacao, generateNumeroRecibo } from "@/components/ReciboDoacao";
+import jsPDF from "jspdf";
 
 interface DoacaoDinheiro {
   id: string;
@@ -363,6 +364,127 @@ export default function DoacoesDinheiroPage() {
   const totalConfirmadas = filteredDoacoes.filter(d => d.status === 'confirmada').reduce((acc, doacao) => acc + doacao.valor, 0);
   const totalPendentes = filteredDoacoes.filter(d => d.status === 'pendente').reduce((acc, doacao) => acc + doacao.valor, 0);
 
+  const exportarRelatorioPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      let yPosition = 20;
+
+      // === CABEÇALHO ===
+      doc.setDrawColor(59, 130, 246);
+      doc.setLineWidth(3);
+      doc.line(20, 15, pageWidth - 20, 15);
+
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('RELATORIO DE DOACOES EM DINHEIRO', pageWidth / 2, 30, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      const dataAtual = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      doc.text(`Gerado em: ${dataAtual}`, pageWidth / 2, 38, { align: 'center' });
+
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(1);
+      doc.line(20, 45, pageWidth - 20, 45);
+
+      yPosition = 55;
+
+      // === RESUMO ===
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('RESUMO', 20, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total de Registros: ${filteredDoacoes.length}`, 20, yPosition);
+      doc.text(`Valor Total: ${formatBrazilianCurrency(totalDoacoes)}`, pageWidth - 80, yPosition);
+      yPosition += 8;
+      doc.text(`Confirmadas: ${formatBrazilianCurrency(totalConfirmadas)}`, 20, yPosition);
+      doc.text(`Pendentes: ${formatBrazilianCurrency(totalPendentes)}`, pageWidth - 80, yPosition);
+      
+      yPosition += 15;
+
+      // === TABELA DE DOAÇÕES ===
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('LISTAGEM DE DOACOES', 20, yPosition);
+      yPosition += 10;
+
+      // Cabeçalho da Tabela
+      doc.setFillColor(59, 130, 246);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(20, yPosition - 5, pageWidth - 40, 10, 'F');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      
+      const col1 = 25;  // Data
+      const col2 = 55;  // Doador
+      const col3 = 120; // Forma Pagto
+      const col4 = 160; // Status
+      const col5 = pageWidth - 25; // Valor (align right)
+
+      doc.text('DATA', col1, yPosition + 2);
+      doc.text('DOADOR', col2, yPosition + 2);
+      doc.text('FORMA PAGTO', col3, yPosition + 2);
+      doc.text('STATUS', col4, yPosition + 2);
+      doc.text('VALOR', col5, yPosition + 2, { align: 'right' });
+
+      yPosition += 10;
+
+      // Dados
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+
+      filteredDoacoes.forEach((doacao, index) => {
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(20, yPosition - 5, pageWidth - 40, 8, 'F');
+        }
+
+        const dataFormatada = formatBrazilianDate(doacao.data_doacao);
+        const nomeDoador = doacao.doador_nome.length > 25 ? doacao.doador_nome.substring(0, 25) + '...' : doacao.doador_nome;
+        const formaPagto = doacao.forma_pagamento.charAt(0).toUpperCase() + doacao.forma_pagamento.slice(1).replace('_', ' ');
+        const status = doacao.status.charAt(0).toUpperCase() + doacao.status.slice(1);
+
+        doc.text(dataFormatada, col1, yPosition);
+        doc.text(nomeDoador, col2, yPosition);
+        doc.text(formaPagto, col3, yPosition);
+        doc.text(status, col4, yPosition);
+        doc.text(formatBrazilianCurrency(doacao.valor), col5, yPosition, { align: 'right' });
+
+        yPosition += 8;
+
+        if (yPosition > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 30;
+        }
+      });
+
+      doc.save(`relatorio-doacoes-dinheiro-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast({
+        title: "Sucesso",
+        description: "Relatório gerado com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o relatório.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -382,7 +504,7 @@ export default function DoacoesDinheiroPage() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={exportarRelatorioPDF}>
             <Download className="h-4 w-4 mr-2" />
             Relatório
           </Button>
