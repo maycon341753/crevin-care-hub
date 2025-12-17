@@ -73,8 +73,8 @@ export default function ListaEsperaPage() {
       const { data, error } = await supabase
         .from('lista_espera_idosos')
         .select('*')
-        .order('posicao_fila', { ascending: true })
-        .order('data_cadastro', { ascending: true });
+        .order('data_cadastro', { ascending: true })
+        .order('posicao_fila', { ascending: true });
 
       if (error) throw error;
       setIdosos(data || []);
