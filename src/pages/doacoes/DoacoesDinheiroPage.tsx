@@ -235,6 +235,36 @@ export default function DoacoesDinheiroPage() {
     setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleDeleteDoacao = async (doacao: DoacaoDinheiro) => {
+    if (!confirm(`Tem certeza que deseja excluir a doação de ${doacao.doador_nome}?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('doacoes_dinheiro')
+        .delete()
+        .eq('id', doacao.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Doação excluída com sucesso.",
+      });
+      fetchDoacoes();
+    } catch (error) {
+      console.error('Erro ao excluir doação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a doação.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
   const handleSubmitEditarDoacao = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDoacao) return;
@@ -446,7 +476,7 @@ export default function DoacoesDinheiroPage() {
                   <TableHead className="min-w-[120px] hidden md:table-cell">Forma Pagamento</TableHead>
                   <TableHead className="min-w-[100px] hidden sm:table-cell">Data</TableHead>
                   <TableHead className="min-w-[80px]">Status</TableHead>
-                  <TableHead className="text-right min-w-[100px]">Ações</TableHead>
+                  <TableHead className="text-right min-w-[140px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -503,6 +533,15 @@ export default function DoacoesDinheiroPage() {
                           >
                             <Receipt className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2 opacity-90" />
                             <span className="hidden sm:inline font-medium">Recibo</span>
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="text-xs"
+                            onClick={() => handleDeleteDoacao(doacao)}
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Excluir</span>
                           </Button>
                         </div>
                       </TableCell>
