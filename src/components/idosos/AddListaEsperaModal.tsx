@@ -37,6 +37,7 @@ interface FormData {
   responsavel_telefone: string;
   responsavel_parentesco: string;
   observacoes: string;
+  data_cadastro: string;
 }
 
 export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEsperaModalProps) {
@@ -52,6 +53,7 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
     responsavel_telefone: "",
     responsavel_parentesco: "",
     observacoes: "",
+    data_cadastro: new Date().toISOString().split('T')[0],
   });
 
   const resetForm = () => {
@@ -66,6 +68,7 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
       responsavel_telefone: "",
       responsavel_parentesco: "",
       observacoes: "",
+      data_cadastro: new Date().toISOString().split('T')[0],
     });
   };
 
@@ -153,7 +156,8 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
           responsavel_telefone: formData.responsavel_telefone.trim() || null,
           responsavel_parentesco: formData.responsavel_parentesco.trim() || null,
           observacoes: formData.observacoes.trim() || null,
-          status: 'aguardando'
+          status: 'aguardando',
+          data_cadastro: formData.data_cadastro
         });
 
       if (error) throw error;
@@ -213,6 +217,17 @@ export function AddListaEsperaModal({ isOpen, onClose, onSuccess }: AddListaEspe
                 id="data_nascimento"
                 value={formData.data_nascimento}
                 onChange={(value) => setFormData({ ...formData, data_nascimento: value })}
+                placeholder="dd/mm/aaaa"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="data_cadastro">Data de Cadastro *</Label>
+              <DateInput
+                id="data_cadastro"
+                value={formData.data_cadastro}
+                onChange={(value) => setFormData({ ...formData, data_cadastro: value })}
                 placeholder="dd/mm/aaaa"
                 required
               />
