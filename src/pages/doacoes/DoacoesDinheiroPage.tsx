@@ -145,6 +145,7 @@ export default function DoacoesDinheiroPage() {
           const mapTipo: Record<string, string> = {
             pix: "PIX",
             pix_eletronico: "PIX Eletrônico",
+            mesada_eletronica: "Mesada Eletrônica",
             cartao: "Cartão",
             dinheiro: "Dinheiro",
             transferencia: "Transferência",
@@ -293,6 +294,7 @@ export default function DoacoesDinheiroPage() {
           const mapTipo: Record<string, string> = {
             pix: "PIX",
             pix_eletronico: "PIX Eletrônico",
+            mesada_eletronica: "Mesada Eletrônica",
             cartao: "Cartão",
             dinheiro: "Dinheiro",
             transferencia: "Transferência",
@@ -347,6 +349,7 @@ export default function DoacoesDinheiroPage() {
     const colors = {
       "pix": "bg-success text-success-foreground",
       "pix_eletronico": "bg-success text-success-foreground",
+      "mesada_eletronica": "bg-info text-info-foreground",
       "cartao": "bg-primary text-primary-foreground",
       "dinheiro": "bg-warning text-warning-foreground",
       "transferencia": "bg-info text-info-foreground",
@@ -621,6 +624,7 @@ export default function DoacoesDinheiroPage() {
                     <SelectItem value="dinheiro">Dinheiro</SelectItem>
                     <SelectItem value="pix">PIX</SelectItem>
                     <SelectItem value="pix_eletronico">PIX Eletrônico</SelectItem>
+                    <SelectItem value="mesada_eletronica">Mesada Eletrônica</SelectItem>
                     <SelectItem value="cartao">Cartão</SelectItem>
                     <SelectItem value="transferencia">Transferência</SelectItem>
                     <SelectItem value="cheque">Cheque</SelectItem>
@@ -722,6 +726,7 @@ export default function DoacoesDinheiroPage() {
                     <SelectItem value="dinheiro">Dinheiro</SelectItem>
                     <SelectItem value="pix">PIX</SelectItem>
                     <SelectItem value="pix_eletronico">PIX Eletrônico</SelectItem>
+                    <SelectItem value="mesada_eletronica">Mesada Eletrônica</SelectItem>
                     <SelectItem value="cartao">Cartão</SelectItem>
                     <SelectItem value="transferencia">Transferência</SelectItem>
                     <SelectItem value="cheque">Cheque</SelectItem>

@@ -17,7 +17,8 @@ BEGIN
             CHECK (forma_pagamento IN (
                 'PIX', 'Cartão', 'Dinheiro', 'Transferência', 'Cheque', 'Boleto',
                 'pix', 'cartao', 'dinheiro', 'transferencia', 'cheque', 'boleto',
-                'pix_eletronico', 'PIX Eletrônico'
+                'pix_eletronico', 'PIX Eletrônico',
+                'mesada_eletronica', 'Mesada Eletrônica'
             ));
         END IF;
 
@@ -29,7 +30,8 @@ BEGIN
             CHECK (tipo_pagamento IN (
                 'PIX', 'Cartão', 'Dinheiro', 'Transferência', 'Cheque', 'Boleto',
                 'pix', 'cartao', 'dinheiro', 'transferencia', 'cheque', 'boleto',
-                'pix_eletronico', 'PIX Eletrônico'
+                'pix_eletronico', 'PIX Eletrônico',
+                'mesada_eletronica', 'Mesada Eletrônica'
             ));
         END IF;
         
