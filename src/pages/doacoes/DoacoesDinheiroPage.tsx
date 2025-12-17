@@ -144,6 +144,7 @@ export default function DoacoesDinheiroPage() {
         if (msg.includes("forma_pagamento") || msg.includes("column \"forma_pagamento\"")) {
           const mapTipo: Record<string, string> = {
             pix: "PIX",
+            pix_eletronico: "PIX Eletrônico",
             cartao: "Cartão",
             dinheiro: "Dinheiro",
             transferencia: "Transferência",
@@ -291,6 +292,7 @@ export default function DoacoesDinheiroPage() {
         if (msg.includes("forma_pagamento") || msg.includes("column \"forma_pagamento\"")) {
           const mapTipo: Record<string, string> = {
             pix: "PIX",
+            pix_eletronico: "PIX Eletrônico",
             cartao: "Cartão",
             dinheiro: "Dinheiro",
             transferencia: "Transferência",
@@ -344,6 +346,7 @@ export default function DoacoesDinheiroPage() {
   const getFormaPagamentoBadge = (forma: string) => {
     const colors = {
       "pix": "bg-success text-success-foreground",
+      "pix_eletronico": "bg-success text-success-foreground",
       "cartao": "bg-primary text-primary-foreground",
       "dinheiro": "bg-warning text-warning-foreground",
       "transferencia": "bg-info text-info-foreground",
@@ -617,6 +620,7 @@ export default function DoacoesDinheiroPage() {
                   <SelectContent>
                     <SelectItem value="dinheiro">Dinheiro</SelectItem>
                     <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="pix_eletronico">PIX Eletrônico</SelectItem>
                     <SelectItem value="cartao">Cartão</SelectItem>
                     <SelectItem value="transferencia">Transferência</SelectItem>
                     <SelectItem value="cheque">Cheque</SelectItem>
@@ -717,6 +721,7 @@ export default function DoacoesDinheiroPage() {
                   <SelectContent>
                     <SelectItem value="dinheiro">Dinheiro</SelectItem>
                     <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="pix_eletronico">PIX Eletrônico</SelectItem>
                     <SelectItem value="cartao">Cartão</SelectItem>
                     <SelectItem value="transferencia">Transferência</SelectItem>
                     <SelectItem value="cheque">Cheque</SelectItem>
