@@ -427,9 +427,9 @@ export default function DoacoesDinheiroPage() {
       doc.setFont('helvetica', 'bold');
       
       const col1 = 25;  // Data
-      const col2 = 55;  // Doador
-      const col3 = 120; // Forma Pagto
-      const col4 = 160; // Status
+      const col2 = 50;  // Doador
+      const col3 = 110; // Forma Pagto
+      const col4 = 145; // Status
       const col5 = pageWidth - 25; // Valor (align right)
 
       doc.text('DATA', col1, yPosition + 2);
