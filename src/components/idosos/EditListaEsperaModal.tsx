@@ -32,6 +32,7 @@ interface IdosoListaEspera {
   responsavel_telefone?: string;
   responsavel_parentesco?: string;
   observacoes?: string;
+  data_cadastro?: string;
   status: 'aguardando' | 'contatado' | 'transferido' | 'cancelado';
 }
 
@@ -53,6 +54,7 @@ interface FormData {
   responsavel_telefone: string;
   responsavel_parentesco: string;
   observacoes: string;
+  data_cadastro: string;
   status: string;
 }
 
@@ -69,6 +71,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
     responsavel_telefone: "",
     responsavel_parentesco: "",
     observacoes: "",
+    data_cadastro: "",
     status: "aguardando",
   });
 
@@ -85,6 +88,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
         responsavel_telefone: idoso.responsavel_telefone || "",
         responsavel_parentesco: idoso.responsavel_parentesco || "",
         observacoes: idoso.observacoes || "",
+        data_cadastro: idoso.data_cadastro ? idoso.data_cadastro.split('T')[0] : new Date().toISOString().split('T')[0],
         status: idoso.status || "aguardando",
       });
     }
@@ -163,6 +167,7 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
           responsavel_telefone: formData.responsavel_telefone.trim() || null,
           responsavel_parentesco: formData.responsavel_parentesco.trim() || null,
           observacoes: formData.observacoes.trim() || null,
+          data_cadastro: formData.data_cadastro,
           status: formData.status
         })
         .eq('id', idoso.id);
@@ -244,6 +249,17 @@ export function EditListaEsperaModal({ isOpen, onClose, onSuccess, idoso }: Edit
                 id="data_nascimento"
                 value={formData.data_nascimento}
                 onChange={(value) => setFormData({ ...formData, data_nascimento: value })}
+                placeholder="dd/mm/aaaa"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="data_cadastro">Data de Cadastro *</Label>
+              <DateInput
+                id="data_cadastro"
+                value={formData.data_cadastro}
+                onChange={(value) => setFormData({ ...formData, data_cadastro: value })}
                 placeholder="dd/mm/aaaa"
                 required
               />
