@@ -31,11 +31,13 @@ import {
   ArrowLeft,
   User,
   Phone,
-  MapPin
+  MapPin,
+  Eye
 } from "lucide-react";
 import { AddListaEsperaModal } from "@/components/idosos/AddListaEsperaModal";
 import { EditListaEsperaModal } from "@/components/idosos/EditListaEsperaModal";
 import { TransferirIdosoModal } from "@/components/idosos/TransferirIdosoModal";
+import { DetalhesListaEsperaModal } from "@/components/idosos/DetalhesListaEsperaModal";
 import { useNavigate } from "react-router-dom";
 
 interface IdosoListaEspera {
@@ -62,6 +64,7 @@ export default function ListaEsperaPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIdoso, setSelectedIdoso] = useState<IdosoListaEspera | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -166,7 +169,16 @@ export default function ListaEsperaPage() {
           </div>
         )}
 
-        <div className="flex gap-2 pt-3">
+        <div className="flex gap-2 pt-3 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleViewDetails(idoso)}
+            className="flex-1 flex items-center gap-1"
+          >
+            <Eye className="h-3 w-3" />
+            Detalhes
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -200,10 +212,16 @@ export default function ListaEsperaPage() {
     setShowTransferModal(true);
   };
 
+  const handleViewDetails = (idoso: IdosoListaEspera) => {
+    setSelectedIdoso(idoso);
+    setShowDetailsModal(true);
+  };
+
   const handleModalClose = () => {
     setShowAddModal(false);
     setShowEditModal(false);
     setShowTransferModal(false);
+    setShowDetailsModal(false);
     setSelectedIdoso(null);
     fetchIdosos();
   };
@@ -390,6 +408,17 @@ export default function ListaEsperaPage() {
         onClose={handleModalClose}
         onSuccess={fetchIdosos}
       />
+
+      {selectedIdoso && (
+        <DetalhesListaEsperaModal
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedIdoso(null);
+          }}
+          idoso={selectedIdoso}
+        />
+      )}
 
       {selectedIdoso && (
         <EditListaEsperaModal
