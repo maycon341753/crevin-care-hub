@@ -229,7 +229,7 @@ export default function ProntuarioNutricional() {
         ...prontuario,
         // Se não usa prótese ou não selecionado, enviar null
         protese_adaptada:
-          (prontuario.denticao === 'protese-sup' || prontuario.denticao === 'protese-inf')
+          (prontuario.denticao === 'protese_sup' || prontuario.denticao === 'protese_inf')
             ? (prontuario.protese_adaptada || null)
             : null,
         // Campos com enum no banco: enviar null quando vazio
@@ -556,7 +556,7 @@ export default function ProntuarioNutricional() {
                 <Label className="text-base font-medium">Como é a dentição do idoso?</Label>
                 <RadioGroup
                   value={prontuario.denticao}
-                  onValueChange={(value) => handleInputChange('denticao', value.replace('protese-sup','protese_sup').replace('protese-inf','protese_inf').replace('ausencia','ausencia_dentes'))}
+                  onValueChange={(value) => handleInputChange('denticao', value)}
                   className="grid grid-cols-2 gap-4 mt-2"
                 >
                   <div className="flex items-center space-x-2">
@@ -564,21 +564,21 @@ export default function ProntuarioNutricional() {
                     <Label htmlFor="denticao-completa">Completa</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protese-sup" id="denticao-protese-sup" />
+                    <RadioGroupItem value="protese_sup" id="denticao-protese-sup" />
                     <Label htmlFor="denticao-protese-sup">Prótese superior</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protese-inf" id="denticao-protese-inf" />
+                    <RadioGroupItem value="protese_inf" id="denticao-protese-inf" />
                     <Label htmlFor="denticao-protese-inf">Prótese inferior</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="ausencia" id="denticao-ausencia" />
+                    <RadioGroupItem value="ausencia_dentes" id="denticao-ausencia" />
                     <Label htmlFor="denticao-ausencia">Ausência de dentes</Label>
                   </div>
                 </RadioGroup>
               </div>
 
-              {(prontuario.denticao === 'protese-sup' || prontuario.denticao === 'protese-inf') && (
+              {(prontuario.denticao === 'protese_sup' || prontuario.denticao === 'protese_inf') && (
                 <div>
                   <Label className="text-base font-medium">Se usa prótese, está bem adaptada?</Label>
                   <RadioGroup
