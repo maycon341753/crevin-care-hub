@@ -350,7 +350,7 @@ export default function ProntuarioNutricional() {
                 />
               </div>
               <div>
-                <Label htmlFor="peso_usual">Peso usual (kg)</Label>
+                <Label htmlFor="peso_usual">Peso Estimado (kg)</Label>
                 <Input
                   id="peso_usual"
                   type="number"
