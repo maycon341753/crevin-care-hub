@@ -1,4 +1,5 @@
 import { Settings, User, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -67,9 +68,11 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
+              <DropdownMenuItem asChild>
+                <Link to="/perfil" className="w-full cursor-pointer flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />

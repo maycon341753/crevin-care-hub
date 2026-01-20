@@ -51,6 +51,7 @@ import UsuariosPage from "./pages/admin/UsuariosPage";
 import AgendaPage from "./pages/agenda/AgendaPage";
 import NotFound from "./pages/NotFound";
 import LicencasFuncionamentoPage from "./pages/obrigacoes/LicencasFuncionamentoPage";
+import Perfil from "./pages/Perfil";
 
 const queryClient = new QueryClient();
 
@@ -142,6 +143,7 @@ const App = () => (
             <Route path="/idosos/prontuario-fisioterapeutico" element={<ProtectedRoute><ProntuarioFisioterapeuticoList /></ProtectedRoute>} />
             <Route path="/idosos/:idosoId/prontuario-fisioterapeutico" element={<ProtectedRoute><ProntuarioFisioterapeutico /></ProtectedRoute>} />
             <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
+            <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
 
