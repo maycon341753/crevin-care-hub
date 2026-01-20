@@ -345,8 +345,7 @@ export default function ProntuarioNutricional() {
                   type="number"
                   step="0.01"
                   value={prontuario.imc || ""}
-                  readOnly
-                  className="bg-muted"
+                  onChange={(e) => handleInputChange('imc', parseFloat(e.target.value) || null)}
                 />
               </div>
               <div>
@@ -802,9 +801,9 @@ export default function ProntuarioNutricional() {
           {/* Suplementação e Hábitos */}
           <Card>
             <CardHeader>
-              <CardTitle>Suplementação e Hábitos Intestinais</CardTitle>
+              <CardTitle>Hábitos Intestinais</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="uso_suplemento"
