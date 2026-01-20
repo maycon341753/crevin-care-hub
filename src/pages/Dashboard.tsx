@@ -193,6 +193,28 @@ export default function Dashboard() {
 
         setContasCriticas(contasOrdenadas);
 
+        // Verificar se existem contas atrasadas (vencidas ou pendentes com data passada)
+        // Usamos uma nova variável para evitar conflito com 'hoje' já declarado
+        const hojeMeiaNoite = new Date();
+        hojeMeiaNoite.setHours(0, 0, 0, 0);
+        
+        const temContaAtrasada = contasOrdenadas.some((c: any) => {
+          const isVencido = c.status === 'vencido';
+          const dataVencimento = new Date(c.data_vencimento);
+          // Adiciona timezone offset para garantir comparação correta da data
+          const dataVencimentoAjustada = new Date(dataVencimento.valueOf() + dataVencimento.getTimezoneOffset() * 60000);
+          
+          return isVencido || (c.status === 'pendente' && dataVencimentoAjustada < hojeMeiaNoite);
+        });
+
+        // Verificar se o modal já foi mostrado nesta sessão
+        const modalJaMostrado = sessionStorage.getItem('dashboard_contas_modal_shown');
+
+        if (temContaAtrasada && !modalJaMostrado) {
+          setShowContasModal(true);
+          sessionStorage.setItem('dashboard_contas_modal_shown', 'true');
+        }
+
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
         toast({
