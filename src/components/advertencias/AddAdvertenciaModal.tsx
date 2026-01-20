@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import DateInput from "@/components/ui/date-input";
 
 interface Funcionario {
   id: string;
@@ -198,11 +199,10 @@ export default function AddAdvertenciaModal({ open, onOpenChange, onSuccess }: A
 
           <div className="space-y-2">
             <Label htmlFor="data_advertencia">Data da Advertência *</Label>
-            <Input
+            <DateInput
               id="data_advertencia"
-              type="date"
               value={formData.data_advertencia}
-              onChange={(e) => setFormData({ ...formData, data_advertencia: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, data_advertencia: value })}
               required
             />
           </div>
