@@ -48,6 +48,7 @@ import LembretesPage from "./pages/LembretesPage";
 import ProfilesPage from "./pages/profiles/ProfilesPage";
 import AuditLogsPage from "./pages/audit/AuditLogsPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
+import ConfiguracoesPage from "./pages/admin/ConfiguracoesPage";
 import AgendaPage from "./pages/agenda/AgendaPage";
 import NotFound from "./pages/NotFound";
 import LicencasFuncionamentoPage from "./pages/obrigacoes/LicencasFuncionamentoPage";
@@ -146,6 +147,7 @@ const App = () => (
             <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
+            <Route path="/admin/configuracoes" element={<ProtectedRoute><ConfiguracoesPage /></ProtectedRoute>} />
 
             {/* Módulos Financeiros */}
             <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />

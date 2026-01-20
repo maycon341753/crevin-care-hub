@@ -74,9 +74,11 @@ export function Header() {
                   <span>Perfil</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/configuracoes" className="w-full cursor-pointer flex items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configurações</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
