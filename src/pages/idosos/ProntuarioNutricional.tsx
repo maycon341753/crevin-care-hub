@@ -300,7 +300,7 @@ export default function ProntuarioNutricional() {
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
               <FileText className="h-8 w-8" />
-              Evolução Nutricional
+              Prontuário
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Paciente: <span className="font-semibold">{idoso.nome}</span>
