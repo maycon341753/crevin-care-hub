@@ -219,6 +219,30 @@ export default function ProntuarioNutricional() {
     setProntuario(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDenticaoChange = (value: string, checked: boolean | string) => {
+    // Checkbox onCheckedChange returns boolean | "indeterminate", we only care about boolean
+    if (checked === "indeterminate") return;
+    
+    const currentValues = prontuario.denticao ? prontuario.denticao.split(',').filter(v => v !== '') : [];
+    let newValues;
+    
+    if (checked) {
+      if (!currentValues.includes(value)) {
+        newValues = [...currentValues, value];
+      } else {
+        newValues = currentValues;
+      }
+    } else {
+      newValues = currentValues.filter(v => v !== value);
+    }
+    
+    handleInputChange('denticao', newValues.join(','));
+  };
+
+  const isDenticaoSelected = (value: string) => {
+    return prontuario.denticao ? prontuario.denticao.split(',').includes(value) : false;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -229,7 +253,7 @@ export default function ProntuarioNutricional() {
         ...prontuario,
         // Se não usa prótese ou não selecionado, enviar null
         protese_adaptada:
-          (prontuario.denticao === 'protese_sup' || prontuario.denticao === 'protese_inf')
+          (prontuario.denticao && (prontuario.denticao.includes('protese_sup') || prontuario.denticao.includes('protese_inf')))
             ? (prontuario.protese_adaptada || null)
             : null,
         // Campos com enum no banco: enviar null quando vazio
@@ -553,31 +577,43 @@ export default function ProntuarioNutricional() {
 
               <div>
                 <Label className="text-base font-medium">Como é a dentição do idoso?</Label>
-                <RadioGroup
-                  value={prontuario.denticao}
-                  onValueChange={(value) => handleInputChange('denticao', value)}
-                  className="grid grid-cols-2 gap-4 mt-2"
-                >
+                <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="completa" id="denticao-completa" />
+                    <Checkbox 
+                      id="denticao-completa" 
+                      checked={isDenticaoSelected('completa')}
+                      onCheckedChange={(checked) => handleDenticaoChange('completa', checked)}
+                    />
                     <Label htmlFor="denticao-completa">Completa</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protese_sup" id="denticao-protese-sup" />
+                    <Checkbox 
+                      id="denticao-protese-sup" 
+                      checked={isDenticaoSelected('protese_sup')}
+                      onCheckedChange={(checked) => handleDenticaoChange('protese_sup', checked)}
+                    />
                     <Label htmlFor="denticao-protese-sup">Prótese superior</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="protese_inf" id="denticao-protese-inf" />
+                    <Checkbox 
+                      id="denticao-protese-inf" 
+                      checked={isDenticaoSelected('protese_inf')}
+                      onCheckedChange={(checked) => handleDenticaoChange('protese_inf', checked)}
+                    />
                     <Label htmlFor="denticao-protese-inf">Prótese inferior</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="ausencia_dentes" id="denticao-ausencia" />
+                    <Checkbox 
+                      id="denticao-ausencia" 
+                      checked={isDenticaoSelected('ausencia_dentes')}
+                      onCheckedChange={(checked) => handleDenticaoChange('ausencia_dentes', checked)}
+                    />
                     <Label htmlFor="denticao-ausencia">Ausência de dentes</Label>
                   </div>
-                </RadioGroup>
+                </div>
               </div>
 
-              {(prontuario.denticao === 'protese_sup' || prontuario.denticao === 'protese_inf') && (
+              {(prontuario.denticao && (prontuario.denticao.includes('protese_sup') || prontuario.denticao.includes('protese_inf'))) && (
                 <div>
                   <Label className="text-base font-medium">Se usa prótese, está bem adaptada?</Label>
                   <RadioGroup
