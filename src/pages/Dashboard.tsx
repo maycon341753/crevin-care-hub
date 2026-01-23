@@ -9,7 +9,9 @@ import {
   Calendar,
   AlertCircle,
   FileText,
-  Activity
+  Activity,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +40,7 @@ export default function Dashboard() {
     metaDoacoes: 0,
     funcionariosPresentes: 0,
   });
+  const [showValues, setShowValues] = useState(false);
   const [showContasModal, setShowContasModal] = useState(false);
   const [contasCriticas, setContasCriticas] = useState<{
     id: string;
@@ -251,7 +254,7 @@ export default function Dashboard() {
     },
     {
       title: "A Receber (abertas)",
-      value: formatBrazilianCurrency(stats.receitaMensal),
+      value: showValues ? formatBrazilianCurrency(stats.receitaMensal) : "R$ •••••",
       change: "0%",
       trend: "up",
       icon: DollarSign,
@@ -260,7 +263,7 @@ export default function Dashboard() {
     },
     {
       title: "Contas a Pagar",
-      value: formatBrazilianCurrency(stats.contasPagar),
+      value: showValues ? formatBrazilianCurrency(stats.contasPagar) : "R$ •••••",
       change: "+0%",
       trend: "up",
       icon: HandHeart,
@@ -287,6 +290,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowValues(!showValues)}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title={showValues ? "Ocultar valores" : "Mostrar valores"}
+          >
+            {showValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
           <Badge variant="outline" className="text-success border-success">
             <Activity className="w-3 h-3 mr-1" />
             Sistema Online
@@ -357,7 +369,9 @@ export default function Dashboard() {
                         >
                           {conta.status}
                         </Badge>
-                        <span className="text-sm font-medium">{formatBrazilianCurrency(conta.valor ?? 0)}</span>
+                        <span className="text-sm font-medium">
+                          {showValues ? formatBrazilianCurrency(conta.valor ?? 0) : "R$ •••••"}
+                        </span>
                       </div>
                     </div>
                   ))}
