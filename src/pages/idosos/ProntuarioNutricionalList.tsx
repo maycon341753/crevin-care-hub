@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Search, User, Calendar, Activity } from "lucide-react";
+import { FileText, Plus, Search, User, Calendar, Activity, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,15 +8,66 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Idoso } from "@/types";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ProntuarioNutricionalListItem {
   id: string;
   idoso_id: string;
   created_at: string;
   updated_at: string;
+  // Antropometria
+  peso_atual: number | null;
+  altura: number | null;
+  imc: number | null;
+  peso_usual: number | null;
+  aj: number | null;
+  cb: number | null;
+  cp: number | null;
+  // Estado Geral
+  lucido: string | null;
+  comunica: string | null;
+  audicao: string | null;
+  caminha: string | null;
+  // Alimentação
+  mastiga: string | null;
+  denticao: string | null;
+  protese_adaptada: string | null;
+  apetite: string | null;
+  consistencia_alimentacao: string | null;
+  aceitacao_alimentos: string | null;
+  mastigacao: string | null;
+  // Hidratação
+  aceitacao_liquidos: string | null;
+  restricao_liquidos: boolean | null;
+  restricao_detalhes: string | null;
+  // Preferências
+  aceita_carnes: string | null;
+  preferencias_alimentares: string | null;
+  recusa_alimentares: string | null;
+  alergias_intolerancia: string | null;
+  // Suplementação
+  uso_suplemento: boolean | null;
+  suplemento_detalhes: string | null;
+  // Outros
+  habito_intestinal: string | null;
+  observacoes: string | null;
+  evolucao_nutricional: string | null;
+  conduta_dietetica: string | null;
+  prescricao_dietetica: string | null;
+  diagnostico: string | null;
+  // Triagem
   mna_score: number | null;
+  escore_triagem: number | null;
   status_nutricional: string;
   diagnostico_nutricional: string;
+  triagem_a: number | null;
+  triagem_b: number | null;
+  triagem_c: number | null;
+  triagem_d: number | null;
+  triagem_e: number | null;
+  triagem_f1: number | null;
+  triagem_cp: number | null;
   idoso: {
     nome: string;
     data_nascimento: string;
@@ -41,13 +92,7 @@ export default function ProntuarioNutricionalList() {
       const { data, error } = await supabase
         .from('prontuario_nutricional')
         .select(`
-          id,
-          idoso_id,
-          created_at,
-          updated_at,
-          mna_score,
-          status_nutricional,
-          diagnostico_nutricional,
+          *,
           idoso:idosos!inner(
             nome,
             data_nascimento,
@@ -104,6 +149,211 @@ export default function ProntuarioNutricionalList() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const generatePDF = (prontuario: ProntuarioNutricionalListItem) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+
+    // Título e Header
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Prontuário Nutricional", pageWidth / 2, 20, { align: "center" });
+    
+    // Cabeçalho Institucional
+    doc.setFontSize(12);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Crevin", pageWidth / 2, 30, { align: "center" });
+    doc.text("Comunidade de Renovacao Esperanca e Vida Nova", pageWidth / 2, 36, { align: "center" });
+    doc.text("01.600.253/0001-69", pageWidth / 2, 42, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, 50, { align: "center" });
+
+    // Helper functions
+    const fmt = (val: any) => val === null || val === undefined || val === '' ? '-' : val;
+    const boolFmt = (val: boolean | null) => val === true ? 'Sim' : (val === false ? 'Não' : '-');
+
+    let currentY = 58;
+
+    // 1. Informações do Idoso
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Informações do Idoso', '']],
+      body: [
+        ['Nome', prontuario.idoso.nome],
+        ['Idade', `${calculateAge(prontuario.idoso.data_nascimento)} anos`],
+        ['Data de Nascimento', formatDate(prontuario.idoso.data_nascimento)],
+        ['Quarto', prontuario.idoso.quarto || 'N/A'],
+        ['Atualizado em', formatDate(prontuario.updated_at)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [66, 66, 66], halign: 'center' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 2. Antropometria
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Antropometria', 'Valores']],
+      body: [
+        ['Peso Atual', prontuario.peso_atual ? `${prontuario.peso_atual} kg` : '-'],
+        ['Altura', prontuario.altura ? `${prontuario.altura} cm` : '-'],
+        ['IMC', prontuario.imc ? `${prontuario.imc} kg/m²` : '-'],
+        ['Peso Usual', prontuario.peso_usual ? `${prontuario.peso_usual} kg` : '-'],
+        ['AJ', fmt(prontuario.aj)],
+        ['CB', fmt(prontuario.cb)],
+        ['CP', fmt(prontuario.cp)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 3. Estado Geral e Alimentação
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Estado Geral e Alimentação', 'Detalhes']],
+      body: [
+        ['Lúcido', fmt(prontuario.lucido)],
+        ['Comunica-se', fmt(prontuario.comunica)],
+        ['Audição', fmt(prontuario.audicao)],
+        ['Caminha', fmt(prontuario.caminha)],
+        ['Apetite', fmt(prontuario.apetite)],
+        ['Consistência da Alimentação', fmt(prontuario.consistencia_alimentacao)],
+        ['Aceitação Alimentar', fmt(prontuario.aceitacao_alimentos)],
+        ['Mastigação', fmt(prontuario.mastigacao)],
+        ['Dentição', fmt(prontuario.denticao)],
+        ['Prótese Adaptada', fmt(prontuario.protese_adaptada)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [39, 174, 96], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 4. Hidratação, Suplementação e Hábito Intestinal
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Hidratação, Suplementação e Intestino', 'Detalhes']],
+      body: [
+        ['Aceitação de Líquidos', fmt(prontuario.aceitacao_liquidos)],
+        ['Restrição de Líquidos', boolFmt(prontuario.restricao_liquidos) + (prontuario.restricao_liquidos ? ` - ${prontuario.restricao_detalhes}` : '')],
+        ['Uso de Suplemento', boolFmt(prontuario.uso_suplemento) + (prontuario.uso_suplemento ? ` - ${prontuario.suplemento_detalhes}` : '')],
+        ['Hábito Intestinal', fmt(prontuario.habito_intestinal)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [142, 68, 173], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 5. Preferências e Restrições
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Preferências e Restrições', 'Detalhes']],
+      body: [
+        ['Aceita Carnes', fmt(prontuario.aceita_carnes)],
+        ['Preferências Alimentares', fmt(prontuario.preferencias_alimentares)],
+        ['Recusas Alimentares', fmt(prontuario.recusa_alimentares)],
+        ['Alergias / Intolerâncias', fmt(prontuario.alergias_intolerancia)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [211, 84, 0], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 6. Triagem Nutricional (MNA)
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Triagem Nutricional (MNA)', 'Valores']],
+      body: [
+        ['A - Ingestão Alimentar', fmt(prontuario.triagem_a)],
+        ['B - Perda de Peso', fmt(prontuario.triagem_b)],
+        ['C - Mobilidade', fmt(prontuario.triagem_c)],
+        ['D - Estresse Psicológico', fmt(prontuario.triagem_d)],
+        ['E - Problemas Neuropsicológicos', fmt(prontuario.triagem_e)],
+        ['F1 - IMC', fmt(prontuario.triagem_f1)],
+        ['CP - Circunferência Panturrilha', fmt(prontuario.triagem_cp)],
+        ['Escore Total', fmt(prontuario.escore_triagem)],
+        ['Status Nutricional (Triagem)', fmt(prontuario.status_nutricional)],
+        ['Score MNA (Geral)', fmt(prontuario.mna_score)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [192, 57, 43], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 2 }
+    });
+
+    // 7. Diagnósticos e Condutas (Texto Longo)
+    const longTextData = [
+      ['Diagnóstico Médico', fmt(prontuario.diagnostico)],
+      ['Diagnóstico Nutricional', fmt(prontuario.diagnostico_nutricional)],
+      ['Conduta Dietética', fmt(prontuario.conduta_dietetica)],
+      ['Prescrição Dietética', fmt(prontuario.prescricao_dietetica)],
+      ['Evolução Nutricional', fmt(prontuario.evolucao_nutricional)],
+      ['Observações', fmt(prontuario.observacoes)],
+    ];
+
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Diagnósticos, Condutas e Evolução', 'Descrição']],
+      body: longTextData,
+      theme: 'grid',
+      headStyles: { fillColor: [44, 62, 80], halign: 'left' },
+      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
+      styles: { fontSize: 10, cellPadding: 3, overflow: 'linebreak' }
+    });
+
+    // Assinatura do Responsável Técnico
+    const finalY = (doc as any).lastAutoTable.finalY;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Verificar se há espaço para assinatura (aprox 60 unidades necessárias antes da área do rodapé)
+    // Rodapé começa por volta de pageHeight - 40
+    if (pageHeight - finalY < 70) {
+      doc.addPage();
+      currentY = 50; // Reset Y para nova página
+    } else {
+      currentY = finalY + 40; // Adicionar espaçamento
+    }
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(pageWidth / 2 - 50, currentY, pageWidth / 2 + 50, currentY); // Linha para assinatura
+    
+    doc.setFontSize(10);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Nutricionista Responsável Técnico", pageWidth / 2, currentY + 5, { align: "center" });
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Carimbo / Assinatura", pageWidth / 2, currentY + 10, { align: "center" });
+
+    // Rodapé
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      
+      // Adicionar endereço apenas na última página
+      if (i === pageCount) {
+        const footerText = "Crevin - Lar do Idoso Comunidade de Renovacao Esperanca e Vida Nova Avenida Floriano Peixoto Quadra 63 Lote 12 Setor Tradicional Planaltina Brasília DF 73330-083";
+        const splitFooter = doc.splitTextToSize(footerText, pageWidth - 28);
+        
+        // Ajustar posição Y baseado no tamanho do texto
+        const footerHeight = splitFooter.length * 4; // Aproximadamente 4 pontos por linha
+        doc.text(splitFooter, pageWidth / 2, doc.internal.pageSize.height - 15 - footerHeight, { align: "center" });
+      }
+      
+      doc.text(`Página ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: "center" });
+    }
+
+    doc.save(`prontuario_${prontuario.idoso.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`);
   };
 
   if (loading) {
@@ -256,15 +506,27 @@ export default function ProntuarioNutricionalList() {
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex flex-col gap-2 mt-4">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/idosos/${prontuario.idoso_id}/prontuario-nutricional`)}
-                      className="flex-1"
+                      className="w-full"
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Ver Prontuário
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generatePDF(prontuario);
+                      }}
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar PDF
                     </Button>
                   </div>
                 </CardContent>
