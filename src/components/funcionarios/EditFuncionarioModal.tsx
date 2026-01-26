@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Funcionario } from "@/types";
 import { Edit } from "lucide-react";
-import { formatCPF, formatPhone, formatBrazilianSalary, parseBrazilianSalary, isValidBrazilianSalary } from "@/lib/utils";
+import { formatCPF, formatPhone, formatBrazilianSalary, parseBrazilianSalary, isValidBrazilianSalary, formatCurrencyInput } from "@/lib/utils";
 import DateInput from '@/components/ui/date-input';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
