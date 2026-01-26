@@ -149,7 +149,7 @@ export function EditFuncionarioModal({
 
       setFormData({
         nome: funcionario.nome || "",
-        cpf: funcionario.cpf || "",
+        cpf: formatCPF(funcionario.cpf || ""),
         telefone: funcionario.telefone || "",
         email: funcionario.email || "",
         cargo: funcionario.cargo || "",
@@ -165,6 +165,12 @@ export function EditFuncionarioModal({
   const handleInputChange = (field: string, value: string) => {
     if (field === 'salario') {
       const formatted = formatCurrencyInput(value);
+      setFormData(prev => ({
+        ...prev,
+        [field]: formatted
+      }));
+    } else if (field === 'cpf') {
+      const formatted = formatCPF(value);
       setFormData(prev => ({
         ...prev,
         [field]: formatted
@@ -376,6 +382,7 @@ export function EditFuncionarioModal({
                   onChange={(e) => handleInputChange("cpf", e.target.value)}
                   placeholder="000.000.000-00"
                   required
+                  maxLength={14}
                 />
               </div>
 

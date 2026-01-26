@@ -8,7 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 // Função para formatar CPF
 export const formatCPF = (value: string) => {
   const numbers = value.replace(/\D/g, '');
-  return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  
+  if (numbers.length <= 3) {
+    return numbers;
+  }
+  if (numbers.length <= 6) {
+    return numbers.replace(/(\d{3})(\d+)/, '$1.$2');
+  }
+  if (numbers.length <= 9) {
+    return numbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+  }
+  return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
 };
 
 // Função para formatar telefone
