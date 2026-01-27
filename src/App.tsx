@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FinancialGuard } from "@/components/auth/FinancialGuard";
 import { useRecurringAccounts } from "@/hooks/useRecurringAccounts";
 import { Loader2 } from "lucide-react";
 import ExemploImagem from "@/components/ExemploImagem";
@@ -150,12 +151,12 @@ const App = () => (
             <Route path="/admin/configuracoes" element={<ProtectedRoute><ConfiguracoesPage /></ProtectedRoute>} />
 
             {/* Módulos Financeiros */}
-            <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />
-            <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><ContasPagarPage /></ProtectedRoute>} />
-            <Route path="/financeiro/contas-receber" element={<ProtectedRoute><ContasReceberPage /></ProtectedRoute>} />
-            <Route path="/financeiro/receitas-futuras" element={<ProtectedRoute><ReceitasFuturasPage /></ProtectedRoute>} />
-            <Route path="/financeiro/contas-bancarias" element={<ProtectedRoute><ContasBancariasPage /></ProtectedRoute>} />
-            <Route path="/financeiro/conciliacao" element={<ProtectedRoute><ConciliacaoPage /></ProtectedRoute>} />
+            <Route path="/financeiro" element={<ProtectedRoute><FinancialGuard><FinanceiroPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><FinancialGuard><ContasPagarPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro/contas-receber" element={<ProtectedRoute><FinancialGuard><ContasReceberPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro/receitas-futuras" element={<ProtectedRoute><FinancialGuard><ReceitasFuturasPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro/contas-bancarias" element={<ProtectedRoute><FinancialGuard><ContasBancariasPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro/conciliacao" element={<ProtectedRoute><FinancialGuard><ConciliacaoPage /></FinancialGuard></ProtectedRoute>} />
             <Route path="/fornecedores" element={<ProtectedRoute><FornecedoresPage /></ProtectedRoute>} />
             <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedorPage /></ProtectedRoute>} />
             <Route path="/fornecedores/editar/:id" element={<ProtectedRoute><EditarFornecedorPage /></ProtectedRoute>} />
