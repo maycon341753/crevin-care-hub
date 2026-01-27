@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Filter, Download, Eye, Edit, Trash2, Users } from "lucide-react";
+import { Plus, Search, Filter, Download, Eye, EyeOff, Edit, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,7 @@ export default function FuncionariosPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
+  const [showValues, setShowValues] = useState(false);
   const { toast } = useToast();
 
   // Debug: Log do estado do modal
@@ -240,6 +241,15 @@ export default function FuncionariosPage() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowValues(!showValues)}
+            className="h-10 w-10 text-muted-foreground hover:text-foreground hidden sm:flex"
+            title={showValues ? "Ocultar valores" : "Mostrar valores"}
+          >
+            {showValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
           <Button 
             onClick={() => setIsAddModalOpen(true)}
             className="w-full sm:w-auto"
@@ -399,7 +409,9 @@ export default function FuncionariosPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {funcionario.salario ? `R$ ${formatBrazilianSalary(funcionario.salario)}` : '-'}
+                      {funcionario.salario 
+                        ? (showValues ? `R$ ${formatBrazilianSalary(funcionario.salario)}` : 'R$ •••••') 
+                        : '-'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       {formatBrazilianDate(funcionario.data_admissao)}
