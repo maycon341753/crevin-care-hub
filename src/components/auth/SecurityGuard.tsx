@@ -14,7 +14,19 @@ const ALLOWED_EMAILS = [
   'desenvolvedor@crevin.com.br'
 ];
 
-export function FinancialGuard({ children }: { children: React.ReactNode }) {
+interface SecurityGuardProps {
+  children: React.ReactNode;
+  title?: string;
+  description?: string;
+  storageKey?: string;
+}
+
+export function SecurityGuard({ 
+  children, 
+  title = "Acesso Protegido", 
+  description = "Confirme sua senha para acessar este módulo.",
+  storageKey = "security_unlocked"
+}: SecurityGuardProps) {
   const { user } = useAuth();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState("");
@@ -23,11 +35,11 @@ export function FinancialGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if already unlocked in this session
-    const unlocked = sessionStorage.getItem('financial_unlocked');
+    const unlocked = sessionStorage.getItem(storageKey);
     if (unlocked === 'true') {
       setIsUnlocked(true);
     }
-  }, []);
+  }, [storageKey]);
 
   if (!user) return null;
 
@@ -46,7 +58,7 @@ export function FinancialGuard({ children }: { children: React.ReactNode }) {
               Acesso Negado
             </CardTitle>
             <CardDescription>
-              Você não tem permissão para acessar o módulo financeiro.
+              Você não tem permissão para acessar este módulo.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -82,10 +94,10 @@ export function FinancialGuard({ children }: { children: React.ReactNode }) {
 
       // Success
       setIsUnlocked(true);
-      sessionStorage.setItem('financial_unlocked', 'true');
+      sessionStorage.setItem(storageKey, 'true');
       toast({
         title: "Acesso liberado",
-        description: "Módulo financeiro desbloqueado com sucesso.",
+        description: "Acesso desbloqueado com sucesso.",
       });
     } catch (error) {
       console.error("Erro de autenticação:", error);
@@ -105,10 +117,10 @@ export function FinancialGuard({ children }: { children: React.ReactNode }) {
         <CardHeader className="bg-primary/5 rounded-t-lg">
           <CardTitle className="flex items-center gap-2 text-primary">
             <Lock className="h-5 w-5" />
-            Acesso Protegido
+            {title}
           </CardTitle>
           <CardDescription>
-            Confirme sua senha para acessar o módulo financeiro.
+            {description}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -135,7 +147,7 @@ export function FinancialGuard({ children }: { children: React.ReactNode }) {
               )}
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">
-              Esta verificação é necessária para garantir a segurança dos dados financeiros.
+              Esta verificação é necessária para garantir a segurança dos dados.
             </p>
           </form>
         </CardContent>

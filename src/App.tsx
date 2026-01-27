@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { FinancialGuard } from "@/components/auth/FinancialGuard";
+import { SecurityGuard } from "@/components/auth/SecurityGuard";
 import { useRecurringAccounts } from "@/hooks/useRecurringAccounts";
 import { Loader2 } from "lucide-react";
 import ExemploImagem from "@/components/ExemploImagem";
@@ -122,8 +122,28 @@ const App = () => (
 
             {/* Protected Routes */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/funcionarios" element={<ProtectedRoute><FuncionariosPage /></ProtectedRoute>} />
-            <Route path="/funcionarios/novo" element={<ProtectedRoute><NovoFuncionarioPage /></ProtectedRoute>} />
+            <Route path="/funcionarios" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito a informações de funcionários."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <FuncionariosPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/funcionarios/novo" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito para cadastro de funcionários."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <NovoFuncionarioPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/funcionarios/advertencias" element={<ProtectedRoute><AdvertenciasPage /></ProtectedRoute>} />
             <Route path="/funcionarios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
             <Route path="/funcionarios/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
@@ -151,12 +171,66 @@ const App = () => (
             <Route path="/admin/configuracoes" element={<ProtectedRoute><ConfiguracoesPage /></ProtectedRoute>} />
 
             {/* Módulos Financeiros */}
-            <Route path="/financeiro" element={<ProtectedRoute><FinancialGuard><FinanceiroPage /></FinancialGuard></ProtectedRoute>} />
-            <Route path="/financeiro/contas-pagar" element={<ProtectedRoute><FinancialGuard><ContasPagarPage /></FinancialGuard></ProtectedRoute>} />
-            <Route path="/financeiro/contas-receber" element={<ProtectedRoute><FinancialGuard><ContasReceberPage /></FinancialGuard></ProtectedRoute>} />
-            <Route path="/financeiro/receitas-futuras" element={<ProtectedRoute><FinancialGuard><ReceitasFuturasPage /></FinancialGuard></ProtectedRoute>} />
-            <Route path="/financeiro/contas-bancarias" element={<ProtectedRoute><FinancialGuard><ContasBancariasPage /></FinancialGuard></ProtectedRoute>} />
-            <Route path="/financeiro/conciliacao" element={<ProtectedRoute><FinancialGuard><ConciliacaoPage /></FinancialGuard></ProtectedRoute>} />
+            <Route path="/financeiro" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <FinanceiroPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/contas-pagar" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <ContasPagarPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/contas-receber" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <ContasReceberPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/receitas-futuras" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <ReceitasFuturasPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/contas-bancarias" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <ContasBancariasPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/conciliacao" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <ConciliacaoPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/fornecedores" element={<ProtectedRoute><FornecedoresPage /></ProtectedRoute>} />
             <Route path="/fornecedores/novo" element={<ProtectedRoute><NovoFornecedorPage /></ProtectedRoute>} />
             <Route path="/fornecedores/editar/:id" element={<ProtectedRoute><EditarFornecedorPage /></ProtectedRoute>} />
