@@ -245,6 +245,28 @@ export default function ProntuarioNutricional() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação de campos numéricos para evitar overflow (numeric(6,2) = max 9999.99)
+    const numericFields: (keyof ProntuarioNutricional)[] = [
+      'peso_atual', 'altura', 'imc', 'peso_usual', 'aj', 'cb', 'cp', 
+      'mna_score', 'escore_triagem', 
+      'triagem_a', 'triagem_b', 'triagem_c', 'triagem_d', 'triagem_e', 'triagem_f1', 'triagem_cp'
+    ];
+
+    for (const field of numericFields) {
+      const value = prontuario[field];
+      if (typeof value === 'number' && value !== null) {
+        if (value > 9999.99 || value < -9999.99) {
+          toast({
+            title: "Erro de validação",
+            description: `O valor do campo "${field}" (${value}) é muito alto. Verifique se os dados estão corretos. No caso da altura, certifique-se de usar centímetros (ex: 170) e não metros (ex: 1.70).`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
     setLoading(true);
 
     try {
