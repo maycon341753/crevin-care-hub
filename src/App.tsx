@@ -144,15 +144,55 @@ const App = () => (
                 </SecurityGuard>
               </ProtectedRoute>
             } />
-            <Route path="/funcionarios/advertencias" element={<ProtectedRoute><AdvertenciasPage /></ProtectedRoute>} />
-            <Route path="/funcionarios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
-            <Route path="/funcionarios/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
+            <Route path="/funcionarios/advertencias" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito a advertências."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <AdvertenciasPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/funcionarios/aniversariantes" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito a aniversariantes."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <AniversariantesPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/funcionarios/departamentos" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito a departamentos."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <DepartamentosPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/doacoes" element={<ProtectedRoute><DoacoesPage /></ProtectedRoute>} />
             <Route path="/doacoes/dinheiro" element={<ProtectedRoute><DoacoesDinheiroPage /></ProtectedRoute>} />
             <Route path="/doacoes/recibos" element={<ProtectedRoute><DoacoesRecibosPage /></ProtectedRoute>} />
             <Route path="/doacoes/itens" element={<ProtectedRoute><DoacoesItensPage /></ProtectedRoute>} />
             <Route path="/doacoes/relatorios" element={<ProtectedRoute><DoacoesRelatoriosPage /></ProtectedRoute>} />
-            <Route path="/departamentos" element={<ProtectedRoute><DepartamentosPage /></ProtectedRoute>} />
+            <Route path="/departamentos" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo de Funcionários" 
+                  description="Acesso restrito a departamentos."
+                  storageKey="funcionarios_unlocked"
+                >
+                  <DepartamentosPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/idosos" element={<ProtectedRoute><IdososPage /></ProtectedRoute>} />
             <Route path="/idosos/novo" element={<ProtectedRoute><NovoIdosoPage /></ProtectedRoute>} />
             <Route path="/idosos/lista-espera" element={<ProtectedRoute><ListaEsperaPage /></ProtectedRoute>} />
