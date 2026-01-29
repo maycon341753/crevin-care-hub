@@ -217,7 +217,17 @@ const App = () => (
                 </SecurityGuard>
               </ProtectedRoute>
             } />
-            <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
+            <Route path="/admin/usuarios" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Gestão de Usuários" 
+                  description="Acesso restrito. Confirme sua senha para gerenciar os usuários do sistema."
+                  storageKey="users_management_unlocked"
+                >
+                  <UsuariosPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/admin/configuracoes" element={<ProtectedRoute><ConfiguracoesPage /></ProtectedRoute>} />
 
             {/* Módulos Financeiros */}

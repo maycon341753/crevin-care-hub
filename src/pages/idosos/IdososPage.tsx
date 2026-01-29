@@ -13,6 +13,8 @@ import { DeleteIdosoModal } from "@/components/idosos/DeleteIdosoModal";
 import { formatCPF, formatPhone } from "@/lib/utils";
 import { Idoso } from "@/types";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function IdososPage() {
   const [idosos, setIdosos] = useState<Idoso[]>([]);
@@ -90,6 +92,50 @@ export default function IdososPage() {
     fetchIdosos();
   };
 
+  const handleGeneratePDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+
+    // Cabeçalho Institucional
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Crevin", pageWidth / 2, 20, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Comunidade de Renovacao Esperanca e Vida Nova", pageWidth / 2, 30, { align: "center" });
+    doc.text("01.600.253/0001-69", pageWidth / 2, 36, { align: "center" });
+
+    // Título do Relatório
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Lista de Idosos", pageWidth / 2, 50, { align: "center" });
+
+    // Data de geração
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, 58, { align: "center" });
+
+    const tableData = filteredIdosos.map((idoso) => [
+      idoso.nome,
+      formatCPF(idoso.cpf),
+      new Date(idoso.data_nascimento).toLocaleDateString('pt-BR'),
+      calculateAge(idoso.data_nascimento).toString(),
+      idoso.telefone ? formatPhone(idoso.telefone) : '-',
+      idoso.ativo ? 'Ativo' : 'Inativo'
+    ]);
+
+    autoTable(doc, {
+      startY: 65,
+      head: [['Nome', 'CPF', 'Data Nasc.', 'Idade', 'Telefone', 'Status']],
+      body: tableData,
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save("lista-idosos.pdf");
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ativo':
@@ -143,6 +189,14 @@ export default function IdososPage() {
           >
             <Clock className="h-4 w-4 mr-2" />
             Lista de Espera
+          </Button>
+          <Button 
+            onClick={handleGeneratePDF} 
+            variant="outline" 
+            className="w-full sm:w-auto"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Gerar PDF
           </Button>
           <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
