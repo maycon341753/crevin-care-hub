@@ -206,7 +206,7 @@ const App = () => (
             <Route path="/idosos/:idosoId/prontuario-fisioterapeutico" element={<ProtectedRoute><ProntuarioFisioterapeutico /></ProtectedRoute>} />
             <Route path="/profiles" element={<ProtectedRoute><ProfilesPage /></ProtectedRoute>} />
             <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
-            <Route path="/audit-logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
+            <Route path="/admin/logs" element={<ProtectedRoute><AuditLogsPage /></ProtectedRoute>} />
             <Route path="/admin/usuarios" element={<ProtectedRoute><UsuariosPage /></ProtectedRoute>} />
             <Route path="/admin/configuracoes" element={<ProtectedRoute><ConfiguracoesPage /></ProtectedRoute>} />
 

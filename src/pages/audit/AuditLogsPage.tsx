@@ -24,11 +24,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Filter, Calendar, User, Activity, RefreshCw, Eye, AlertTriangle, CheckCircle, XCircle, Clock } from "lucide-react";
 import { formatBrazilianDateTime } from "@/lib/utils";
+import { format } from "date-fns";
+import { DatePickerBr } from "@/components/ui/date-picker-br";
 
 interface AuditLog {
   id: string;
   user_id: string;
-  operation: string;
+  operation: string | null;
   table_name: string;
   record_id: string | null;
   old_values: Record<string, unknown> | null;
@@ -36,9 +38,6 @@ interface AuditLog {
   ip_address: string | null;
   user_agent: string | null;
   created_at: string;
-  profiles?: {
-    full_name: string | null;
-  };
 }
 
 interface FilterState {
@@ -75,6 +74,7 @@ export default function AuditLogsPage() {
         .order('full_name');
 
       if (error) throw error;
+      console.log('Perfis carregados:', data);
       setUsers(data || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -87,12 +87,7 @@ export default function AuditLogsPage() {
       
       let query = supabase
         .from('audit_logs')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name
-          )
-        `, { count: 'exact' });
+        .select('*', { count: 'exact' });
 
       // Aplicar filtros
       if (filters.search) {
@@ -168,7 +163,9 @@ export default function AuditLogsPage() {
     fetchLogs(1);
   };
 
-  const getActionBadgeVariant = (action: string) => {
+  const getActionBadgeVariant = (action: string | null | undefined) => {
+    if (!action) return 'outline';
+    
     switch (action.toLowerCase()) {
       case 'insert':
       case 'create':
@@ -302,14 +299,14 @@ export default function AuditLogsPage() {
             <div className="space-y-2">
               <Label htmlFor="action">Ação</Label>
               <Select
-                value={filters.action}
-                onValueChange={(value) => handleFilterChange('action', value)}
+                value={filters.action || "all"}
+                onValueChange={(value) => handleFilterChange('action', value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todas as ações" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as ações</SelectItem>
+                  <SelectItem value="all">Todas as ações</SelectItem>
                   <SelectItem value="INSERT">Inserir</SelectItem>
                   <SelectItem value="UPDATE">Atualizar</SelectItem>
                   <SelectItem value="DELETE">Excluir</SelectItem>
@@ -320,14 +317,14 @@ export default function AuditLogsPage() {
             <div className="space-y-2">
               <Label htmlFor="table">Tabela</Label>
               <Select
-                value={filters.table_name}
-                onValueChange={(value) => handleFilterChange('table_name', value)}
+                value={filters.table_name || "all"}
+                onValueChange={(value) => handleFilterChange('table_name', value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todas as tabelas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as tabelas</SelectItem>
+                  <SelectItem value="all">Todas as tabelas</SelectItem>
                   <SelectItem value="profiles">Usuários</SelectItem>
                   <SelectItem value="funcionarios">Funcionários</SelectItem>
                   <SelectItem value="idosos">Idosos</SelectItem>
@@ -340,14 +337,14 @@ export default function AuditLogsPage() {
             <div className="space-y-2">
               <Label htmlFor="user">Usuário</Label>
               <Select
-                value={filters.user_id}
-                onValueChange={(value) => handleFilterChange('user_id', value)}
+                value={filters.user_id || "all"}
+                onValueChange={(value) => handleFilterChange('user_id', value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os usuários" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os usuários</SelectItem>
+                  <SelectItem value="all">Todos os usuários</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || 'Usuário sem nome'}
@@ -359,21 +356,19 @@ export default function AuditLogsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="date_from">Data Inicial</Label>
-              <Input
-                id="date_from"
-                type="date"
-                value={filters.date_from}
-                onChange={(e) => handleFilterChange('date_from', e.target.value)}
+              <DatePickerBr
+                date={filters.date_from ? new Date(filters.date_from + 'T12:00:00') : undefined}
+                setDate={(date) => handleFilterChange('date_from', date ? format(date, 'yyyy-MM-dd') : '')}
+                placeholder="Selecione a data inicial"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="date_to">Data Final</Label>
-              <Input
-                id="date_to"
-                type="date"
-                value={filters.date_to}
-                onChange={(e) => handleFilterChange('date_to', e.target.value)}
+              <DatePickerBr
+                date={filters.date_to ? new Date(filters.date_to + 'T12:00:00') : undefined}
+                setDate={(date) => handleFilterChange('date_to', date ? format(date, 'yyyy-MM-dd') : '')}
+                placeholder="Selecione a data final"
               />
             </div>
           </div>
@@ -441,7 +436,11 @@ export default function AuditLogsPage() {
                               <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                               <div className="min-w-0">
                                 <div className="font-medium text-xs sm:text-sm truncate">
-                                  {log.profiles?.full_name || 'Usuário não encontrado'}
+                                  {users.find(u => u.id === log.user_id)?.full_name || (
+                                    <span className="text-muted-foreground italic" title={log.user_id}>
+                                      ID: {log.user_id?.substring(0, 8)}...
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-muted-foreground sm:hidden">
                                   {log.table_name}
