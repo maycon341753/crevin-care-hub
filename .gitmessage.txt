@@ -1,0 +1,13 @@
+# Título (linha 1): Type(scope): resumo técnico no imperativo, conciso
+# Ex.: feat(financeiro): adicionar modal PDF com filtros de período
+
+# Corpo (linhas seguintes): o que mudou, por que, impacto
+# Ex.:
+# - adiciona DateSeparateInput ao modal de relatório
+# - corrige parsing de datas e filtro por categoria/status
+# - melhora busca evitando toLowerCase em campos indefinidos
+
+# Rodapé (opcional): refs, breaking changes
+# Ex.:
+# refs: #123
+# BREAKING CHANGE: altera estrutura de dados em contas_receber
