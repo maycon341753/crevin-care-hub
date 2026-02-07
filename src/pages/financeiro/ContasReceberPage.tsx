@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import DateSeparateInput from '@/components/ui/date-separate-input';
 import { 
   Plus, 
   Search, 
@@ -16,12 +19,15 @@ import {
   Clock,
   XCircle,
   Edit,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import AddContaReceberModal from '@/components/financeiro/AddContaReceberModal';
 import EditContaReceberModal from '@/components/financeiro/EditContaReceberModal';
 import { formatBrazilianCurrency, formatBrazilianDate } from '@/lib/utils';
@@ -60,6 +66,17 @@ const ContasReceberPage = () => {
   const [categoriaFilter, setCategoriaFilter] = useState('todas');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingConta, setEditingConta] = useState<ContaReceber | null>(null);
+  const [showRelatorioModal, setShowRelatorioModal] = useState(false);
+  const [relatorioStatus, setRelatorioStatus] = useState('todos');
+  const [relatorioCategoria, setRelatorioCategoria] = useState('todas');
+  const [relatorioInicio, setRelatorioInicio] = useState<string>(() => {
+    const d = new Date();
+    return format(new Date(d.getFullYear(), d.getMonth(), 1), 'yyyy-MM-dd');
+  });
+  const [relatorioFim, setRelatorioFim] = useState<string>(() => {
+    const d = new Date();
+    return format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd');
+  });
 
   useEffect(() => {
     fetchContasReceber();
@@ -180,10 +197,16 @@ const ContasReceberPage = () => {
             Gerencie todas as contas a receber da instituição
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Conta a Receber
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Conta a Receber
+          </Button>
+          <Button variant="outline" onClick={() => setShowRelatorioModal(true)}>
+            <FileText className="h-4 w-4 mr-2" />
+            Relatório PDF
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
@@ -380,6 +403,109 @@ const ContasReceberPage = () => {
           categorias={categorias}
         />
       )}
+      
+      <Dialog open={showRelatorioModal} onOpenChange={setShowRelatorioModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Relatório de Contas a Receber</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={relatorioStatus} onValueChange={setRelatorioStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="recebido">Recebido</SelectItem>
+                    <SelectItem value="vencido">Vencido</SelectItem>
+                    <SelectItem value="cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select value={relatorioCategoria} onValueChange={setRelatorioCategoria}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {categorias.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Início</Label>
+                <DateSeparateInput value={relatorioInicio} onChange={setRelatorioInicio} />
+              </div>
+              <div className="space-y-2">
+                <Label>Fim</Label>
+                <DateSeparateInput value={relatorioFim} onChange={setRelatorioFim} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRelatorioModal(false)}>Cancelar</Button>
+            <Button onClick={() => {
+              const [iy, im, id] = relatorioInicio.split('-').map(Number);
+              const [fy, fm, fd] = relatorioFim.split('-').map(Number);
+              const inicio = new Date(iy, (im || 1) - 1, id || 1, 0, 0, 0, 0);
+              const fim = new Date(fy, (fm || 1) - 1, fd || 1, 23, 59, 59, 999);
+              const filtered = contasReceber.filter((conta) => {
+                const byStatus = relatorioStatus === 'todos' || conta.status === relatorioStatus;
+                const byCategoria = relatorioCategoria === 'todas' || conta.categoria_id === relatorioCategoria;
+                const d = new Date(`${conta.data_vencimento}T00:00:00`);
+                const byPeriodo = d >= inicio && d <= fim;
+                return byStatus && byCategoria && byPeriodo;
+              });
+              const total = filtered.reduce((sum, c) => sum + c.valor, 0);
+              const doc = new jsPDF();
+              doc.setFontSize(20);
+              doc.text('Relatório - Contas a Receber', 20, 20);
+              doc.setFontSize(12);
+              doc.text(`${format(inicio, 'dd/MM/yyyy')} - ${format(fim, 'dd/MM/yyyy')}`, 20, 30);
+              doc.setFontSize(14);
+              doc.text('Resumo', 20, 50);
+              doc.setFontSize(10);
+              doc.text(`Total do período: ${formatBrazilianCurrency(total)}`, 20, 60);
+              const tableData = filtered.map((conta) => [
+                conta.descricao,
+                formatBrazilianCurrency(conta.valor),
+                formatBrazilianDate(conta.data_vencimento),
+                conta.categorias_financeiras?.nome || '',
+                conta.status
+              ]);
+              autoTable(doc, {
+                head: [['Descrição', 'Valor', 'Vencimento', 'Categoria', 'Status']],
+                body: tableData,
+                startY: 75,
+                styles: { fontSize: 8 }
+              });
+              const pageCount = doc.getNumberOfPages();
+              for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.text(`Página ${i} de ${pageCount}`, 20, doc.internal.pageSize.height - 10);
+                doc.text(`Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 120, doc.internal.pageSize.height - 10);
+              }
+              doc.save(`contas-receber-${format(inicio, 'yyyyMMdd')}-${format(fim, 'yyyyMMdd')}.pdf`);
+              setShowRelatorioModal(false);
+              toast.success('Relatório PDF gerado com sucesso');
+            }}>
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

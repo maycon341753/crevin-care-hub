@@ -98,6 +98,7 @@ const AddContaReceberModal: React.FC<AddContaReceberModalProps> = ({
         ...formData,
         valor: parseBrazilianCurrency(formData.valor), // Converte valor brasileiro para número
         idoso_id: formData.idoso_id || null,
+        administrador_id: formData.administrador_id || null,
         created_by: userData.user?.id || '00000000-0000-0000-0000-000000000000'
       };
 
