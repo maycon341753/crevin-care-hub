@@ -159,11 +159,11 @@ const ContasReceberPage = () => {
   };
 
   const filteredContas = contasReceber.filter(conta => {
-    const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conta.pagador_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = ((conta.descricao || '').toLowerCase()).includes(s) ||
+                         ((conta.pagador_nome || '').toLowerCase()).includes(s);
     const matchesStatus = statusFilter === 'todos' || conta.status === statusFilter;
     const matchesCategoria = categoriaFilter === 'todas' || conta.categoria_id === categoriaFilter;
-    
     return matchesSearch && matchesStatus && matchesCategoria;
   });
 

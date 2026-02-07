@@ -152,14 +152,16 @@ const FinanceiroPage: React.FC = () => {
 
   // Funções de filtro
   const filteredContasReceber = contasReceber.filter(conta => {
-    const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = ((conta.descricao || '').toLowerCase()).includes(s);
     const matchesStatus = statusFilter === 'todos' || conta.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const filteredContasPagar = contasPagar.filter(conta => {
-    const matchesSearch = conta.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conta.fornecedor.toLowerCase().includes(searchTerm.toLowerCase());
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = ((conta.descricao || '').toLowerCase()).includes(s) ||
+                         ((conta.fornecedor || '').toLowerCase()).includes(s);
     const matchesStatus = statusFilter === 'todos' || conta.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
