@@ -194,100 +194,7 @@ export default function ProntuarioNutricionalList() {
       styles: { fontSize: 10, cellPadding: 2 }
     });
 
-    // 2. Antropometria
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Antropometria', 'Valores']],
-      body: [
-        ['Peso Atual', prontuario.peso_atual ? `${prontuario.peso_atual} kg` : '-'],
-        ['Altura', prontuario.altura ? `${prontuario.altura} cm` : '-'],
-        ['IMC', prontuario.imc ? `${prontuario.imc} kg/m²` : '-'],
-        ['Peso Usual', prontuario.peso_usual ? `${prontuario.peso_usual} kg` : '-'],
-        ['AJ', fmt(prontuario.aj)],
-        ['CB', fmt(prontuario.cb)],
-        ['CP', fmt(prontuario.cp)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185], halign: 'left' },
-      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
-
-    // 3. Estado Geral e Alimentação
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Estado Geral e Alimentação', 'Detalhes']],
-      body: [
-        ['Lúcido', fmt(prontuario.lucido)],
-        ['Comunica-se', fmt(prontuario.comunica)],
-        ['Audição', fmt(prontuario.audicao)],
-        ['Caminha', fmt(prontuario.caminha)],
-        ['Apetite', fmt(prontuario.apetite)],
-        ['Consistência da Alimentação', fmt(prontuario.consistencia_alimentacao)],
-        ['Aceitação Alimentar', fmt(prontuario.aceitacao_alimentos)],
-        ['Mastigação', fmt(prontuario.mastigacao)],
-        ['Dentição', fmt(prontuario.denticao)],
-        ['Prótese Adaptada', fmt(prontuario.protese_adaptada)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [39, 174, 96], halign: 'left' },
-      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
-
-    // 4. Hidratação, Suplementação e Hábito Intestinal
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Hidratação, Suplementação e Intestino', 'Detalhes']],
-      body: [
-        ['Aceitação de Líquidos', fmt(prontuario.aceitacao_liquidos)],
-        ['Restrição de Líquidos', boolFmt(prontuario.restricao_liquidos) + (prontuario.restricao_liquidos ? ` - ${prontuario.restricao_detalhes}` : '')],
-        ['Uso de Suplemento', boolFmt(prontuario.uso_suplemento) + (prontuario.uso_suplemento ? ` - ${prontuario.suplemento_detalhes}` : '')],
-        ['Hábito Intestinal', fmt(prontuario.habito_intestinal)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [142, 68, 173], halign: 'left' },
-      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
-
-    // 5. Preferências e Restrições
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Preferências e Restrições', 'Detalhes']],
-      body: [
-        ['Aceita Carnes', fmt(prontuario.aceita_carnes)],
-        ['Preferências Alimentares', fmt(prontuario.preferencias_alimentares)],
-        ['Recusas Alimentares', fmt(prontuario.recusa_alimentares)],
-        ['Alergias / Intolerâncias', fmt(prontuario.alergias_intolerancia)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [211, 84, 0], halign: 'left' },
-      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
-
-    // 6. Triagem Nutricional (MNA)
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Triagem Nutricional (MNA)', 'Valores']],
-      body: [
-        ['A - Ingestão Alimentar', fmt(prontuario.triagem_a)],
-        ['B - Perda de Peso', fmt(prontuario.triagem_b)],
-        ['C - Mobilidade', fmt(prontuario.triagem_c)],
-        ['D - Estresse Psicológico', fmt(prontuario.triagem_d)],
-        ['E - Problemas Neuropsicológicos', fmt(prontuario.triagem_e)],
-        ['F1 - IMC', fmt(prontuario.triagem_f1)],
-        ['CP - Circunferência Panturrilha', fmt(prontuario.triagem_cp)],
-        ['Escore Total', fmt(prontuario.escore_triagem)],
-        ['Status Nutricional (Triagem)', fmt(prontuario.status_nutricional)],
-        ['Score MNA (Geral)', fmt(prontuario.mna_score)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [192, 57, 43], halign: 'left' },
-      columnStyles: { 0: { fontStyle: 'bold', width: 60 } },
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
+    const afterInfoY = (doc as any).lastAutoTable.finalY + 10;
 
     // 7. Diagnósticos e Condutas (Texto Longo)
     const longTextData = [
@@ -300,7 +207,7 @@ export default function ProntuarioNutricionalList() {
     ];
 
     autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
+      startY: afterInfoY,
       head: [['Diagnósticos, Condutas e Evolução', 'Descrição']],
       body: longTextData,
       theme: 'grid',
