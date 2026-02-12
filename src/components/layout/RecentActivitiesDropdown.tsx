@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Clock, Activity, User, Database, FileText, Settings, Trash2, Edit, Plus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Clock, Activity, User, Database, FileText, Settings, Trash2, Edit, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -97,6 +97,9 @@ export function RecentActivitiesDropdown() {
   const [activities, setActivities] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [hasNew, setHasNew] = useState(false);
+  const pollRef = useRef<number | null>(null);
 
   const fetchRecentActivities = async () => {
     try {
@@ -148,6 +151,8 @@ export function RecentActivitiesDropdown() {
       })) || [];
 
       setActivities(activitiesWithProfiles);
+      setLastUpdated(new Date());
+      setHasNew(false);
     } catch (error) {
       console.error('Erro ao buscar atividades:', error);
       toast.error('Erro ao carregar atividades recentes');
@@ -159,7 +164,44 @@ export function RecentActivitiesDropdown() {
   useEffect(() => {
     if (isOpen) {
       fetchRecentActivities();
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      pollRef.current = window.setInterval(() => {
+        fetchRecentActivities();
+      }, 15000);
+    } else {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('audit-logs-recent')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'audit_logs' },
+        () => {
+          if (isOpen) {
+            fetchRecentActivities();
+          } else {
+            setHasNew(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
   }, [isOpen]);
 
   const formatActivityDescription = (activity: AuditLog) => {
@@ -193,12 +235,31 @@ export function RecentActivitiesDropdown() {
         <Button variant="ghost" size="sm" className="relative">
           <Activity className="h-4 w-4" />
           <span className="sr-only">Atividades recentes</span>
+          {hasNew && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-96" align="end" forceMount>
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          Atividades Recentes do Sistema
+        <DropdownMenuLabel className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Atividades Recentes do Sistema
+          </div>
+          <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <span className="text-xs text-muted-foreground">
+                Atualizado {formatDistanceToNow(lastUpdated, { addSuffix: true, locale: ptBR })}
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => fetchRecentActivities()}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
