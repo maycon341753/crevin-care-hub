@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Quarto } from "@/types/quarto";
 import { AddQuartoModal } from "@/components/quartos/AddQuartoModal";
 import { EditQuartoModal } from "@/components/quartos/EditQuartoModal";
-import { Plus, Edit, Trash2, Search, Users, Bed, Home } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Users, Bed, Home, Eye } from "lucide-react";
+import { ViewQuartoModal } from "@/components/quartos/ViewQuartoModal";
 
 export default function QuartosPage() {
   const [quartos, setQuartos] = useState<Quarto[]>([]);
@@ -21,6 +22,7 @@ export default function QuartosPage() {
   const [tipoFilter, setTipoFilter] = useState<string>("todos");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedQuarto, setSelectedQuarto] = useState<Quarto | null>(null);
   const { toast } = useToast();
 
@@ -115,10 +117,16 @@ export default function QuartosPage() {
     setShowEditModal(true);
   };
 
+  const handleViewQuarto = (quarto: Quarto) => {
+    setSelectedQuarto(quarto);
+    setShowViewModal(true);
+  };
+
   // Função para fechar modais e recarregar dados
   const handleCloseModal = () => {
     setShowAddModal(false);
     setShowEditModal(false);
+    setShowViewModal(false);
     setSelectedQuarto(null);
     fetchQuartos();
   };
@@ -365,6 +373,14 @@ export default function QuartosPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleViewQuarto(quarto)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleEditQuarto(quarto)}
                             className="h-8 w-8 p-0"
                           >
@@ -394,6 +410,14 @@ export default function QuartosPage() {
       open={showAddModal}
       onClose={handleCloseModal}
     />
+
+    {selectedQuarto && (
+      <ViewQuartoModal
+        open={showViewModal}
+        onClose={handleCloseModal}
+        quarto={selectedQuarto}
+      />
+    )}
 
     {selectedQuarto && (
       <EditQuartoModal
