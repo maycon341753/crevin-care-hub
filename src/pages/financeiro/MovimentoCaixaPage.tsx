@@ -1,0 +1,516 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { formatBrazilianCurrency, formatBrazilianDate, formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
+import { Plus, Lock, Edit, Trash2 } from 'lucide-react';
+
+interface CashCategory {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+interface CashMovement {
+  id: string;
+  movement_date: string;
+  description: string;
+  type: 'entrada' | 'saida';
+  amount: number;
+  entrada: number;
+  saida: number;
+  category_id: string | null;
+  created_at: string;
+}
+
+const MovimentoCaixaPage: React.FC = () => {
+  const [fromDate, setFromDate] = useState<string>(() => {
+    const d = new Date();
+    return format(new Date(d.getFullYear(), d.getMonth(), 1), 'yyyy-MM-dd');
+    });
+  const [categories, setCategories] = useState<CashCategory[]>([]);
+  const [movements, setMovements] = useState<CashMovement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openCloseModal, setOpenCloseModal] = useState(false);
+  const [newType, setNewType] = useState<'entrada' | 'saida'>('saida');
+  const [newDate, setNewDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [newDescription, setNewDescription] = useState('');
+  const [newCategory, setNewCategory] = useState<string | undefined>();
+  const [newAmount, setNewAmount] = useState<string>('');
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
+  const [historySummaries, setHistorySummaries] = useState<Array<{ key: string; start: string; end: string; entrada: number; saida: number; saldo: number }>>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<CashMovement | null>(null);
+  const [editType, setEditType] = useState<'entrada' | 'saida'>('saida');
+  const [editDate, setEditDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [editDescription, setEditDescription] = useState('');
+  const [editCategory, setEditCategory] = useState<string | undefined>();
+  const [editAmount, setEditAmount] = useState<string>('');
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [catRes, movRes, histRes] = await Promise.all([
+        supabase.from('cash_categories').select('*').eq('active', true).order('name'),
+        supabase.from('cash_movements').select('*').gte('movement_date', fromDate).order('movement_date', { ascending: true }).order('created_at', { ascending: true }),
+        supabase.from('cash_movements').select('movement_date,entrada,saida').lt('movement_date', fromDate)
+      ]);
+      if (catRes.error) throw catRes.error;
+      if (movRes.error) throw movRes.error;
+      if (histRes.error) throw histRes.error;
+      setCategories(catRes.data || []);
+      setMovements(movRes.data || []);
+      const agg = new Map<string, { entrada: number; saida: number }>();
+      (histRes.data || []).forEach((r: any) => {
+        const d = new Date(r.movement_date);
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+        const prev = agg.get(key) || { entrada: 0, saida: 0 };
+        prev.entrada += Number(r.entrada || 0);
+        prev.saida += Number(r.saida || 0);
+        agg.set(key, prev);
+      });
+      const hist = Array.from(agg.entries()).map(([key, v]) => {
+        const [y, mm] = key.split('-').map(Number);
+        const startDate = new Date(y, (mm || 1) - 1, 1);
+        const endDate = new Date(y, (mm || 1), 0);
+        return {
+          key,
+          start: format(startDate, 'dd/MM/yyyy'),
+          end: format(endDate, 'dd/MM/yyyy'),
+          entrada: v.entrada,
+          saida: v.saida,
+          saldo: v.entrada - v.saida,
+        };
+      }).sort((a, b) => a.key < b.key ? 1 : -1);
+      setHistorySummaries(hist);
+    } catch (e: any) {
+      toast.error('Erro ao carregar movimentos de caixa');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [fromDate]);
+
+  const rows = useMemo(() => {
+    let running = 0;
+    return (movements || []).map(m => {
+      running += (m.entrada || 0) - (m.saida || 0);
+      return { ...m, saldo: running };
+    });
+  }, [movements]);
+
+  const saldoTotal = useMemo(() => {
+    return rows.length ? rows[rows.length - 1].saldo : 0;
+  }, [rows]);
+
+  const onCreate = async () => {
+    try {
+      const amountNumber = parseBrazilianCurrency(newAmount || '');
+      if (!newDescription || !amountNumber || !newDate) {
+        toast.error('Preencha descrição, data e valor');
+        return;
+      }
+      const payload = {
+        movement_date: newDate,
+        description: newDescription,
+        type: newType,
+        amount: amountNumber,
+        category_id: newCategory || null,
+      };
+      const { error } = await supabase.from('cash_movements').insert([payload]);
+      if (error) throw error;
+      setOpenModal(false);
+      setNewDescription('');
+      setNewAmount('');
+      setNewCategory(undefined);
+      setNewType('saida');
+      setNewDate(format(new Date(), 'yyyy-MM-dd'));
+      await fetchData();
+      toast.success('Movimentação registrada');
+    } catch (e: any) {
+      toast.error('Erro ao criar movimentação');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Movimento de Caixa</h1>
+          <p className="text-sm text-gray-600">Movimento de caixa a partir de {formatBrazilianDate(fromDate)}</p>
+        </div>
+        <div className="flex gap-2">
+          <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-[180px]" />
+          <Button variant="outline" onClick={() => setOpenCategoryModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Categoria
+          </Button>
+          <Button variant="outline" onClick={() => setOpenCloseModal(true)}>
+            <Lock className="w-4 h-4 mr-2" />
+            Fechar Caixa
+          </Button>
+          <Button onClick={() => setOpenModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Movimentação
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Saldo do Período</CardTitle>
+          <div className={`text-xl font-bold ${saldoTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {formatBrazilianCurrency(saldoTotal)}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição/Histórico</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {rows.map((m) => (
+                  <tr key={m.id}>
+                    <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
+                    <td className="px-6 py-3 text-sm">{m.description}</td>
+                    <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
+                    <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
+                    <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
+                    <td className="px-6 py-3 text-sm text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditing(m);
+                            setEditType(m.type);
+                            setEditDate(m.movement_date);
+                            setEditDescription(m.description);
+                            setEditCategory(m.category_id || undefined);
+                            setEditAmount(formatBrazilianCurrencyValue(m.amount));
+                            setEditOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            if (!window.confirm('Excluir movimentação?')) return;
+                            const { error } = await supabase.from('cash_movements').delete().eq('id', m.id);
+                            if (error) {
+                              toast.error('Erro ao excluir');
+                            } else {
+                              toast.success('Movimentação excluída');
+                              await fetchData();
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-6 text-center text-sm text-gray-500">Sem movimentações para o período</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Histórico de Movimentações Anteriores</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo do Mês</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {historySummaries.map(h => (
+                  <tr key={h.key}>
+                    <td className="px-6 py-3 text-sm">{h.start} - {h.end}</td>
+                    <td className="px-6 py-3 text-sm text-right text-green-700">{formatBrazilianCurrency(h.entrada)}</td>
+                    <td className="px-6 py-3 text-sm text-right text-red-700">{formatBrazilianCurrency(h.saida)}</td>
+                    <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency(h.saldo)}</td>
+                  </tr>
+                ))}
+                {historySummaries.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-6 text-center text-sm text-gray-500">Sem histórico anterior</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Nova Movimentação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={newType} onValueChange={(v: any) => setNewType(v)}>
+                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada">Entrada</SelectItem>
+                    <SelectItem value="saida">Saída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descrição ou histórico" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select value={newCategory} onValueChange={setNewCategory}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor</Label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
+            <Button onClick={onCreate}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openCategoryModal} onOpenChange={setOpenCategoryModal}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Nova Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Nome da Categoria</Label>
+              <Input
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Ex.: Compras Super Mercado"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenCategoryModal(false)}>Cancelar</Button>
+            <Button
+              onClick={async () => {
+                try {
+                  const name = (newCategoryName || '').trim();
+                  if (!name) {
+                    toast.error('Informe o nome da categoria');
+                    return;
+                  }
+                  const { data, error } = await supabase
+                    .from('cash_categories')
+                    .insert([{ name, active: true }])
+                    .select()
+                    .single();
+                  if (error) throw error;
+                  setCategories(prev => [...prev, data as CashCategory]);
+                  setNewCategory((data as any).id);
+                  setNewCategoryName('');
+                  setOpenCategoryModal(false);
+                  toast.success('Categoria criada');
+                } catch (e: any) {
+                  toast.error('Erro ao criar categoria');
+                }
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Editar Movimentação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={editType} onValueChange={(v: any) => setEditType(v)}>
+                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada">Entrada</SelectItem>
+                    <SelectItem value="saida">Saída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Descrição ou histórico" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select value={editCategory} onValueChange={setEditCategory}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor</Label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={async () => {
+                if (!editing) return;
+                try {
+                  const amountNumber = parseBrazilianCurrency(editAmount || '');
+                  if (!editDescription || !amountNumber || !editDate) {
+                    toast.error('Preencha descrição, data e valor');
+                    return;
+                  }
+                  const { error } = await supabase
+                    .from('cash_movements')
+                    .update({
+                      movement_date: editDate,
+                      description: editDescription,
+                      type: editType,
+                      amount: amountNumber,
+                      category_id: editCategory || null,
+                    })
+                    .eq('id', editing.id);
+                  if (error) throw error;
+                  toast.success('Movimentação atualizada');
+                  setEditOpen(false);
+                  setEditing(null);
+                  await fetchData();
+                } catch (e: any) {
+                  toast.error('Erro ao atualizar movimentação');
+                }
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openCloseModal} onOpenChange={setOpenCloseModal}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Fechar Caixa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-600">Tem certeza que deseja fechar o caixa do período atual?</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenCloseModal(false)}>Cancelar</Button>
+            <Button
+              onClick={async () => {
+                try {
+                  const d = new Date(fromDate);
+                  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+                  const nextStr = format(next, 'yyyy-MM-dd');
+                  setFromDate(nextStr);
+                  setOpenCloseModal(false);
+                  await fetchData();
+                  toast.success('Caixa fechado');
+                } catch (e: any) {
+                  toast.error('Erro ao fechar caixa');
+                }
+              }}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default MovimentoCaixaPage;

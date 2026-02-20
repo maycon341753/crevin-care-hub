@@ -41,6 +41,7 @@ import ContasReceberPage from "./pages/financeiro/ContasReceberPage";
 import ReceitasFuturasPage from "./pages/financeiro/ReceitasFuturasPage";
 import ConciliacaoPage from "./pages/financeiro/ConciliacaoPage";
 import ContasBancariasPage from "./pages/financeiro/ContasBancariasPage";
+import MovimentoCaixaPage from "./pages/financeiro/MovimentoCaixaPage";
 import NovoFornecedorPage from "./pages/fornecedores/NovoFornecedorPage";
 import FornecedoresPage from "./pages/fornecedores/FornecedoresPage";
 import EditarFornecedorPage from "./pages/fornecedores/EditarFornecedorPage";
@@ -288,6 +289,16 @@ const App = () => (
                   storageKey="financial_unlocked"
                 >
                   <ConciliacaoPage />
+                </SecurityGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/financeiro/movimento-caixa" element={
+              <ProtectedRoute>
+                <SecurityGuard 
+                  title="Módulo Financeiro" 
+                  storageKey="financial_unlocked"
+                >
+                  <MovimentoCaixaPage />
                 </SecurityGuard>
               </ProtectedRoute>
             } />

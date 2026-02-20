@@ -90,6 +90,7 @@ const navigationItems = [
     icon: DollarSign,
     subItems: [
       { title: "Visão Geral", url: "/financeiro" },
+      { title: "Movimento de Caixa", url: "/financeiro/movimento-caixa" },
       { title: "Contas a Pagar", url: "/financeiro/contas-pagar" },
       { title: "Contas a Receber", url: "/financeiro/contas-receber" },
       { title: "Receitas Futuras", url: "/financeiro/receitas-futuras" },
