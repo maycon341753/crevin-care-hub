@@ -471,40 +471,42 @@ const MovimentoCaixaPage: React.FC = () => {
       </Card>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[900px] w-[95vw]">
           <DialogHeader>
             <DialogTitle>Detalhes do Período {detailTitle}</DialogTitle>
           </DialogHeader>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {detailRows.map((m) => (
-                  <tr key={m.id}>
-                    <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
-                    <td className="px-6 py-3 text-sm">
-                      {m.category_id ? (categoryMap.get(m.category_id) || '-') : '-'}
-                    </td>
-                    <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
-                    <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
-                    <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
-                  </tr>
-                ))}
-                {detailRows.length === 0 && (
+          <div className="max-h-[70vh] overflow-auto">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">{detailLoading ? 'Carregando...' : 'Sem movimentações no período'}</td>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {detailRows.map((m) => (
+                    <tr key={m.id}>
+                      <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
+                      <td className="px-6 py-3 text-sm">
+                        {m.category_id ? (categoryMap.get(m.category_id) || '-') : '-'}
+                      </td>
+                      <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
+                      <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
+                      <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
+                    </tr>
+                  ))}
+                  {detailRows.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">{detailLoading ? 'Carregando...' : 'Sem movimentações no período'}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
