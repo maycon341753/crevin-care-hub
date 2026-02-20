@@ -5,11 +5,16 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatBrazilianCurrency, formatBrazilianDate, formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
-import { Plus, Lock, Edit, Trash2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Plus, Lock, Edit, Trash2, FileText } from 'lucide-react';
+import { DatePickerBr } from '@/components/ui/date-picker-br';
 
 interface CashCategory {
   id: string;
@@ -54,6 +59,17 @@ const MovimentoCaixaPage: React.FC = () => {
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState<string | undefined>();
   const [editAmount, setEditAmount] = useState<string>('');
+  const [openPdfModal, setOpenPdfModal] = useState(false);
+  const [openCategoryPicker, setOpenCategoryPicker] = useState(false);
+  const [openEditCategoryPicker, setOpenEditCategoryPicker] = useState(false);
+  const [pdfFrom, setPdfFrom] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [pdfTo, setPdfTo] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  });
 
   const fetchData = async () => {
     try {
@@ -116,6 +132,74 @@ const MovimentoCaixaPage: React.FC = () => {
     return rows.length ? rows[rows.length - 1].saldo : 0;
   }, [rows]);
 
+  const gerarPDF = (start: Date, end: Date) => {
+    const filtered = rows.filter(r => {
+      const rd = new Date(r.movement_date);
+      return rd >= start && rd <= end;
+    });
+    const totalEntrada = filtered.reduce((s, r) => s + (r.entrada || 0), 0);
+    const totalSaida = filtered.reduce((s, r) => s + (r.saida || 0), 0);
+    const saldoPeriodo = totalEntrada - totalSaida;
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    doc.setFontSize(18);
+    doc.text('Movimento de Caixa', 40, 40);
+    doc.setFontSize(11);
+    doc.text(`Período: ${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`, 40, 60);
+    doc.setDrawColor(50, 50, 50);
+    doc.line(40, 68, 555, 68);
+
+    const body = filtered.map(r => [
+      formatBrazilianDate(r.movement_date),
+      r.description,
+      r.entrada ? formatBrazilianCurrency(r.entrada) : '-',
+      r.saida ? formatBrazilianCurrency(r.saida) : '-',
+      formatBrazilianCurrency((r as any).saldo),
+    ]);
+
+    autoTable(doc, {
+      head: [['Data', 'Descrição/Histórico', 'Entrada', 'Saída', 'Saldo']],
+      body,
+      startY: 85,
+      styles: { fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [33, 82, 255] },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 250 },
+        2: { halign: 'right', cellWidth: 80 },
+        3: { halign: 'right', cellWidth: 80 },
+        4: { halign: 'right', cellWidth: 80 },
+      },
+      didDrawPage: () => {
+        const page = doc.getCurrentPageInfo().pageNumber;
+        const pageCount = (doc as any).getNumberOfPages();
+        doc.setFontSize(8);
+        doc.text(`Página ${page} de ${pageCount}`, 40, 820);
+      },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY || 85;
+    doc.setFontSize(12);
+    doc.text('Resumo do Período', 40, finalY + 24);
+    autoTable(doc, {
+      body: [
+        ['Total de Entradas', formatBrazilianCurrency(totalEntrada)],
+        ['Total de Saídas', formatBrazilianCurrency(totalSaida)],
+        ['Saldo do Período', formatBrazilianCurrency(saldoPeriodo)],
+      ],
+      startY: finalY + 32,
+      styles: { fontSize: 10, cellPadding: 6 },
+      columnStyles: {
+        0: { cellWidth: 180 },
+        1: { halign: 'right', cellWidth: 120 },
+      },
+      theme: 'plain',
+    });
+
+    const filename = `movimento-caixa-${format(start, 'yyyyMMdd')}-a-${format(end, 'yyyyMMdd')}.pdf`;
+    doc.save(filename);
+  };
+
   const onCreate = async () => {
     try {
       const amountNumber = parseBrazilianCurrency(newAmount || '');
@@ -169,6 +253,10 @@ const MovimentoCaixaPage: React.FC = () => {
           <Button variant="outline" onClick={() => setOpenCloseModal(true)}>
             <Lock className="w-4 h-4 mr-2" />
             Fechar Caixa
+          </Button>
+          <Button variant="outline" onClick={() => setOpenPdfModal(true)}>
+            <FileText className="w-4 h-4 mr-2" />
+            Gerar PDF
           </Button>
           <Button onClick={() => setOpenModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -253,6 +341,49 @@ const MovimentoCaixaPage: React.FC = () => {
         </CardContent>
       </Card>
 
+      <Dialog open={openPdfModal} onOpenChange={setOpenPdfModal}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Gerar PDF por Período</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>De</Label>
+                <DatePickerBr date={pdfFrom} setDate={setPdfFrom} placeholder="Dia/Mês/Ano" />
+              </div>
+              <div className="space-y-2">
+                <Label>Até</Label>
+                <DatePickerBr date={pdfTo} setDate={setPdfTo} placeholder="Dia/Mês/Ano" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">O relatório usa as movimentações já carregadas na tela.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenPdfModal(false)}>Cancelar</Button>
+            <Button
+              onClick={() => {
+                if (!pdfFrom || !pdfTo) {
+                  toast.error('Selecione o período');
+                  return;
+                }
+                const start = pdfFrom;
+                const end = pdfTo;
+                if (start > end) {
+                  toast.error('Data inicial maior que a final');
+                  return;
+                }
+                gerarPDF(start, end);
+                toast.success('PDF gerado com sucesso');
+                setOpenPdfModal(false);
+              }}
+            >
+              Gerar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Histórico de Movimentações Anteriores</CardTitle>
@@ -317,14 +448,35 @@ const MovimentoCaixaPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <Select value={newCategory} onValueChange={setNewCategory}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openCategoryPicker} onOpenChange={setOpenCategoryPicker}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                      {newCategory ? (categories.find(c => c.id === newCategory)?.name || 'Selecione') : 'Selecione'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar categoria..." />
+                      <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {categories.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={c.name}
+                              onSelect={() => {
+                                setNewCategory(c.id);
+                                setOpenCategoryPicker(false);
+                              }}
+                            >
+                              {c.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Valor</Label>
@@ -421,14 +573,35 @@ const MovimentoCaixaPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <Select value={editCategory} onValueChange={setEditCategory}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openEditCategoryPicker} onOpenChange={setOpenEditCategoryPicker}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                      {editCategory ? (categories.find(c => c.id === editCategory)?.name || 'Selecione') : 'Selecione'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar categoria..." />
+                      <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {categories.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={c.name}
+                              onSelect={() => {
+                                setEditCategory(c.id);
+                                setOpenEditCategoryPicker(false);
+                              }}
+                            >
+                              {c.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Valor</Label>
