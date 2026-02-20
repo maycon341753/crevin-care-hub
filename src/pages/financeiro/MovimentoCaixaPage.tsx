@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { formatBrazilianCurrency, formatBrazilianDate, formatCurrencyInput, parseBrazilianCurrency, formatBrazilianCurrencyValue } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Plus, Lock, Edit, Trash2, FileText } from 'lucide-react';
+import { Plus, Lock, Edit, Trash2, FileText, Search } from 'lucide-react';
 import { DatePickerBr } from '@/components/ui/date-picker-br';
 
 interface CashCategory {
@@ -70,6 +70,10 @@ const MovimentoCaixaPage: React.FC = () => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth() + 1, 0);
   });
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailTitle, setDetailTitle] = useState('');
+  const [detailRows, setDetailRows] = useState<Array<CashMovement & { saldo: number }>>([]);
 
   const fetchData = async () => {
     try {
@@ -131,6 +135,41 @@ const MovimentoCaixaPage: React.FC = () => {
   const saldoTotal = useMemo(() => {
     return rows.length ? rows[rows.length - 1].saldo : 0;
   }, [rows]);
+
+  const openHistoryDetails = async (key: string) => {
+    try {
+      setDetailLoading(true);
+      const [yStr, mStr] = key.split('-');
+      const y = Number(yStr);
+      const m = Number(mStr);
+      const start = new Date(y, (m || 1) - 1, 1);
+      const end = new Date(y, (m || 1), 0);
+      const startStr = format(start, 'yyyy-MM-dd');
+      const endStr = format(end, 'yyyy-MM-dd');
+      const { data, error } = await supabase
+        .from('cash_movements')
+        .select('*')
+        .gte('movement_date', startStr)
+        .lte('movement_date', endStr)
+        .order('movement_date', { ascending: true })
+        .order('created_at', { ascending: true });
+      if (error) {
+        toast.error('Erro ao carregar detalhes');
+        return;
+      }
+      let running = 0;
+      const list = (data || []) as CashMovement[];
+      const detailed = list.map((m) => {
+        running += (m.entrada || 0) - (m.saida || 0);
+        return { ...m, saldo: running };
+      });
+      setDetailRows(detailed);
+      setDetailTitle(`${String(m).padStart(2, '0')}/${y}`);
+      setDetailOpen(true);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const gerarPDF = (start: Date, end: Date) => {
     const filtered = rows.filter(r => {
@@ -397,6 +436,7 @@ const MovimentoCaixaPage: React.FC = () => {
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo do Mês</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -406,11 +446,16 @@ const MovimentoCaixaPage: React.FC = () => {
                     <td className="px-6 py-3 text-sm text-right text-green-700">{formatBrazilianCurrency(h.entrada)}</td>
                     <td className="px-6 py-3 text-sm text-right text-red-700">{formatBrazilianCurrency(h.saida)}</td>
                     <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency(h.saldo)}</td>
+                    <td className="px-6 py-3 text-sm text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openHistoryDetails(h.key)}>
+                        <Search className="w-4 h-4" />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
                 {historySummaries.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-6 text-center text-sm text-gray-500">Sem histórico anterior</td>
+                    <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">Sem histórico anterior</td>
                   </tr>
                 )}
               </tbody>
@@ -418,6 +463,46 @@ const MovimentoCaixaPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Período {detailTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição/Histórico</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {detailRows.map((m) => (
+                  <tr key={m.id}>
+                    <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
+                    <td className="px-6 py-3 text-sm">{m.description}</td>
+                    <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
+                    <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
+                    <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
+                  </tr>
+                ))}
+                {detailRows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">{detailLoading ? 'Carregando...' : 'Sem movimentações no período'}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="sm:max-w-[520px]">
