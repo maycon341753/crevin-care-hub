@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 const ALLOWED_EMAILS = [
   'walrezende@hotmail.com',
   'mayconreis@gmail.com',
-  'desenvolvedor@crevin.com.br'
+  'desenvolvedor@crevin.com.br',
+  'daysecrevin@gmail.com'
 ];
 
 interface SecurityGuardProps {
