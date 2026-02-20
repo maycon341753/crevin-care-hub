@@ -205,48 +205,62 @@ const FinanceiroPage: React.FC = () => {
   const handleGerarRelatorioCSV = () => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
     const contasReceberMes = contasReceber.filter(conta => {
-      const dataVencimento = new Date(conta.data_vencimento);
-      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+      const d = new Date(conta.data_vencimento);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-    
     const contasPagarMes = contasPagar.filter(conta => {
-      const dataVencimento = new Date(conta.data_vencimento);
-      return dataVencimento.getMonth() === currentMonth && dataVencimento.getFullYear() === currentYear;
+      const d = new Date(conta.data_vencimento);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-
-    const totalReceberMes = contasReceberMes.reduce((sum, conta) => sum + conta.valor, 0);
-    const totalPagarMes = contasPagarMes.reduce((sum, conta) => sum + conta.valor, 0);
-
-    let csvContent = 'Relatório Financeiro - ' + format(new Date(), 'MMMM yyyy', { locale: ptBR }) + '\n\n';
-    csvContent += 'RESUMO FINANCEIRO\n';
-    csvContent += 'Total a Receber,' + formatBrazilianCurrency(totalReceberMes) + '\n';
-    csvContent += 'Total a Pagar,' + formatBrazilianCurrency(totalPagarMes) + '\n';
-    csvContent += 'Saldo Previsto,' + formatBrazilianCurrency(totalReceberMes - totalPagarMes) + '\n\n';
-    
-    csvContent += 'CONTAS A RECEBER\n';
-    csvContent += 'Descrição,Valor,Vencimento,Status\n';
-    contasReceberMes.forEach(conta => {
-      csvContent += `"${conta.descricao}",${conta.valor},${formatBrazilianDate(conta.data_vencimento)},${conta.status}\n`;
+    const totalReceberMes = contasReceberMes.reduce((sum, c) => sum + c.valor, 0);
+    const totalPagarMes = contasPagarMes.reduce((sum, c) => sum + c.valor, 0);
+    const sep = ';';
+    const esc = (v: string) => {
+      const s = v ?? '';
+      const needs = /[\";\n\r]/.test(s);
+      const q = s.replace(/\"/g, '\"\"');
+      return needs ? `"${q}"` : q;
+    };
+    let lines: string[] = [];
+    lines.push(`Relatório Financeiro - ${format(new Date(), 'MMMM yyyy', { locale: ptBR })}`);
+    lines.push('');
+    lines.push('RESUMO FINANCEIRO');
+    lines.push(['Total a Receber', formatBrazilianCurrency(totalReceberMes)].join(sep));
+    lines.push(['Total a Pagar', formatBrazilianCurrency(totalPagarMes)].join(sep));
+    lines.push(['Saldo Previsto', formatBrazilianCurrency(totalReceberMes - totalPagarMes)].join(sep));
+    lines.push('');
+    lines.push('CONTAS A RECEBER');
+    lines.push(['Descrição', 'Valor', 'Vencimento', 'Status'].join(sep));
+    contasReceberMes.forEach(c => {
+      lines.push([
+        esc(c.descricao || ''),
+        esc(formatBrazilianCurrency(c.valor)),
+        esc(formatBrazilianDate(c.data_vencimento)),
+        esc(c.status)
+      ].join(sep));
     });
-    
-    csvContent += '\nCONTAS A PAGAR\n';
-    csvContent += 'Descrição,Fornecedor,Valor,Vencimento,Status\n';
-    contasPagarMes.forEach(conta => {
-      csvContent += `"${conta.descricao}","${conta.fornecedor}",${conta.valor},${formatBrazilianDate(conta.data_vencimento)},${conta.status}\n`;
+    lines.push('');
+    lines.push('CONTAS A PAGAR');
+    lines.push(['Descrição', 'Fornecedor', 'Valor', 'Vencimento', 'Status'].join(sep));
+    contasPagarMes.forEach(c => {
+      lines.push([
+        esc(c.descricao || ''),
+        esc(c.fornecedor || ''),
+        esc(formatBrazilianCurrency(c.valor)),
+        esc(formatBrazilianDate(c.data_vencimento)),
+        esc(c.status)
+      ].join(sep));
     });
-
+    const csvContent = '\uFEFF' + lines.join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const a = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio-financeiro-${format(new Date(), 'yyyy-MM')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
+    a.href = url;
+    a.download = `relatorio-financeiro-${format(new Date(), 'yyyy-MM')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     toast.success('Relatório CSV gerado com sucesso');
   };
 
