@@ -80,7 +80,7 @@ const navigationItems = [
       { title: "Quartos/Alas", url: "/idosos/quartos" },
       { title: "Médico", url: "/idosos/medico" },
       { title: "Prontuário Médico", url: "/idosos/prontuario-medico" },
-      { title: "Prontuários Nutricionais", url: "/idosos/prontuario-nutricional" },
+      { title: "Evolução Nutricional", url: "/idosos/prontuario-nutricional" },
       { title: "Avaliação Fisioterapêutica", url: "/idosos/prontuario-fisioterapeutico" },
     ],
   },

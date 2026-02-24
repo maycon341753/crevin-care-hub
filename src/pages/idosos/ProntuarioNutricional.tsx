@@ -70,6 +70,7 @@ export default function ProntuarioNutricional() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [idoso, setIdoso] = useState<Idoso | null>(null);
+  const [imcManual, setImcManual] = useState(false);
   const [prontuario, setProntuario] = useState<ProntuarioNutricional>({
     idoso_id: idosoId || "",
     peso_atual: null,
@@ -126,12 +127,14 @@ export default function ProntuarioNutricional() {
   }, [idosoId]);
 
   useEffect(() => {
-    calculateIMC();
-  }, [prontuario.peso_atual, prontuario.altura]);
+    if (!imcManual) {
+      calculateIMC();
+    }
+  }, [prontuario.peso_atual, prontuario.altura, imcManual]);
 
   useEffect(() => {
     calculateTriagemScore();
-  }, [prontuario.triagem_a, prontuario.triagem_b, prontuario.triagem_c, prontuario.triagem_d, prontuario.triagem_e, prontuario.triagem_f1, prontuario.triagem_cp]);
+  }, [prontuario.triagem_a, prontuario.triagem_b, prontuario.triagem_c, prontuario.triagem_d, prontuario.triagem_e, prontuario.triagem_f1]);
 
   const fetchIdoso = async () => {
     try {
@@ -175,6 +178,7 @@ export default function ProntuarioNutricional() {
   };
 
   const calculateIMC = () => {
+    if (imcManual) return;
     if (prontuario.peso_atual && prontuario.altura) {
       const alturaMetros = prontuario.altura / 100;
       const imc = prontuario.peso_atual / (alturaMetros * alturaMetros);
@@ -190,7 +194,6 @@ export default function ProntuarioNutricional() {
       prontuario.triagem_d,
       prontuario.triagem_e,
       prontuario.triagem_f1,
-      prontuario.triagem_cp
     ];
 
     const validScores = scores.filter(score => score !== null && score !== undefined);
@@ -391,7 +394,10 @@ export default function ProntuarioNutricional() {
                   type="number"
                   step="0.01"
                   value={prontuario.imc || ""}
-                  onChange={(e) => handleInputChange('imc', parseFloat(e.target.value) || null)}
+                  onChange={(e) => {
+                    setImcManual(true);
+                    handleInputChange('imc', parseFloat(e.target.value) || null);
+                  }}
                 />
               </div>
               <div>

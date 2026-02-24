@@ -185,8 +185,6 @@ export default function ProntuarioNutricionalList() {
         ['Nome', prontuario.idoso.nome],
         ['Idade', `${calculateAge(prontuario.idoso.data_nascimento)} anos`],
         ['Data de Nascimento', formatDate(prontuario.idoso.data_nascimento)],
-        ['Quarto', prontuario.idoso.quarto || 'N/A'],
-        ['Atualizado em', formatDate(prontuario.updated_at)],
       ],
       theme: 'grid',
       headStyles: { fillColor: [66, 66, 66], halign: 'center' },
@@ -196,19 +194,13 @@ export default function ProntuarioNutricionalList() {
 
     const afterInfoY = (doc as any).lastAutoTable.finalY + 10;
 
-    // 7. Diagnósticos e Condutas (Texto Longo)
     const longTextData = [
-      ['Diagnóstico Médico', fmt(prontuario.diagnostico)],
-      ['Diagnóstico Nutricional', fmt(prontuario.diagnostico_nutricional)],
-      ['Conduta Dietética', fmt(prontuario.conduta_dietetica)],
-      ['Prescrição Dietética', fmt(prontuario.prescricao_dietetica)],
       ['Evolução Nutricional', fmt(prontuario.evolucao_nutricional)],
-      ['Observações', fmt(prontuario.observacoes)],
     ];
 
     autoTable(doc, {
       startY: afterInfoY,
-      head: [['Diagnósticos, Condutas e Evolução', 'Descrição']],
+      head: [['Evolução Nutricional', 'Descrição']],
       body: longTextData,
       theme: 'grid',
       headStyles: { fillColor: [44, 62, 80], halign: 'left' },
