@@ -532,6 +532,84 @@ const MovimentoCaixaPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Nova Movimentação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={newType} onValueChange={(v: any) => setNewType(v)}>
+                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada">Entrada</SelectItem>
+                    <SelectItem value="saida">Saída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descrição ou histórico" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Popover open={openCategoryPicker} onOpenChange={setOpenCategoryPicker}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                      {newCategory ? (categories.find(c => c.id === newCategory)?.name || 'Selecione') : 'Selecione'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar categoria..." />
+                      <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {categories.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={c.name}
+                              onSelect={() => {
+                                setNewCategory(c.id);
+                                setOpenCategoryPicker(false);
+                              }}
+                            >
+                              {c.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor</Label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
+            <Button onClick={onCreate}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={openCategoryModal} onOpenChange={setOpenCategoryModal}>
         <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
