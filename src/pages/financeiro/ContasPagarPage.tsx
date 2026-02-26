@@ -1,9 +1,17 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { 
   Plus, 
   Search, 
@@ -64,6 +72,11 @@ const ContasPagarPage: React.FC = () => {
   const [categoriaFilter, setCategoriaFilter] = useState<string>('todas');
   const [loading, setLoading] = useState(true);
   
+  // PDF Filters
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [pdfStartDate, setPdfStartDate] = useState('');
+  const [pdfEndDate, setPdfEndDate] = useState('');
+
   // Modais
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingConta, setEditingConta] = useState<ContaPagar | null>(null);
@@ -157,10 +170,29 @@ const ContasPagarPage: React.FC = () => {
     }
   };
 
-  // Função para gerar relatório em PDF
+  // Função para abrir modal de relatório PDF
   const handleGerarRelatorioPDF = () => {
+    setShowPDFModal(true);
+  };
+
+  const confirmarGeracaoPDF = () => {
     try {
+      setShowPDFModal(false);
       const doc = new jsPDF();
+
+      // Filtrar contas considerando também o intervalo de datas
+      const contasParaRelatorio = filteredContas.filter(conta => {
+        if (!pdfStartDate && !pdfEndDate) return true;
+        
+        const dataVencimento = new Date(conta.data_vencimento);
+        const inicio = pdfStartDate ? new Date(pdfStartDate) : null;
+        const fim = pdfEndDate ? new Date(pdfEndDate) : null;
+
+        if (inicio && dataVencimento < inicio) return false;
+        if (fim && dataVencimento > fim) return false;
+        
+        return true;
+      });
 
       // Cabeçalho
       doc.setFont('helvetica');
@@ -168,14 +200,27 @@ const ContasPagarPage: React.FC = () => {
       doc.text('Relatório de Contas a Pagar', 20, 20);
       doc.setFontSize(12);
       doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 20, 30);
+      
+      if (pdfStartDate || pdfEndDate) {
+        const periodo = `${pdfStartDate ? format(new Date(pdfStartDate), 'dd/MM/yyyy') : 'Início'} até ${pdfEndDate ? format(new Date(pdfEndDate), 'dd/MM/yyyy') : 'Fim'}`;
+        doc.text(`Período: ${periodo}`, 20, 38);
+      }
+
+      // Calcular totais baseados nas contas filtradas para o relatório
+      const totalRelatorio = contasParaRelatorio.reduce((acc, curr) => {
+        if (curr.status === 'pendente') acc.pendente += curr.valor;
+        if (curr.status === 'pago') acc.pago += curr.valor;
+        if (curr.status === 'vencido') acc.vencido += curr.valor;
+        return acc;
+      }, { pendente: 0, pago: 0, vencido: 0 });
 
       // Resumo financeiro
       doc.setFontSize(14);
-      doc.text('Resumo', 20, 48);
+      doc.text('Resumo', 20, 55);
       doc.setFontSize(10);
-      doc.text(`Total Pendente: ${formatBrazilianCurrency(totalPendente)}`, 20, 58);
-      doc.text(`Total Pago: ${formatBrazilianCurrency(totalPago)}`, 20, 66);
-      doc.text(`Total Vencido: ${formatBrazilianCurrency(totalVencido)}`, 20, 74);
+      doc.text(`Total Pendente: ${formatBrazilianCurrency(totalRelatorio.pendente)}`, 20, 65);
+      doc.text(`Total Pago: ${formatBrazilianCurrency(totalRelatorio.pago)}`, 20, 73);
+      doc.text(`Total Vencido: ${formatBrazilianCurrency(totalRelatorio.vencido)}`, 20, 81);
 
       // Filtros aplicados
       const categoriaNome = categoriaFilter === 'todas' 
@@ -185,14 +230,14 @@ const ContasPagarPage: React.FC = () => {
       const busca = searchTerm ? `"${searchTerm}"` : '—';
 
       doc.setFontSize(12);
-      doc.text('Filtros aplicados', 20, 90);
+      doc.text('Filtros aplicados', 20, 95);
       doc.setFontSize(9);
-      doc.text(`Busca: ${busca}`, 20, 98);
-      doc.text(`Status: ${statusNome}`, 80, 98);
-      doc.text(`Categoria: ${categoriaNome}`, 140, 98);
+      doc.text(`Busca: ${busca}`, 20, 103);
+      doc.text(`Status: ${statusNome}`, 80, 103);
+      doc.text(`Categoria: ${categoriaNome}`, 140, 103);
 
       // Tabela de contas usando autoTable para melhor legibilidade
-      const body = filteredContas.map(conta => [
+      const body = contasParaRelatorio.map(conta => [
         conta.descricao,
         formatBrazilianCurrency(conta.valor),
         formatBrazilianDate(conta.data_vencimento),
@@ -206,7 +251,7 @@ const ContasPagarPage: React.FC = () => {
           'Descrição', 'Valor', 'Vencimento', 'Fornecedor', 'Categoria', 'Status'
         ]],
         body,
-        startY: 108,
+        startY: 113,
         styles: { fontSize: 9, cellPadding: 2 },
         headStyles: { fillColor: [240, 240, 240], textColor: 20 },
         theme: 'striped',
@@ -618,6 +663,51 @@ const ContasPagarPage: React.FC = () => {
           categorias={categorias.filter(c => c.tipo === 'despesa')}
         />
       )}
+
+      <Dialog open={showPDFModal} onOpenChange={setShowPDFModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerar Relatório PDF</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pdf-start">Data Início</Label>
+                <Input
+                  id="pdf-start"
+                  type="date"
+                  lang="pt-BR"
+                  placeholder="dd/mm/aaaa"
+                  value={pdfStartDate}
+                  onChange={(e) => setPdfStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pdf-end">Data Fim</Label>
+                <Input
+                  id="pdf-end"
+                  type="date"
+                  lang="pt-BR"
+                  placeholder="dd/mm/aaaa"
+                  value={pdfEndDate}
+                  onChange={(e) => setPdfEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Se as datas não forem selecionadas, o relatório incluirá todos os registros filtrados na tela.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPDFModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarGeracaoPDF}>
+              Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -187,30 +187,38 @@ const MovimentoCaixaPage: React.FC = () => {
     const saldoPeriodo = totalEntrada - totalSaida;
 
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    
+    const marginLeft = 40;
+    const marginRight = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - marginLeft - marginRight;
+
     doc.setFontSize(18);
-    doc.text('Movimento de Caixa', 40, 40);
+    doc.text('Movimento de Caixa', marginLeft, 40);
     doc.setFontSize(11);
-    doc.text(`Período: ${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`, 40, 60);
+    doc.text(`Período: ${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`, marginLeft, 60);
     doc.setDrawColor(50, 50, 50);
-    doc.line(40, 68, 555, 68);
+    doc.line(marginLeft, 68, pageWidth - marginRight, 68);
 
     const body = filtered.map(r => [
       formatBrazilianDate(r.movement_date),
-      r.description,
+      r.category_id ? (categoryMap.get(r.category_id) || 'Sem categoria') : 'Sem categoria',
       r.entrada ? formatBrazilianCurrency(r.entrada) : '-',
       r.saida ? formatBrazilianCurrency(r.saida) : '-',
       formatBrazilianCurrency((r as any).saldo),
     ]);
 
     autoTable(doc, {
-      head: [['Data', 'Descrição/Histórico', 'Entrada', 'Saída', 'Saldo']],
+      head: [['Data', 'Categoria', 'Entrada', 'Saída', 'Saldo']],
       body,
       startY: 85,
-      styles: { fontSize: 9, cellPadding: 5 },
+      styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
       headStyles: { fillColor: [33, 82, 255] },
+      margin: { left: marginLeft, right: marginRight },
+      tableWidth: usableWidth,
       columnStyles: {
         0: { cellWidth: 70 },
-        1: { cellWidth: 250 },
+        1: { cellWidth: 'auto' },
         2: { halign: 'right', cellWidth: 80 },
         3: { halign: 'right', cellWidth: 80 },
         4: { halign: 'right', cellWidth: 80 },
@@ -219,13 +227,13 @@ const MovimentoCaixaPage: React.FC = () => {
         const page = doc.getCurrentPageInfo().pageNumber;
         const pageCount = (doc as any).getNumberOfPages();
         doc.setFontSize(8);
-        doc.text(`Página ${page} de ${pageCount}`, 40, 820);
+        doc.text(`Página ${page} de ${pageCount}`, marginLeft, 820);
       },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY || 85;
     doc.setFontSize(12);
-    doc.text('Resumo do Período', 40, finalY + 24);
+    doc.text('Resumo do Período', marginLeft, finalY + 24);
     autoTable(doc, {
       body: [
         ['Total de Entradas', formatBrazilianCurrency(totalEntrada)],
@@ -234,8 +242,10 @@ const MovimentoCaixaPage: React.FC = () => {
       ],
       startY: finalY + 32,
       styles: { fontSize: 10, cellPadding: 6 },
+      margin: { left: marginLeft, right: marginRight },
+      tableWidth: usableWidth * 0.6,
       columnStyles: {
-        0: { cellWidth: 180 },
+        0: { cellWidth: 'auto' },
         1: { halign: 'right', cellWidth: 120 },
       },
       theme: 'plain',
@@ -386,6 +396,99 @@ const MovimentoCaixaPage: React.FC = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Histórico de Movimentações Anteriores</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo do Mês</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {historySummaries.map(h => (
+                  <tr key={h.key}>
+                    <td className="px-6 py-3 text-sm">{h.start} - {h.end}</td>
+                    <td className="px-6 py-3 text-sm text-right text-green-700">{formatBrazilianCurrency(h.entrada)}</td>
+                    <td className="px-6 py-3 text-sm text-right text-red-700">{formatBrazilianCurrency(h.saida)}</td>
+                    <td className={`px-6 py-3 text-sm text-right ${h.saldo >= 0 ? 'text-green-700' : 'text-red-700'}`}>{formatBrazilianCurrency(h.saldo)}</td>
+                    <td className="px-6 py-3 text-sm text-right">
+                      <div className="flex justify-end">
+                        <Button variant="ghost" size="sm" onClick={() => openHistoryDetails(h.key)}>
+                          <Search className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {historySummaries.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">Sem histórico anterior</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-[720px] max-h-[80vh] overflow-hidden grid grid-rows-[auto,1fr,auto]">
+          <DialogHeader>
+            <DialogTitle>Movimentações de {detailTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 overflow-y-auto min-h-0">
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {detailRows.map(r => (
+                      <tr key={r.id}>
+                        <td className="px-4 py-2 text-sm">{formatBrazilianDate(r.movement_date)}</td>
+                        <td className="px-4 py-2 text-sm">{r.description}</td>
+                        <td className="px-4 py-2 text-sm">{r.category_id ? (categoryMap.get(r.category_id) ?? 'Sem categoria') : 'Sem categoria'}</td>
+                        <td className="px-4 py-2 text-sm text-right text-green-700">{r.entrada ? formatBrazilianCurrency(r.entrada) : '-'}</td>
+                        <td className="px-4 py-2 text-sm text-right text-red-700">{r.saida ? formatBrazilianCurrency(r.saida) : '-'}</td>
+                        <td className="px-4 py-2 text-sm text-right">{formatBrazilianCurrency((r as any).saldo)}</td>
+                      </tr>
+                    ))}
+                    {detailRows.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">Sem movimentações no período</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={openPdfModal} onOpenChange={setOpenPdfModal}>
         <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
@@ -425,169 +528,6 @@ const MovimentoCaixaPage: React.FC = () => {
             >
               Gerar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Histórico de Movimentações Anteriores</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo do Mês</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {historySummaries.map(h => (
-                  <tr key={h.key}>
-                    <td className="px-6 py-3 text-sm">{h.start} - {h.end}</td>
-                    <td className="px-6 py-3 text-sm text-right text-green-700">{formatBrazilianCurrency(h.entrada)}</td>
-                    <td className="px-6 py-3 text-sm text-right text-red-700">{formatBrazilianCurrency(h.saida)}</td>
-                    <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency(h.saldo)}</td>
-                    <td className="px-6 py-3 text-sm text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openHistoryDetails(h.key)}>
-                        <Search className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {historySummaries.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">Sem histórico anterior</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-[900px] w-[95vw]">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Período {detailTitle}</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[70vh] overflow-auto">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {detailRows.map((m) => (
-                    <tr key={m.id}>
-                      <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
-                      <td className="px-6 py-3 text-sm">
-                        {m.category_id ? (categoryMap.get(m.category_id) || '-') : '-'}
-                      </td>
-                      <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
-                      <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
-                      <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
-                    </tr>
-                  ))}
-                  {detailRows.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-6 text-center text-sm text-gray-500">{detailLoading ? 'Carregando...' : 'Sem movimentações no período'}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setDetailOpen(false)}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>Nova Movimentação</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={newType} onValueChange={(v: any) => setNewType(v)}>
-                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entrada">Entrada</SelectItem>
-                    <SelectItem value="saida">Saída</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descrição ou histórico" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Popover open={openCategoryPicker} onOpenChange={setOpenCategoryPicker}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between">
-                      {newCategory ? (categories.find(c => c.id === newCategory)?.name || 'Selecione') : 'Selecione'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                      <CommandInput placeholder="Buscar categoria..." />
-                      <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
-                      <CommandList>
-                        <CommandGroup>
-                          {categories.map(c => (
-                            <CommandItem
-                              key={c.id}
-                              value={c.name}
-                              onSelect={() => {
-                                setNewCategory(c.id);
-                                setOpenCategoryPicker(false);
-                              }}
-                            >
-                              {c.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label>Valor</Label>
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(formatCurrencyInput(e.target.value))}
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
-            <Button onClick={onCreate}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
