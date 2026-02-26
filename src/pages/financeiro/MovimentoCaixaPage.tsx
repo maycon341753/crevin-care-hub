@@ -323,7 +323,7 @@ const MovimentoCaixaPage: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição/Histórico</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
@@ -334,7 +334,7 @@ const MovimentoCaixaPage: React.FC = () => {
                 {rows.map((m) => (
                   <tr key={m.id}>
                     <td className="px-6 py-3 text-sm">{formatBrazilianDate(m.movement_date)}</td>
-                    <td className="px-6 py-3 text-sm">{m.description}</td>
+                    <td className="px-6 py-3 text-sm">{m.category_id ? (categoryMap.get(m.category_id) ?? 'Sem categoria') : 'Sem categoria'}</td>
                     <td className="px-6 py-3 text-sm text-right text-green-700">{m.entrada ? formatBrazilianCurrency(m.entrada) : '-'}</td>
                     <td className="px-6 py-3 text-sm text-right text-red-700">{m.saida ? formatBrazilianCurrency(m.saida) : '-'}</td>
                     <td className="px-6 py-3 text-sm text-right">{formatBrazilianCurrency((m as any).saldo)}</td>
