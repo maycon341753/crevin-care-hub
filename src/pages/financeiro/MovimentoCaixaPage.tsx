@@ -31,6 +31,7 @@ interface CashMovement {
   entrada: number;
   saida: number;
   category_id: string | null;
+  source?: string | null;
   created_at: string;
 }
 
@@ -74,6 +75,8 @@ const MovimentoCaixaPage: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailTitle, setDetailTitle] = useState('');
   const [detailRows, setDetailRows] = useState<Array<CashMovement & { saldo: number }>>([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -81,15 +84,16 @@ const MovimentoCaixaPage: React.FC = () => {
       const [catRes, movRes, histRes] = await Promise.all([
         supabase.from('cash_categories').select('*').eq('active', true).order('name'),
         supabase.from('cash_movements').select('*').gte('movement_date', fromDate).order('movement_date', { ascending: true }).order('created_at', { ascending: true }),
-        supabase.from('cash_movements').select('movement_date,entrada,saida').lt('movement_date', fromDate)
+        supabase.from('cash_movements').select('*').lt('movement_date', fromDate)
       ]);
       if (catRes.error) throw catRes.error;
       if (movRes.error) throw movRes.error;
       if (histRes.error) throw histRes.error;
       setCategories(catRes.data || []);
-      setMovements(movRes.data || []);
+      const filteredMovements = (movRes.data || []).filter((r: any) => r.source === 'manual');
+      setMovements(filteredMovements);
       const agg = new Map<string, { entrada: number; saida: number }>();
-      (histRes.data || []).forEach((r: any) => {
+      ((histRes.data || []) as any[]).filter((r: any) => r.source === 'manual').forEach((r: any) => {
         const d = new Date(r.movement_date);
         const y = d.getFullYear();
         const m = d.getMonth();
@@ -164,7 +168,7 @@ const MovimentoCaixaPage: React.FC = () => {
         return;
       }
       let running = 0;
-      const list = (data || []) as CashMovement[];
+      const list = ((data || []) as CashMovement[]).filter((m) => (m as any).source === 'manual');
       const detailed = list.map((m) => {
         running += (m.entrada || 0) - (m.saida || 0);
         return { ...m, saldo: running };
@@ -368,15 +372,9 @@ const MovimentoCaixaPage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={async () => {
-                            if (!window.confirm('Excluir movimentação?')) return;
-                            const { error } = await supabase.from('cash_movements').delete().eq('id', m.id);
-                            if (error) {
-                              toast.error('Erro ao excluir');
-                            } else {
-                              toast.success('Movimentação excluída');
-                              await fetchData();
-                            }
+                          onClick={() => {
+                            setDeleteTargetId(m.id);
+                            setDeleteConfirmOpen(true);
                           }}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -460,6 +458,7 @@ const MovimentoCaixaPage: React.FC = () => {
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-white shadow-sm border-l z-10">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -471,11 +470,40 @@ const MovimentoCaixaPage: React.FC = () => {
                         <td className="px-4 py-2 text-sm text-right text-green-700">{r.entrada ? formatBrazilianCurrency(r.entrada) : '-'}</td>
                         <td className="px-4 py-2 text-sm text-right text-red-700">{r.saida ? formatBrazilianCurrency(r.saida) : '-'}</td>
                         <td className="px-4 py-2 text-sm text-right">{formatBrazilianCurrency((r as any).saldo)}</td>
+                        <td className="px-4 py-2 text-sm text-right sticky right-0 bg-white shadow-sm border-l z-10">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditing(r);
+                                setEditType(r.type);
+                                setEditDate(r.movement_date);
+                                setEditDescription(r.description);
+                                setEditCategory(r.category_id || undefined);
+                                setEditAmount(formatBrazilianCurrencyValue(r.amount));
+                                setEditOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setDeleteTargetId(r.id);
+                                setDeleteConfirmOpen(true);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                     {detailRows.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">Sem movimentações no período</td>
+                        <td colSpan={7} className="px-4 py-6 text-center text-sm text-gray-500">Sem movimentações no período</td>
                       </tr>
                     )}
                   </tbody>
@@ -791,6 +819,37 @@ const MovimentoCaixaPage: React.FC = () => {
               }}
             >
               Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-gray-600">
+            Tem certeza que deseja excluir esta movimentação? Esta ação não pode ser desfeita.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!deleteTargetId) return;
+                const { error } = await supabase.from('cash_movements').delete().eq('id', deleteTargetId);
+                if (error) {
+                  toast.error('Erro ao excluir');
+                } else {
+                  toast.success('Movimentação excluída');
+                  setDeleteConfirmOpen(false);
+                  setDeleteTargetId(null);
+                  await fetchData();
+                }
+              }}
+            >
+              Excluir
             </Button>
           </DialogFooter>
         </DialogContent>
