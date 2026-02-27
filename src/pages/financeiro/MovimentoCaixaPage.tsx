@@ -322,7 +322,17 @@ const MovimentoCaixaPage: React.FC = () => {
           <p className="text-sm text-gray-600">Movimento de caixa a partir de {formatBrazilianDate(fromDate)}</p>
         </div>
         <div className="flex gap-2">
-          <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-[180px]" />
+          <Input
+                type="month"
+                value={fromDate.slice(0, 7)}
+                onChange={(e) => {
+                  const v = e.target.value; // yyyy-MM
+                  if (v) {
+                    setFromDate(`${v}-01`);
+                  }
+                }}
+                className="w-[180px]"
+              />
           <Button variant="outline" onClick={() => setOpenCategoryModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nova Categoria
