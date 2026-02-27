@@ -51,7 +51,7 @@ export default function Dashboard() {
   }[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
+      useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
@@ -220,18 +220,14 @@ export default function Dashboard() {
 
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os dados do dashboard.",
-          variant: "destructive",
-        });
+        // Toast removido daqui para evitar loop se ocorrer erro repetitivo
       } finally {
         setLoading(false);
       }
     };
 
     loadDashboardData();
-  }, [toast]);
+  }, []);
 
   const statsCards = [
     {

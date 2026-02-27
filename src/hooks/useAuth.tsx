@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [toast]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {

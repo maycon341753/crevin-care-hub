@@ -59,6 +59,7 @@ import Perfil from "./pages/Perfil";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  
   const { user, loading } = useAuth();
   
   // Inicializa o processamento de contas recorrentes quando o usuário está autenticado
