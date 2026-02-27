@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBrazilianDate } from "@/lib/utils";
 import { AddMedicoModal } from "@/components/medico/AddMedicoModal";
 import { EditMedicoModal } from "@/components/medico/EditMedicoModal";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface MedicoIdoso {
   id: string;
@@ -44,6 +45,8 @@ export default function MedicoPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRegistro, setSelectedRegistro] = useState<MedicoIdoso | null>(null);
   const { toast } = useToast();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // Função para buscar registros médicos
   const fetchRegistrosMedico = async () => {
@@ -76,7 +79,7 @@ export default function MedicoPage() {
 
   // Função para deletar registro
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+    
 
     try {
       const { error } = await supabase
@@ -409,7 +412,7 @@ export default function MedicoPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDelete(registro.id)}
+                          onClick={() => { setDeleteTargetId(registro.id); setDeleteConfirmOpen(true); }}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -444,6 +447,26 @@ export default function MedicoPage() {
         registro={selectedRegistro}
         onSuccess={fetchRegistrosMedico}
       />
-    </div>
+    
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              if (!deleteTargetId) return;
+              await handleDelete(deleteTargetId);
+              setDeleteConfirmOpen(false);
+              setDeleteTargetId(null);
+            }}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+</div>
   );
 }
