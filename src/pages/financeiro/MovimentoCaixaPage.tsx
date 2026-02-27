@@ -182,9 +182,16 @@ const MovimentoCaixaPage: React.FC = () => {
   };
 
   const gerarPDF = (start: Date, end: Date) => {
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+    const parseLocalDate = (isoDate: string) => {
+      let [yy, mm, dd] = isoDate.split('-').map(Number);
+      if (yy > 2099) yy = start.getFullYear();
+      return new Date(yy, (mm || 1) - 1, dd || 1);
+    };
     const filtered = rows.filter(r => {
-      const rd = new Date(r.movement_date);
-      return rd >= start && rd <= end;
+      const rd = parseLocalDate(r.movement_date);
+      return rd >= startDay && rd <= endDay;
     });
     const totalEntrada = filtered.reduce((s, r) => s + (r.entrada || 0), 0);
     const totalSaida = filtered.reduce((s, r) => s + (r.saida || 0), 0);
@@ -204,8 +211,19 @@ const MovimentoCaixaPage: React.FC = () => {
     doc.setDrawColor(50, 50, 50);
     doc.line(marginLeft, 68, pageWidth - marginRight, 68);
 
+        const formatDateForPdf = (isoDate: string) => {
+      const parts = (isoDate || '').split('-');
+      let y = Number(parts[0] || 0);
+      if (y > 2099) y = start.getFullYear();
+      const m = Number(parts[1] || 1);
+      const d = Number(parts[2] || 1);
+      const dt = new Date(y, (m || 1) - 1, d || 1);
+      if (isNaN(dt.getTime())) return isoDate || '';
+      return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
     const body = filtered.map(r => [
-      formatBrazilianDate(r.movement_date),
+      formatDateForPdf(r.movement_date),
       r.category_id ? (categoryMap.get(r.category_id) || 'Sem categoria') : 'Sem categoria',
       r.entrada ? formatBrazilianCurrency(r.entrada) : '-',
       r.saida ? formatBrazilianCurrency(r.saida) : '-',
