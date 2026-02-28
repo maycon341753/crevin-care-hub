@@ -167,11 +167,34 @@ export default function ProntuarioFisioterapeutico() {
     setSaving(true);
 
     try {
-      const { error } = await supabase
-        .from('prontuario_fisioterapeutico')
-        .upsert(prontuario);
+      
+      const payload = {
+        ...prontuario,
+        idoso_id: idosoId || '',
+      };
 
+      let result;
+      if (prontuario.id) {
+        result = await supabase
+          .from('prontuario_fisioterapeutico')
+          .update(payload)
+          .eq('id', prontuario.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('prontuario_fisioterapeutico')
+          .insert(payload)
+          .select()
+          .single();
+      }
+
+      const { data, error } = result;
       if (error) throw error;
+      if (data) {
+        setProntuario(data);
+      }
+
 
       toast.success('Prontuário fisioterapêutico salvo com sucesso!');
       navigate('/idosos');
