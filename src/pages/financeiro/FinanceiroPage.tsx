@@ -450,12 +450,12 @@ const FinanceiroPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Financeiro</h1>
           <p className="text-gray-600">Gestão financeira completa</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
           <Button onClick={handleGerarRelatorioCSV} variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Relatório CSV
@@ -468,7 +468,7 @@ const FinanceiroPage: React.FC = () => {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Receitas do Mês</CardTitle>
@@ -532,20 +532,20 @@ const FinanceiroPage: React.FC = () => {
       {/* Filtros */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="flex-1 min-w-0">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por descrição..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 w-full"
                 />
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -562,13 +562,13 @@ const FinanceiroPage: React.FC = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="receber" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="receber">Contas a Receber</TabsTrigger>
-          <TabsTrigger value="pagar">Contas a Pagar</TabsTrigger>
+        <TabsList className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <TabsTrigger value="receber" className="flex-1 sm:flex-none">Contas a Receber</TabsTrigger>
+          <TabsTrigger value="pagar" className="flex-1 sm:flex-none">Contas a Pagar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="receber" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold">Contas a Receber</h2>
             <Button onClick={() => setIsContaReceberModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -608,17 +608,17 @@ const FinanceiroPage: React.FC = () => {
                             <div className="text-sm text-gray-500">{conta.observacoes}</div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                           {formatBrazilianCurrency(conta.valor)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                           {formatBrazilianDate(conta.data_vencimento)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(conta.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -645,7 +645,7 @@ const FinanceiroPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="pagar" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold">Contas a Pagar</h2>
             <Button onClick={() => setIsContaPagarModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -701,7 +701,7 @@ const FinanceiroPage: React.FC = () => {
                           {getStatusBadge(conta.status)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
