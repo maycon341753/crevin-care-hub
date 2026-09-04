@@ -697,8 +697,15 @@ const MovimentoCaixaPage: React.FC = () => {
                 <Label>Categoria</Label>
                 <Popover open={openCategoryPicker} onOpenChange={setOpenCategoryPicker}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between">
-                      {newCategory ? (categories.find(c => c.id === newCategory)?.name || 'Selecione') : 'Selecione'}
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                      title={newCategory ? (categories.find(c => c.id === newCategory)?.name || '') : ''}
+                    >
+                      <span className="truncate text-left flex-1">
+                        {newCategory ? (categories.find(c => c.id === newCategory)?.name || 'Selecione') : 'Selecione'}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
@@ -717,7 +724,7 @@ const MovimentoCaixaPage: React.FC = () => {
                               }}
                             >
                               <div className="flex w-full items-center justify-between gap-2">
-                                <span className="truncate">{c.name}</span>
+                                <span className="truncate" title={c.name}>{c.name}</span>
                                 <Button
                                   type="button"
                                   variant="ghost"
@@ -837,8 +844,15 @@ const MovimentoCaixaPage: React.FC = () => {
                 <Label>Categoria</Label>
                 <Popover open={openEditCategoryPicker} onOpenChange={setOpenEditCategoryPicker}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between">
-                      {editCategory ? (categories.find(c => c.id === editCategory)?.name || 'Selecione') : 'Selecione'}
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                      title={editCategory ? (categories.find(c => c.id === editCategory)?.name || '') : ''}
+                    >
+                      <span className="truncate text-left flex-1">
+                        {editCategory ? (categories.find(c => c.id === editCategory)?.name || 'Selecione') : 'Selecione'}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
@@ -857,7 +871,7 @@ const MovimentoCaixaPage: React.FC = () => {
                               }}
                             >
                               <div className="flex w-full items-center justify-between gap-2">
-                                <span className="truncate">{c.name}</span>
+                                <span className="truncate" title={c.name}>{c.name}</span>
                                 <Button
                                   type="button"
                                   variant="ghost"
