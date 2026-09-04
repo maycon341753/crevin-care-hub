@@ -708,7 +708,7 @@ const MovimentoCaixaPage: React.FC = () => {
                       </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onWheel={(e) => e.stopPropagation()}>
                     <Command>
                       <CommandInput placeholder="Buscar categoria..." />
                       <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
@@ -855,7 +855,7 @@ const MovimentoCaixaPage: React.FC = () => {
                       </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onWheel={(e) => e.stopPropagation()}>
                     <Command>
                       <CommandInput placeholder="Buscar categoria..." />
                       <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
